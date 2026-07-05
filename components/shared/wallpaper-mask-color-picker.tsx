@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@/lib/icons";
 
 import { useWallpaper } from "@/components/shared/wallpaper-provider";
 import { WALLPAPER_MASK_COLORS } from "@/config/wallpaper-mask";
@@ -49,7 +49,6 @@ export function WallpaperMaskColorPicker({
                     "size-3",
                     color.id === "white" ? "text-black" : "text-white",
                   )}
-                  weight="bold"
                 />
               ) : null}
             </span>

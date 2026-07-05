@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowClockwiseIcon } from "@phosphor-icons/react";
+import { ArrowClockwiseIcon } from "@/lib/icons";
 
 import { Button } from "@/components/ui/button";
 import { SEPARATED_CONTROL } from "@/config/shape";

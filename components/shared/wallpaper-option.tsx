@@ -3,7 +3,7 @@
 import { getWallpaperPreviewStyle } from "@/lib/wallpaper/resolve-wallpaper";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import type { Wallpaper } from "@/types/wallpaper";
-import { CheckIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 interface WallpaperOptionProps {
@@ -36,10 +36,7 @@ export function WallpaperOption({
       <div className="flex items-center justify-between gap-2 px-2.5 py-2">
         <span className="truncate text-xs font-medium">{wallpaper.label}</span>
         {selected ? (
-          <CheckIcon
-            className="size-3.5 shrink-0 text-foreground"
-            weight="bold"
-          />
+          <CheckIcon className="size-3.5 shrink-0 text-foreground" />
         ) : null}
       </div>
     </button>

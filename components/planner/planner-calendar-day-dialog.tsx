@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@/lib/icons";
 
 import { savePlannedItemAction } from "@/app/actions/planner";
 import { PlannedItemFormSheet } from "@/components/planner/planned-item-form-sheet";

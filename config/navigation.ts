@@ -1,4 +1,4 @@
-import { CalendarBlankIcon, NotebookIcon, TrayIcon, type Icon } from "@phosphor-icons/react";
+import { CalendarBlankIcon, NotebookIcon, TrayIcon, type Icon } from "@/lib/icons";
 
 export const PAYPLAN_ROUTE = "/payplan";
 

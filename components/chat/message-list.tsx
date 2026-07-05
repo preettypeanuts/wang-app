@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
+import { ChatMessageMenu } from "@/components/chat/chat-message-menu";
 import { ChatMessageRetryButton } from "@/components/chat/chat-message-retry-button";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageTimestamp } from "@/components/chat/message-timestamp";
@@ -14,19 +15,24 @@ import {
 } from "@/config/chat-layout";
 import { STACK_GAP } from "@/config/spacing";
 import { getInboxRetryContext } from "@/lib/chat/inbox-error";
+import { canManageSentUserMessage } from "@/lib/chat/inbox-message-actions";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/types/chat";
 
 interface MessageListProps {
   messages: ChatMessage[];
   onRetry?: (assistantMessageId: string) => Promise<void>;
-  retryDisabled?: boolean;
+  onEditMessage?: (userMessageId: string) => Promise<void>;
+  onUndoMessage?: (userMessageId: string) => Promise<void>;
+  actionsDisabled?: boolean;
 }
 
 export function MessageList({
   messages,
   onRetry,
-  retryDisabled = false,
+  onEditMessage,
+  onUndoMessage,
+  actionsDisabled = false,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -65,6 +71,18 @@ export function MessageList({
           {messages.map((message, index) => {
             const isUser = message.role === "user";
             const retryContext = getInboxRetryContext(messages, index);
+            const canManage =
+              canManageSentUserMessage(message) &&
+              Boolean(onEditMessage) &&
+              Boolean(onUndoMessage);
+
+            const bubble = (
+              <MessageBubble
+                role={message.role}
+                content={message.content}
+                className={canManage ? "max-w-full" : undefined}
+              />
+            );
 
             return (
               <div
@@ -74,14 +92,24 @@ export function MessageList({
                   isUser ? "items-end" : "items-start",
                 )}
               >
-                <MessageBubble role={message.role} content={message.content} />
+                {canManage ? (
+                  <ChatMessageMenu
+                    disabled={actionsDisabled}
+                    onEdit={() => void onEditMessage?.(message.id)}
+                    onUndo={() => void onUndoMessage?.(message.id)}
+                  >
+                    {bubble}
+                  </ChatMessageMenu>
+                ) : (
+                  bubble
+                )}
                 <MessageTimestamp
                   createdAt={message.createdAt}
                   role={message.role}
                 />
                 {retryContext && onRetry ? (
                   <ChatMessageRetryButton
-                    disabled={retryDisabled}
+                    disabled={actionsDisabled}
                     onRetry={() => void onRetry(retryContext.assistantMessageId)}
                   />
                 ) : null}

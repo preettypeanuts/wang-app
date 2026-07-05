@@ -1,6 +1,6 @@
 "use client";
 
-import type { Icon } from "@phosphor-icons/react";
+import type { Icon } from "@/lib/icons";
 
 import { SEPARATED_SURFACE } from "@/config/shape";
 import { cn } from "@/lib/utils";
@@ -46,7 +46,6 @@ export function JournalStatTile({
       <div className="flex items-center gap-1.5">
         <IconComponent
           className={cn("size-4 shrink-0", iconClassName ?? "text-foreground/70")}
-          weight="duotone"
         />
         <p className={cn("text-xs font-medium", labelClassName ?? "text-foreground/75")}>
           {label}

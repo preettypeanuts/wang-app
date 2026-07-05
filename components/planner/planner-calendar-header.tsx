@@ -6,7 +6,7 @@ import {
 } from "@/config/planner-calendar";
 import { formatPlannerMonthLabel } from "@/lib/planner/calendar";
 import { cn } from "@/lib/utils";
-import { CaretLeftIcon, CaretRightIcon } from "@phosphor-icons/react";
+import { CaretLeftIcon, CaretRightIcon } from "@/lib/icons";
 
 interface PlannerCalendarHeaderProps {
   monthKey: string;

@@ -7,7 +7,7 @@ import {
   DotsThreeIcon,
   PencilSimpleIcon,
   TrashIcon,
-} from "@phosphor-icons/react";
+} from "@/lib/icons";
 
 import { markInstallmentPaidAction } from "@/app/actions/planner";
 import { Button } from "@/components/ui/button";
@@ -75,7 +75,7 @@ export function PlannedItemCardMenu({
           />
         }
       >
-        <DotsThreeIcon className="size-4" weight="bold" />
+        <DotsThreeIcon className="size-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" side="bottom" className="min-w-36 capitalize">
         {canPay ? (

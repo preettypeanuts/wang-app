@@ -48,18 +48,18 @@ export function JournalTable({ items }: JournalTableProps) {
         <Table className="">
         <TableHeader className={JOURNAL_TABLE_HEADER}>
           <TableRow className="border-0 hover:bg-transparent">
-            <TableHead className={cn(JOURNAL_TABLE_HEAD, "w-[9.5rem]")}>
+            <TableHead className={cn(JOURNAL_TABLE_HEAD, "w-38")}>
               Waktu
             </TableHead>
-            <TableHead className={cn(JOURNAL_TABLE_HEAD, "w-[7.5rem]")}>
+            <TableHead className={cn(JOURNAL_TABLE_HEAD, "w-30")}>
               Tipe
             </TableHead>
-            <TableHead className={cn(JOURNAL_TABLE_HEAD, "w-[7rem]")}>
+            <TableHead className={cn(JOURNAL_TABLE_HEAD, "w-28")}>
               Kategori
             </TableHead>
             <TableHead className={JOURNAL_TABLE_HEAD}>Pesan inbox</TableHead>
             <TableHead
-              className={cn(JOURNAL_TABLE_HEAD, "w-[9rem] text-right")}
+              className={cn(JOURNAL_TABLE_HEAD, "w-36 text-right")}
             >
               Nominal
             </TableHead>

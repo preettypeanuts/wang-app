@@ -1,4 +1,4 @@
-import { ReceiptIcon } from "@phosphor-icons/react";
+import { ReceiptIcon } from "@/lib/icons";
 
 import {
   CHAT_SLASH_MENU,
@@ -51,7 +51,7 @@ export function ChatPayPlanSlashMenu({
             onClick={() => onSelect(item)}
           >
             <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#FF9500]/15 text-[#FF9500] dark:bg-[#FF9500]/20">
-              <ReceiptIcon className="size-4" weight="duotone" />
+              <ReceiptIcon className="size-4" />
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex items-center justify-between gap-2">

@@ -4,7 +4,7 @@ import {
   ArrowDownIcon,
   ArrowUpIcon,
   WalletIcon,
-} from "@phosphor-icons/react";
+} from "@/lib/icons";
 
 import { SOLID_WIDGET_TILE_STYLES } from "@/config/solid-widget-tiles";
 import { SEPARATED_SURFACE } from "@/config/shape";
@@ -73,7 +73,6 @@ export function DailySummaryStats({
             <div className="flex min-w-0 items-center gap-2">
               <IconComponent
                 className={cn("size-4 shrink-0", tile.iconColor)}
-                weight="duotone"
               />
               <span className={cn("text-xs font-medium", tile.labelColor)}>
                 {stat.label}

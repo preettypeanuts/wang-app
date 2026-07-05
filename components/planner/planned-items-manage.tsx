@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { PlusIcon } from "@phosphor-icons/react";
+import { PlusIcon } from "@/lib/icons";
 
 import {
   deletePlannedItemAction,

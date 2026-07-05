@@ -4,7 +4,7 @@ import {
   CalendarBlankIcon,
   SquaresFourIcon,
   TableIcon,
-} from "@phosphor-icons/react";
+} from "@/lib/icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";

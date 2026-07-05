@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import {
   payPayPlanFromInboxAction,
   retryInboxMessageAction,
   submitInboxMessage,
+  undoInboxMessageAction,
 } from "@/app/actions/inbox";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -30,6 +31,11 @@ export function InboxView({
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [draftText, setDraftText] = useState<string | null>(null);
+
+  const handleDraftTextApplied = useCallback(() => {
+    setDraftText(null);
+  }, []);
 
   async function handleSubmit(text: string) {
     const trimmed = text.trim();
@@ -116,6 +122,39 @@ export function InboxView({
     }
   }
 
+  async function removeMessagePair(userMessageId: string) {
+    const result = await undoInboxMessageAction(userMessageId);
+
+    setMessages((current) =>
+      current.filter((message) => !result.removedIds.includes(message.id)),
+    );
+
+    router.refresh();
+
+    return result;
+  }
+
+  async function handleUndoMessage(userMessageId: string) {
+    setIsProcessing(true);
+
+    try {
+      await removeMessagePair(userMessageId);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  async function handleEditMessage(userMessageId: string) {
+    setIsProcessing(true);
+
+    try {
+      const result = await removeMessagePair(userMessageId);
+      setDraftText(result.content);
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
   async function handlePayPlan(item: UnpaidPayPlanChatItem) {
     const pendingUserId = createPendingId();
     const pendingAssistantId = createPendingId();
@@ -172,7 +211,9 @@ export function InboxView({
       <MessageList
         messages={messages}
         onRetry={handleRetry}
-        retryDisabled={isProcessing}
+        onEditMessage={handleEditMessage}
+        onUndoMessage={handleUndoMessage}
+        actionsDisabled={isProcessing}
       />
       <ChatHeader />
       <div className={CHAT_INPUT_DOCK}>
@@ -181,6 +222,8 @@ export function InboxView({
           onPayPlan={handlePayPlan}
           unpaidPayPlanItems={unpaidPayPlanItems}
           disabled={isProcessing}
+          draftText={draftText}
+          onDraftTextApplied={handleDraftTextApplied}
         />
       </div>
     </div>

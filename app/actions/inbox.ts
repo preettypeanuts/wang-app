@@ -8,7 +8,9 @@ import {
 } from "@/lib/ai/parse-transaction";
 import {
   createInboxMessage,
+  deleteInboxMessagePair,
   updateInboxMessage,
+  type DeleteInboxMessagePairResult,
 } from "@/lib/db/inbox-messages";
 import { listPlannedItems, markInstallmentPaid } from "@/lib/db/planned-items";
 import { prisma } from "@/lib/db/prisma";
@@ -179,6 +181,17 @@ export async function retryInboxMessageAction(
       assistantMessage,
     };
   }
+}
+
+export async function undoInboxMessageAction(
+  userMessageId: string,
+): Promise<DeleteInboxMessagePairResult> {
+  const result = await deleteInboxMessagePair(userMessageId);
+
+  revalidatePath("/");
+  revalidatePath("/journal");
+
+  return result;
 }
 
 interface PayPayPlanFromInboxSuccess {

@@ -94,3 +94,83 @@ export async function getInboxMessages(): Promise<ChatMessage[]> {
 
   return records.map(mapInboxMessage);
 }
+
+export interface DeleteInboxMessagePairResult {
+  removedIds: string[];
+  content: string;
+}
+
+/** Removes a user chat message, its assistant reply, and linked transaction. */
+export async function deleteInboxMessagePair(
+  userMessageId: string,
+): Promise<DeleteInboxMessagePairResult> {
+  const userRecord = await prisma.inboxMessage.findUnique({
+    where: { id: userMessageId },
+    select: {
+      id: true,
+      role: true,
+      kind: true,
+      content: true,
+      createdAt: true,
+    },
+  });
+
+  if (
+    !userRecord ||
+    userRecord.role !== "user" ||
+    userRecord.kind !== "chat"
+  ) {
+    throw new Error("Pesan tidak ditemukan.");
+  }
+
+  if (userRecord.content.startsWith("Bayar ")) {
+    throw new Error("Pembayaran PayPlan tidak bisa dibatalkan dari chat.");
+  }
+
+  const assistantRecord = await prisma.inboxMessage.findFirst({
+    where: {
+      role: "assistant",
+      kind: "chat",
+      createdAt: {
+        gt: userRecord.createdAt,
+      },
+    },
+    orderBy: {
+      createdAt: "asc",
+    },
+    select: {
+      id: true,
+      transactionId: true,
+    },
+  });
+
+  const removedIds = [userRecord.id];
+  const transactionId = assistantRecord?.transactionId ?? null;
+
+  if (assistantRecord) {
+    removedIds.push(assistantRecord.id);
+  }
+
+  await prisma.$transaction(async (tx) => {
+    if (assistantRecord) {
+      await tx.inboxMessage.delete({
+        where: { id: assistantRecord.id },
+      });
+    }
+
+    await tx.inboxMessage.delete({
+      where: { id: userRecord.id },
+    });
+
+    if (transactionId) {
+      await tx.transaction.delete({
+        where: { id: transactionId },
+      });
+    }
+  });
+
+  return {
+    removedIds,
+    content: userRecord.content,
+  };
+}

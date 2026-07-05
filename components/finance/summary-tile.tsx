@@ -11,7 +11,7 @@ import {
   ShoppingBagIcon,
   WalletIcon,
   type Icon,
-} from "@phosphor-icons/react";
+} from "@/lib/icons";
 
 import type { SummaryTileIcon } from "@/config/summary-tiles";
 import { SEPARATED_SURFACE } from "@/config/shape";
@@ -76,7 +76,6 @@ export function SummaryTile({
           iconClassName,
           isCompact ? "size-4" : "size-5",
         )}
-        weight="duotone"
       />
       <div className={cn("min-w-0", isCompact && "flex-1")}>
         <p

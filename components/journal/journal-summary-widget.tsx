@@ -5,7 +5,7 @@ import {
   ArrowUpIcon,
   SparkleIcon,
   WalletIcon,
-} from "@phosphor-icons/react";
+} from "@/lib/icons";
 
 import { JournalStatTile } from "@/components/journal/journal-stat-tile";
 import { JOURNAL_WIDGET_TILE_STYLES } from "@/config/journal-widget";

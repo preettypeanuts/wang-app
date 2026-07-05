@@ -91,7 +91,7 @@ export function PlannedItemsTable({
               return (
                 <TableRow key={item.id} className={PLANNER_TABLE_ROW}>
                   <TableCell
-                    className={cn(PLANNER_TABLE_CELL, "max-w-[10rem] font-medium")}
+                    className={cn(PLANNER_TABLE_CELL, "max-w-40 font-medium")}
                   >
                     <span className="block truncate">{item.name}</span>
                   </TableCell>

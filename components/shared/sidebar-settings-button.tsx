@@ -1,6 +1,6 @@
 "use client";
 
-import { GearSixIcon } from "@phosphor-icons/react";
+import { GearSixIcon } from "@/lib/icons";
 
 import { SettingsSheet } from "@/components/shared/settings-sheet";
 import {

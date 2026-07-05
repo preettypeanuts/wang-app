@@ -1,8 +1,13 @@
 "use client";
 
-import { ArrowUpIcon, PlusIcon } from "@phosphor-icons/react";
+import {
+  ArrowUpIcon,
+  CalculatorIcon,
+  PlusIcon,
+} from "@/lib/icons";
 import { useEffect, useMemo, useState } from "react";
 
+import { ChatCalculatorSheet } from "@/components/chat/chat-calculator-sheet";
 import { ChatPayPlanSlashMenu } from "@/components/chat/chat-payplan-slash-menu";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,6 +31,8 @@ interface ChatInputProps {
   onPayPlan?: (item: UnpaidPayPlanChatItem) => Promise<void>;
   unpaidPayPlanItems?: UnpaidPayPlanChatItem[];
   disabled?: boolean;
+  draftText?: string | null;
+  onDraftTextApplied?: () => void;
 }
 
 export function ChatInput({
@@ -33,10 +40,13 @@ export function ChatInput({
   onPayPlan,
   unpaidPayPlanItems = [],
   disabled = false,
+  draftText = null,
+  onDraftTextApplied,
 }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const hasText = value.trim().length > 0;
   const isInputDisabled = disabled || isSubmitting;
   const slashMatch = value.match(/^\/(.*)$/);
@@ -50,6 +60,15 @@ export function ChatInput({
   useEffect(() => {
     setHighlightedIndex(0);
   }, [slashQuery, filteredItems.length]);
+
+  useEffect(() => {
+    if (draftText === null) {
+      return;
+    }
+
+    setValue(draftText);
+    onDraftTextApplied?.();
+  }, [draftText, onDraftTextApplied]);
 
   async function handleSubmit() {
     if (isSlashOpen) {
@@ -82,6 +101,14 @@ export function ChatInput({
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleUseCalculatorAmount(amount: number) {
+    const amountText = String(amount);
+    setValue((current) => {
+      const trimmed = current.trimEnd();
+      return trimmed.length === 0 ? amountText : `${trimmed} ${amountText}`;
+    });
   }
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -162,10 +189,20 @@ export function ChatInput({
             <PlusIcon className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top" align="start" sideOffset={8}>
+            <DropdownMenuItem onClick={() => setIsCalculatorOpen(true)}>
+              <CalculatorIcon className="size-4" />
+              Kalkulator
+            </DropdownMenuItem>
             <DropdownMenuItem>Upload struk</DropdownMenuItem>
             <DropdownMenuItem>Input manual</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <ChatCalculatorSheet
+          open={isCalculatorOpen}
+          onOpenChange={setIsCalculatorOpen}
+          onUseAmount={handleUseCalculatorAmount}
+        />
 
         <div
           className={cn(
@@ -196,7 +233,7 @@ export function ChatInput({
               aria-label="Kirim pesan"
               className="mr-0.5 size-7 shrink-0 rounded-full"
             >
-              <ArrowUpIcon className="size-3.5" weight="bold" />
+              <ArrowUpIcon className="size-3.5" />
             </Button>
           ) : null}
         </div>

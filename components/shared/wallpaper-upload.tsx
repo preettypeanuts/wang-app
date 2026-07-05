@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { UploadSimpleIcon } from "@phosphor-icons/react";
+import { UploadSimpleIcon } from "@/lib/icons";
 
 import { useWallpaper } from "@/components/shared/wallpaper-provider";
 import { Button } from "@/components/ui/button";

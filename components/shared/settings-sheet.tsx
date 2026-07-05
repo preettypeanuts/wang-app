@@ -13,7 +13,7 @@ import {
 import { GLASS_HOVER, GLASS_SURFACE } from "@/config/glass";
 import { SEPARATED_PILL } from "@/config/shape";
 import { SETTINGS_HEADER, SETTINGS_SHEET } from "@/config/settings-layout";
-import { GearSixIcon } from "@phosphor-icons/react";
+import { GearSixIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 interface SettingsSheetProps {

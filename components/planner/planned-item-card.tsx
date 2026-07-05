@@ -3,7 +3,7 @@ import {
   CurrencyCircleDollarIcon,
   ReceiptIcon,
   type Icon,
-} from "@phosphor-icons/react";
+} from "@/lib/icons";
 
 import { PlannedItemCardMenu } from "@/components/planner/planned-item-card-menu";
 import { PlannedItemCardFooter } from "@/components/planner/planned-item-card-footer";
@@ -70,7 +70,6 @@ export function PlannedItemCard({
           >
             <IconComponent
               className={cn("size-5", kindStyle.color)}
-              weight="duotone"
             />
           </div>
 

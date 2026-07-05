@@ -5,7 +5,7 @@ import {
   MoonIcon,
   SunIcon,
   type Icon,
-} from "@phosphor-icons/react";
+} from "@/lib/icons";
 
 import { useAppearance } from "@/components/shared/appearance-provider";
 import { THEME_MODES } from "@/config/theme-modes";
@@ -51,10 +51,7 @@ export function ThemeModePicker() {
                   : "text-muted-foreground",
               )}
             >
-              <IconComponent
-                className="size-4"
-                weight={selected ? "fill" : "regular"}
-              />
+              <IconComponent className="size-4" />
               {mode.label}
             </button>
           );

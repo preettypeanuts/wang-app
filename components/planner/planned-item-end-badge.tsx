@@ -1,4 +1,4 @@
-import { InfinityIcon } from "@phosphor-icons/react";
+import { InfinityIcon } from "@/lib/icons";
 
 import { PLANNER_MANAGE_META } from "@/config/planner-manage";
 import {
@@ -20,7 +20,7 @@ export function PlannedItemEndBadge({ item }: PlannedItemEndBadgeProps) {
         aria-label="Berulang tanpa akhir"
         title="Berulang tanpa akhir"
       >
-        <InfinityIcon className="size-4" weight="bold" />
+        <InfinityIcon className="size-4" />
       </span>
     );
   }

@@ -1,4 +1,4 @@
-import { ReceiptIcon, WalletIcon, type Icon } from "@phosphor-icons/react";
+import { ReceiptIcon, WalletIcon, type Icon } from "@/lib/icons";
 
 import {
   PLANNER_CALENDAR_SUMMARY_AMOUNT,
@@ -60,7 +60,6 @@ export function PlannerCalendarSummaryTile({
       <div className="flex items-start justify-between gap-3">
         <IconComponent
           className={cn("shrink-0", iconClassName, PLANNER_CALENDAR_SUMMARY_ICON)}
-          weight="duotone"
         />
         <p
           className={cn(

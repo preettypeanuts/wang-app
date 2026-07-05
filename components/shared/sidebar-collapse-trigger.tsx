@@ -1,6 +1,6 @@
 "use client";
 
-import { SidebarIcon } from "@phosphor-icons/react";
+import { SidebarIcon } from "@/lib/icons";
 
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";

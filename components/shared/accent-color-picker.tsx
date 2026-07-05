@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckIcon } from "@phosphor-icons/react";
+import { CheckIcon } from "@/lib/icons";
 
 import { useAppearance } from "@/components/shared/appearance-provider";
 import { ACCENT_COLORS } from "@/config/accent-colors";
@@ -41,7 +41,7 @@ export function AccentColorPicker() {
             />
             <span className="flex-1 font-medium">{accent.label}</span>
             {selected ? (
-              <CheckIcon className="size-4 text-primary" weight="bold" />
+              <CheckIcon className="size-4 text-primary" />
             ) : (
               <span className="size-4 shrink-0" aria-hidden />
             )}
