@@ -1,0 +1,44 @@
+---
+description: React & Next.js component patterns for Monmon chat UI
+globs: **/*.tsx
+alwaysApply: false
+---
+
+# React Component Rules
+
+## Server vs Client
+
+```tsx
+// ✅ Server — fetch transaksi, summary, static layout
+export default async function HomePage() {
+  const transactions = await getTransactions()
+  return <ChatShell initialTransactions={transactions} />
+}
+
+// ✅ Client — chat input, streaming AI, interaksi
+"use client"
+export function ChatInput({ onSubmit }: ChatInputProps) { ... }
+```
+
+**`"use client"` hanya jika:** useState, event handlers, browser APIs, streaming AI, animasi interaktif.
+
+**Jangan di:** layout, page yang fetch data, static UI, komponen pure presentational.
+
+## shadcn/ui — Wajib
+Install dulu via CLI. Wrap, jangan edit `components/ui/`. Pakai `cn()` untuk conditional classes.
+
+Contoh komponen chat yang umum dipakai: `button`, `textarea`, `scroll-area`, `card`, `skeleton`, `avatar`, `separator`.
+
+Custom component **hanya** jika tidak ada di shadcn/ui.
+
+## Chat UI
+- Pisah: `ChatShell` (layout) · `MessageList` · `MessageBubble` · `ChatInput`
+- Server fetch data transaksi; client handle input & tampilan real-time
+- Streaming AI response → client component terisolasi, sisanya tetap server
+- Loading state pakai `Skeleton` dari shadcn — bukan spinner custom
+
+## Performance
+- `next/font` dengan `display: "swap"`
+- Dynamic import hanya untuk komponen berat (chart, editor)
+- `import { format } from "date-fns/format"` — bukan `import * as dateFns`
+- Virtual scroll hanya jika message list benar-benar panjang — jangan premature optimize

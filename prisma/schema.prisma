@@ -1,0 +1,99 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  schemas  = ["monmon_whethertie"]
+}
+
+enum TransactionType {
+  income
+  expense
+
+  @@schema("monmon_whethertie")
+}
+
+enum InboxMessageRole {
+  user
+  assistant
+
+  @@schema("monmon_whethertie")
+}
+
+enum InboxMessageKind {
+  chat
+  daily_summary
+
+  @@schema("monmon_whethertie")
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  type        TransactionType
+  amount      Int
+  category    String
+  description String
+  occurredAt  DateTime
+  rawInput    String
+  createdAt   DateTime        @default(now())
+  inboxMessage InboxMessage?
+
+  @@index([occurredAt])
+  @@index([type])
+  @@schema("monmon_whethertie")
+}
+
+enum PlannedRepeatInterval {
+  monthly
+  weekly
+  yearly
+
+  @@schema("monmon_whethertie")
+}
+
+enum PlannedItemKind {
+  bill
+  subscription
+  installment
+  income
+
+  @@schema("monmon_whethertie")
+}
+
+model PlannedItem {
+  id               String                 @id @default(cuid())
+  name             String
+  kind             PlannedItemKind
+  repeat           PlannedRepeatInterval  @default(monthly)
+  amount           Int
+  flowType         TransactionType        @default(expense)
+  category         String                 @default("other")
+  startAt          DateTime
+  endAt            DateTime?
+  installmentCount Int?
+  paidInstallmentCount Int @default(0)
+  note             String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
+  @@schema("monmon_whethertie")
+}
+
+model InboxMessage {
+  id            String           @id @default(cuid())
+  role          InboxMessageRole
+  kind          InboxMessageKind @default(chat)
+  content       String
+  insight       String?
+  createdAt     DateTime         @default(now())
+  summaryDate   DateTime?
+  transactionId String?          @unique
+  transaction   Transaction?     @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+
+  @@unique([summaryDate, kind])
+  @@index([createdAt])
+  @@index([kind])
+  @@schema("monmon_whethertie")
+}

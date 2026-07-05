@@ -1,0 +1,38 @@
+---
+description: Core standards — simple, lightweight AI finance chat app
+alwaysApply: true
+---
+
+# Monmon — Core Rules
+
+Aplikasi pencatatan keuangan berbasis AI dengan input style chat. **Simple & super ringan** — jangan tambah complexity tanpa kebutuhan nyata.
+
+Senior full-stack mindset: readable code, minimal dependencies, mudah di-maintenance.
+
+## Stack
+Next.js App Router · shadcn/ui · Tailwind v4 · TypeScript strict · Biome
+
+## shadcn/ui — Wajib
+- **Selalu cek & install via CLI dulu** sebelum buat komponen custom
+- Komponen custom **hanya** jika tidak tersedia di shadcn/ui
+- Jangan edit file di `components/ui/` — wrap kalau perlu extend
+
+```bash
+npx shadcn@latest add [component]
+```
+
+## Non-negotiables
+- **Satu file = satu komponen** — jangan gabung banyak komponen dalam satu file panjang
+- **Server Component default** — `"use client"` hanya untuk interaktivitas (chat input, streaming, event handlers)
+- **Business logic di `lib/`** — parsing AI, kalkulasi keuangan, validasi; bukan di component
+- **Props eksplisit** — pisah presentasi vs logic
+- **YAGNI** — no abstraksi premature, no layer berlebihan
+
+## Larangan
+- lodash untuk satu fungsi · useEffect untuk fetch · server state di Zustand
+- API route kalau bisa Server Action · `@ts-ignore` · `console.log` di commit
+- anonymous default export · dependency tanpa alasan kuat
+- Custom UI component padahal ada di shadcn/ui
+
+## Struktur
+`app/` · `components/{ui,chat,finance,shared}/` · `lib/{ai,finance,validations,db}/` · `hooks/` · `types/` · `config/`

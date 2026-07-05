@@ -1,0 +1,45 @@
+---
+description: TypeScript strict standards for Monmon finance app
+globs: **/*.{ts,tsx}
+alwaysApply: false
+---
+
+# TypeScript Rules
+
+Strict mode ON — `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`.
+
+## Domain Types
+
+```ts
+type TransactionType = "income" | "expense"
+type TransactionId = string & { readonly brand: "TransactionId" }
+
+interface Transaction {
+  id: TransactionId
+  type: TransactionType
+  amount: number
+  category: string
+  description: string
+  date: Date
+}
+
+// ✅ Props eksplisit
+interface MessageBubbleProps {
+  role: "user" | "assistant"
+  content: string
+  className?: string
+}
+
+// ✅ unknown + validate, bukan any — terutama output AI
+function parseAiTransaction(raw: unknown): Transaction { ... }
+```
+
+## Naming
+- Components → PascalCase file · Hooks → `useXxx.ts` · Utils → camelCase
+- Constants → `SCREAMING_SNAKE` · Types → PascalCase
+
+## Validasi & Forms
+- Zod schema di `lib/validations/` — validasi input user & response AI
+- React Hook Form + Zod untuk form manual (jika ada)
+- Server state → TanStack Query, bukan Zustand
+- Amount & currency logic di `lib/finance/` — bukan scattered di component
