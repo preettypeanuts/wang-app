@@ -1,7 +1,7 @@
 import { cache } from "react";
 
-import { generateJournalCondition } from "@/lib/ai/generate-journal-condition";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
+import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
 import {
   addDays,
   endOfDay,
@@ -79,9 +79,10 @@ export const getJournalDaySummary = cache(
 
     const summary = buildTodaySummary(transactions);
     const yesterdaySummary = buildTodaySummary(yesterdayTransactions);
-    const condition = await generateJournalCondition(
-      day,
+    const condition = buildFallbackJournalCondition(
       transactions,
+      summary.totalExpense,
+      summary.totalIncome,
       cumulativeBalance,
     );
 

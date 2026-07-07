@@ -8,9 +8,9 @@ import {
   type ReactNode,
 } from "react";
 
-import { isPersistentMobileTabRoute } from "@/config/persistent-tabs";
+import { isPersistentTabRoute } from "@/config/persistent-tabs";
 import { PersistentTabActiveProvider } from "@/components/shared/persistent-tab-active-context";
-import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import { isTabsRouteLoading } from "@/lib/navigation/is-tabs-route-loading";
 import { useSession } from "@/lib/auth/auth-client";
 
 interface PersistentTabLayoutProps {
@@ -18,15 +18,14 @@ interface PersistentTabLayoutProps {
 }
 
 /**
- * Mobile: cache each bottom-nav tab so switching routes does not unmount panels.
- * Desktop: pass-through — standard Next.js navigation.
+ * Cache each main nav tab so switching routes does not unmount panels.
+ * Skips caching route loading skeletons so first paint can stream in.
  */
 export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
   const pathname = usePathname();
-  const isMobile = useIsMobileViewport();
   const { data: session } = useSession();
   const userId = session?.user?.id ?? null;
-  const tabPath = isPersistentMobileTabRoute(pathname) ? pathname : null;
+  const tabPath = isPersistentTabRoute(pathname) ? pathname : null;
   const [cache, setCache] = useState<Record<string, ReactNode>>({});
 
   useLayoutEffect(() => {
@@ -34,26 +33,29 @@ export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
   }, [userId]);
 
   useLayoutEffect(() => {
-    if (!isMobile || !tabPath) {
+    if (!tabPath || isTabsRouteLoading(children)) {
       return;
     }
 
-    setCache((current) => {
-      if (current[tabPath]) {
-        return current;
-      }
-
-      return { ...current, [tabPath]: children };
-    });
-  }, [children, isMobile, tabPath]);
+    setCache((current) => ({ ...current, [tabPath]: children }));
+  }, [children, tabPath]);
 
   const panels = useMemo(() => {
-    if (!isMobile || !tabPath) {
+    if (!tabPath) {
+      return null;
+    }
+
+    const cached = cache[tabPath];
+    if (cached) {
+      return cache;
+    }
+
+    if (isTabsRouteLoading(children)) {
       return null;
     }
 
     return { ...cache, [tabPath]: children };
-  }, [cache, children, isMobile, tabPath]);
+  }, [cache, children, tabPath]);
 
   if (!panels || !tabPath) {
     return children;

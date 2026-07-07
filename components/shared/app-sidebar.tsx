@@ -15,6 +15,7 @@ import {
   SEPARATED_SIDEBAR_GUTTER,
 } from "@/config/sidebar";
 import { mainNavItems, utilityNavItems } from "@/config/navigation";
+import { warmRouteDataOnHover } from "@/lib/navigation/warm-route-data";
 import {
   Sidebar,
   SidebarContent,
@@ -65,7 +66,12 @@ export function AppSidebar() {
                   {mainNavItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
-                        render={<Link href={item.href} />}
+                        render={
+                          <Link
+                            href={item.href}
+                            onMouseEnter={() => warmRouteDataOnHover(item.href)}
+                          />
+                        }
                         isActive={pathname === item.href}
                         tooltip={item.title}
                         className={SEPARATED_MENU_ITEM}
@@ -82,7 +88,12 @@ export function AppSidebar() {
                   {utilityNavItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
-                        render={<Link href={item.href} />}
+                        render={
+                          <Link
+                            href={item.href}
+                            onMouseEnter={() => warmRouteDataOnHover(item.href)}
+                          />
+                        }
                         isActive={pathname === item.href}
                         tooltip={item.title}
                         className={SEPARATED_MENU_ITEM}

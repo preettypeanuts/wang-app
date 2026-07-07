@@ -1,4 +1,3 @@
-import { generateJournalCondition } from "@/lib/ai/generate-journal-condition";
 import { getCategoryLabel } from "@/config/categories";
 import { getAvailableBalance } from "@/lib/db/balance";
 import { listPlans } from "@/lib/db/plans";
@@ -13,6 +12,7 @@ import {
 } from "@/lib/finance/build-plans-overview";
 import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
+import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
 import { addDays, getDayRange } from "@/lib/finance/day-range";
 import { formatJournalTime } from "@/lib/finance/format-datetime";
 import { formatOverviewGreeting } from "@/lib/finance/format-overview-greeting";
@@ -105,9 +105,10 @@ export async function getOverviewPageData(
   const todaySummary = buildTodaySummary(journalTransactions);
   const monthSummary = buildTodaySummary(monthTransactions);
 
-  const condition = await generateJournalCondition(
-    now,
+  const condition = buildFallbackJournalCondition(
     journalTransactions,
+    todaySummary.totalExpense,
+    todaySummary.totalIncome,
     availableBalance,
   );
 

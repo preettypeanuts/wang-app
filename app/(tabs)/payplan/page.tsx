@@ -18,12 +18,12 @@ export default async function PayPlanPage({ searchParams }: PayPlanPageProps) {
   const { monthKey, tab, calendarLayout, filters } =
     parsePlannerSearchParams(params);
 
-  const plannedItems = await listPlannedItems(userId);
-
-  const [data, budgets] = await Promise.all([
-    getPlannerMonthData(userId, monthKey, plannedItems),
+  const [plannedItems, budgets] = await Promise.all([
+    listPlannedItems(userId),
     listBudgetsForMonth(userId, monthKey),
   ]);
+
+  const data = await getPlannerMonthData(userId, monthKey, plannedItems);
 
   const initialDayKey = pickDefaultDayKey(data.monthKey, data.marks);
   const monthOccurrences = data.items.map((item) => ({
