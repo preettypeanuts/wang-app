@@ -6,6 +6,7 @@ import { type ReactElement, useState } from "react";
 
 import { MobileNavDrawerLogoutButton } from "@/components/shared/mobile-nav-drawer-logout-button";
 import { MobileNavDrawerProfileLink } from "@/components/shared/mobile-nav-drawer-profile-link";
+import { MobileNavDrawerPushToggleRow } from "@/components/shared/mobile-nav-drawer-push-toggle-row";
 import { SettingsSheet } from "@/components/shared/settings-sheet";
 import {
   Drawer,
@@ -88,6 +89,7 @@ export function MobileNavDrawer({ trigger }: MobileNavDrawerProps) {
                 </Link>
               );
             })}
+            <MobileNavDrawerPushToggleRow />
           </div>
 
           <div className={MOBILE_DRAWER_FOOTER}>
