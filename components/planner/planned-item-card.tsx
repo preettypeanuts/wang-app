@@ -1,14 +1,12 @@
-import {
-  CreditCardIcon,
-  CurrencyCircleDollarIcon,
-  ReceiptIcon,
-  type Icon,
-} from "@/lib/icons";
+import { PlannedItemCardFooter } from "@/components/planner/planned-item-card-footer";
 
 import { PlannedItemCardMenu } from "@/components/planner/planned-item-card-menu";
-import { PlannedItemCardFooter } from "@/components/planner/planned-item-card-footer";
-import { PlannedItemInstallmentStatus } from "@/components/planner/planned-item-installment-status";
 import { formatInstallmentProgressLabel } from "@/components/planner/planned-item-installment-progress";
+import { PlannedItemInstallmentStatus } from "@/components/planner/planned-item-installment-status";
+import {
+  PAYPLAN_MANAGE_CARD_MOBILE,
+  PAYPLAN_MOBILE_SOLID_CARD,
+} from "@/config/payplan-mobile";
 import {
   getPlannedKindBadgeClass,
   PLANNER_KIND_STYLES,
@@ -19,17 +17,19 @@ import {
   PLANNER_MANAGE_META_BETWEEN,
   PLANNER_MANAGE_REPEAT,
 } from "@/config/planner-manage";
+import { formatIdr } from "@/lib/finance/format-currency";
 import {
-  PAYPLAN_MANAGE_CARD_MOBILE,
-  PAYPLAN_MOBILE_SOLID_CARD,
-} from "@/config/payplan-mobile";
+  CreditCardIcon,
+  CurrencyCircleDollarIcon,
+  type Icon,
+  ReceiptIcon,
+} from "@/lib/icons";
 import {
   formatPlannedInstallmentCount,
   formatPlannedItemKind,
   formatPlannedItemRepeat,
 } from "@/lib/planner/format-planned-item";
 import { getInstallmentProgress } from "@/lib/planner/installment-progress";
-import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import type { PlannedItemKind, PlannedItemRecord } from "@/types/planner";
 
@@ -46,6 +46,7 @@ const PLANNER_KIND_BADGE =
 interface PlannedItemCardProps {
   item: PlannedItemRecord;
   disabled?: boolean;
+  onViewDetail: (item: PlannedItemRecord) => void;
   onEdit: (item: PlannedItemRecord) => void;
   onDelete: (item: PlannedItemRecord) => void;
 }
@@ -53,6 +54,7 @@ interface PlannedItemCardProps {
 export function PlannedItemCard({
   item,
   disabled = false,
+  onViewDetail,
   onEdit,
   onDelete,
 }: PlannedItemCardProps) {
@@ -63,14 +65,26 @@ export function PlannedItemCard({
   const isIncome = item.flowType === "income";
 
   return (
-    <article
+    <div
       className={cn(
         PLANNER_MANAGE_CARD,
         PAYPLAN_MOBILE_SOLID_CARD,
         PAYPLAN_MANAGE_CARD_MOBILE,
+        "relative",
+        !disabled &&
+          "transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]",
       )}
     >
-      <div className={PLANNER_MANAGE_CARD_BODY}>
+      {disabled ? null : (
+        <button
+          type="button"
+          className="absolute inset-0 z-0 rounded-[inherit]"
+          aria-label={`Lihat detail ${item.name}`}
+          onClick={() => onViewDetail(item)}
+        />
+      )}
+
+      <div className={cn(PLANNER_MANAGE_CARD_BODY, "relative z-10")}>
         <div className="flex items-center gap-2.5">
           <div
             className={cn(
@@ -78,21 +92,21 @@ export function PlannedItemCard({
               kindStyle.surface,
             )}
           >
-            <IconComponent
-              className={cn("size-5", kindStyle.color)}
-            />
+            <IconComponent className={cn("size-5", kindStyle.color)} />
           </div>
 
           <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground/90">
             {item.name}
           </h3>
 
-          <PlannedItemCardMenu
-            item={item}
-            disabled={disabled}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
+          <div className="relative z-20">
+            <PlannedItemCardMenu
+              item={item}
+              disabled={disabled}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </div>
         </div>
 
         <div className={PLANNER_MANAGE_META_BETWEEN}>
@@ -138,10 +152,12 @@ export function PlannedItemCard({
         </div>
       </div>
 
-      <PlannedItemCardFooter
-        item={item}
-        installmentProgress={installmentProgress}
-      />
-    </article>
+      <div className="relative z-10">
+        <PlannedItemCardFooter
+          item={item}
+          installmentProgress={installmentProgress}
+        />
+      </div>
+    </div>
   );
 }

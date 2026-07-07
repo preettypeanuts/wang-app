@@ -1,6 +1,7 @@
 import { PlannedItemCardMenu } from "@/components/planner/planned-item-card-menu";
 import { PlannedItemEndBadge } from "@/components/planner/planned-item-end-badge";
 import { PlannedItemKindIcon } from "@/components/planner/planned-item-kind-icon";
+import { PLANNER_MANAGE_STATUS } from "@/config/planner-manage";
 import {
   PLANNER_LIST_AMOUNT_EXPENSE,
   PLANNER_LIST_AMOUNT_INCOME,
@@ -13,20 +14,20 @@ import {
   PLANNER_LIST_ROW_TRAILING,
   PLANNER_LIST_ROW_TRAILING_STACK,
 } from "@/config/planner-table";
-import { PLANNER_MANAGE_STATUS } from "@/config/planner-manage";
+import { formatIdr } from "@/lib/finance/format-currency";
 import {
   formatPlannedInstallmentCount,
   formatPlannedItemRepeat,
   formatPlannedStartLabel,
 } from "@/lib/planner/format-planned-item";
 import { getPlannedItemPaymentStatus } from "@/lib/planner/installment-progress";
-import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import type { PlannedItemRecord } from "@/types/planner";
 
 interface PlannedItemListRowProps {
   item: PlannedItemRecord;
   disabled?: boolean;
+  onViewDetail: (item: PlannedItemRecord) => void;
   onEdit: (item: PlannedItemRecord) => void;
   onDelete: (item: PlannedItemRecord) => void;
 }
@@ -34,6 +35,7 @@ interface PlannedItemListRowProps {
 export function PlannedItemListRow({
   item,
   disabled = false,
+  onViewDetail,
   onEdit,
   onDelete,
 }: PlannedItemListRowProps) {
@@ -45,10 +47,26 @@ export function PlannedItemListRow({
     item.flowType === "expense" ? getPlannedItemPaymentStatus(item) : null;
 
   return (
-    <article className={PLANNER_LIST_ROW}>
-      <PlannedItemKindIcon kind={item.kind} />
+    <div
+      className={cn(
+        PLANNER_LIST_ROW,
+        "relative",
+        !disabled &&
+          "transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]",
+      )}
+    >
+      {disabled ? null : (
+        <button
+          type="button"
+          className="absolute inset-0 z-0"
+          aria-label={`Lihat detail ${item.name}`}
+          onClick={() => onViewDetail(item)}
+        />
+      )}
 
-      <div className={PLANNER_LIST_ROW_CONTENT}>
+      <PlannedItemKindIcon kind={item.kind} className="relative z-10" />
+
+      <div className={cn(PLANNER_LIST_ROW_CONTENT, "relative z-10")}>
         <p
           className={cn(
             PLANNER_LIST_ROW_TITLE,
@@ -95,7 +113,7 @@ export function PlannedItemListRow({
         </div>
       </div>
 
-      <div className={PLANNER_LIST_ROW_TRAILING}>
+      <div className={cn(PLANNER_LIST_ROW_TRAILING, "relative z-20")}>
         <div className={PLANNER_LIST_ROW_TRAILING_STACK}>
           <p
             className={cn(
@@ -129,6 +147,6 @@ export function PlannedItemListRow({
           onDelete={onDelete}
         />
       </div>
-    </article>
+    </div>
   );
 }

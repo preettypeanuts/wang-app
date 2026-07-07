@@ -1,0 +1,308 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+
+import { markInstallmentPaidAction } from "@/app/actions/planner";
+import { PlannedItemEndBadge } from "@/components/planner/planned-item-end-badge";
+import { PlannedItemInstallmentProgressBar } from "@/components/planner/planned-item-installment-progress";
+import { PlannedItemInstallmentStatus } from "@/components/planner/planned-item-installment-status";
+import { PlannedItemKindIcon } from "@/components/planner/planned-item-kind-icon";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { getCategoryLabel } from "@/config/categories";
+import {
+  FORM_DIALOG_BODY_SCROLL,
+  FORM_DIALOG_CONTENT_WIDE,
+  FORM_DIALOG_FOOTER,
+  FORM_DIALOG_HEADER,
+  FORM_GROUP,
+  FORM_PREVIEW_COMPACT,
+  FORM_PREVIEW_COMPACT_AMOUNT,
+} from "@/config/form-dialog";
+import {
+  getPlannedKindBadgeClass,
+  PLANNER_MANAGE_META,
+} from "@/config/planner-manage";
+import { SEPARATED_CONTROL } from "@/config/shape";
+import { formatIdr } from "@/lib/finance/format-currency";
+import { formatDayMonth } from "@/lib/finance/format-datetime";
+import { CheckCircleIcon, PencilSimpleIcon, TrashIcon } from "@/lib/icons";
+import {
+  formatPlannedInstallmentCount,
+  formatPlannedItemKind,
+  formatPlannedItemRepeat,
+  formatPlannedStartLabel,
+} from "@/lib/planner/format-planned-item";
+import {
+  getInstallmentProgress,
+  getPlannedItemInstallmentSchedule,
+} from "@/lib/planner/installment-progress";
+import {
+  canMarkPlannedItemPaid,
+  getMarkPlannedItemPaidLabel,
+  getPlannedItemPaymentIndex,
+} from "@/lib/planner/item-payment";
+import { cn } from "@/lib/utils";
+import type { PlannedItemRecord } from "@/types/planner";
+
+interface PlannedItemDetailDialogProps {
+  open: boolean;
+  item: PlannedItemRecord | null;
+  onOpenChange: (open: boolean) => void;
+  onEdit: (item: PlannedItemRecord) => void;
+  onDelete: (item: PlannedItemRecord) => void;
+}
+
+export function PlannedItemDetailDialog({
+  open,
+  item,
+  onOpenChange,
+  onEdit,
+  onDelete,
+}: PlannedItemDetailDialogProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  if (!item) {
+    return null;
+  }
+
+  const currentItem = item;
+  const isIncome = currentItem.flowType === "income";
+  const installmentProgress = getInstallmentProgress(currentItem);
+  const installmentCount = formatPlannedInstallmentCount(currentItem);
+  const installmentSchedule = getPlannedItemInstallmentSchedule(currentItem);
+  const canPay = canMarkPlannedItemPaid(currentItem) && !isPending;
+  const payLabel = getMarkPlannedItemPaidLabel();
+  const totalAmount =
+    currentItem.kind === "installment" && currentItem.installmentCount
+      ? currentItem.amount * currentItem.installmentCount
+      : null;
+
+  function handleMarkPaid() {
+    if (!canPay) {
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await markInstallmentPaidAction(
+        currentItem.id,
+        getPlannedItemPaymentIndex(currentItem),
+      );
+
+      if (result.ok) {
+        router.refresh();
+      }
+    });
+  }
+
+  function handleEdit() {
+    onOpenChange(false);
+    onEdit(currentItem);
+  }
+
+  function handleDelete() {
+    onOpenChange(false);
+    onDelete(currentItem);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className={FORM_DIALOG_CONTENT_WIDE}>
+        <DialogHeader className={FORM_DIALOG_HEADER}>
+          <DialogTitle className="text-lg font-semibold tracking-tight">
+            {currentItem.name}
+          </DialogTitle>
+          <DialogDescription className="text-[13px] leading-snug">
+            Detail jadwal PayPlan dan status pembayaran.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className={FORM_DIALOG_BODY_SCROLL}>
+            <div className="flex items-center gap-3 px-1 pb-1">
+              <PlannedItemKindIcon kind={currentItem.kind} />
+              <span
+                className={cn(
+                  "inline-flex rounded-lg px-2 py-0.5 text-[10px] font-semibold",
+                  getPlannedKindBadgeClass(currentItem.kind),
+                )}
+              >
+                {formatPlannedItemKind(currentItem.kind)}
+              </span>
+            </div>
+
+            <div className={FORM_PREVIEW_COMPACT}>
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                  {currentItem.kind === "installment"
+                    ? "Bayar per periode"
+                    : "Nominal"}
+                </p>
+                <p
+                  className={cn(
+                    "mt-0.5",
+                    FORM_PREVIEW_COMPACT_AMOUNT,
+                    isIncome
+                      ? "text-[#2FAE52] dark:text-[#34C759]"
+                      : "text-foreground",
+                  )}
+                >
+                  {isIncome ? "+" : ""}
+                  {formatIdr(currentItem.amount)}
+                </p>
+                {totalAmount ? (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Total {formatIdr(totalAmount)}
+                  </p>
+                ) : null}
+              </div>
+              <div className="shrink-0 text-right text-[11px] leading-snug text-muted-foreground">
+                <p>{getCategoryLabel(currentItem.category)}</p>
+                <p className="font-medium text-foreground">
+                  {formatPlannedItemRepeat(currentItem.repeat)}
+                  {installmentCount ? ` · ${installmentCount}` : ""}
+                </p>
+              </div>
+            </div>
+
+            {installmentProgress ? (
+              <div className="px-1 py-2">
+                <PlannedItemInstallmentProgressBar
+                  progress={installmentProgress}
+                />
+                <p className="mt-1.5 text-center text-[11px] font-medium tabular-nums text-muted-foreground">
+                  {installmentProgress.completed}/{installmentProgress.total}{" "}
+                  selesai
+                </p>
+              </div>
+            ) : null}
+
+            <div className="px-1 py-1">
+              <PlannedItemInstallmentStatus item={currentItem} />
+            </div>
+
+            <div className={FORM_GROUP}>
+              <div className="grid grid-cols-2 gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className={PLANNER_MANAGE_META}>Mulai</p>
+                  <p className="mt-1 text-sm font-medium text-foreground/90">
+                    {formatPlannedStartLabel(currentItem)}
+                  </p>
+                </div>
+                <div className="min-w-0 text-right">
+                  <p className={PLANNER_MANAGE_META}>Selesai</p>
+                  <div className="mt-1 flex justify-end">
+                    <PlannedItemEndBadge item={currentItem} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {currentItem.note ? (
+              <div className={FORM_GROUP}>
+                <div className="px-4 py-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Catatan
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+                    {currentItem.note}
+                  </p>
+                </div>
+              </div>
+            ) : null}
+
+            {installmentSchedule.length > 0 ? (
+              <div className={FORM_GROUP}>
+                <div className="px-4 py-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Jadwal cicilan
+                  </p>
+                  <ul className="mt-2 space-y-2">
+                    {installmentSchedule.map((entry) => (
+                      <li
+                        key={entry.index}
+                        className="flex items-center justify-between gap-3 text-sm"
+                      >
+                        <span className="min-w-0 truncate text-foreground/90">
+                          Cicilan {entry.index + 1}
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            {formatDayMonth(entry.dueAt)}
+                          </span>
+                        </span>
+                        <span
+                          className={cn(
+                            "shrink-0 text-xs font-semibold",
+                            entry.isPaid ? "text-[#34C759]" : "text-[#FF9500]",
+                          )}
+                        >
+                          {entry.isPaid ? "Lunas" : "Belum"}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className={FORM_DIALOG_FOOTER}>
+            <Button
+              type="button"
+              size="icon"
+              variant="destructive"
+              disabled={isPending}
+              className={cn(SEPARATED_CONTROL, "shrink-0")}
+              onClick={handleDelete}
+              aria-label="Hapus"
+            >
+              <span className="sr-only">Hapus</span>
+              <TrashIcon className="size-4" />
+            </Button>
+            <div className="flex min-w-0 flex-1 gap-2">
+              {canPay ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={isPending}
+                  className={cn(SEPARATED_CONTROL, "shrink-0")}
+                  onClick={handleMarkPaid}
+                >
+                  <CheckCircleIcon className="size-4" />
+                  {isPending ? "Menyimpan..." : payLabel}
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                disabled={isPending}
+                className={cn(SEPARATED_CONTROL, "shrink-0")}
+                onClick={handleEdit}
+                aria-label="Edit"
+              >
+                <span className="sr-only">Edit</span>
+                <PencilSimpleIcon className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                disabled={isPending}
+                className={cn(SEPARATED_CONTROL, "flex-1")}
+                onClick={() => onOpenChange(false)}
+              >
+                Tutup
+              </Button>
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

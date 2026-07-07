@@ -86,6 +86,26 @@ export function getDueDateForInstallmentIndex(
   return cursor;
 }
 
+export interface PlannedInstallmentScheduleEntry {
+  index: number;
+  dueAt: Date;
+  isPaid: boolean;
+}
+
+export function getPlannedItemInstallmentSchedule(
+  item: PlannedItemRecord,
+): PlannedInstallmentScheduleEntry[] {
+  if (!item.installmentCount) {
+    return [];
+  }
+
+  return Array.from({ length: item.installmentCount }, (_, index) => ({
+    index,
+    dueAt: getDueDateForInstallmentIndex(item, index),
+    isPaid: index < item.paidInstallmentCount,
+  }));
+}
+
 function formatDaysUntilLabel(daysUntil: number): string {
   if (daysUntil > 0) {
     return `${daysUntil} hari lagi`;

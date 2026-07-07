@@ -11,6 +11,7 @@ interface PlannedItemsListProps {
   items: PlannedItemRecord[];
   disabled?: boolean;
   filteredEmpty?: boolean;
+  onViewDetail: (item: PlannedItemRecord) => void;
   onEdit: (item: PlannedItemRecord) => void;
   onDelete: (item: PlannedItemRecord) => void;
 }
@@ -19,6 +20,7 @@ export function PlannedItemsList({
   items,
   disabled = false,
   filteredEmpty = false,
+  onViewDetail,
   onEdit,
   onDelete,
 }: PlannedItemsListProps) {
@@ -44,6 +46,7 @@ export function PlannedItemsList({
           key={item.id}
           item={item}
           disabled={disabled}
+          onViewDetail={onViewDetail}
           onEdit={onEdit}
           onDelete={onDelete}
         />

@@ -1,18 +1,17 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { FunnelIcon, PlusIcon } from "@/lib/icons";
-
 import {
   deletePlannedItemAction,
   savePlannedItemAction,
 } from "@/app/actions/planner";
 import { PayplanAddFab } from "@/components/planner/payplan-add-fab";
+import { PlannedItemDetailDialog } from "@/components/planner/planned-item-detail-dialog";
 import { PlannedItemFormDialog } from "@/components/planner/planned-item-form-dialog";
 import { PlannedItemsFilterDialog } from "@/components/planner/planned-items-filter-dialog";
 import { PlannedItemsFilterMenu } from "@/components/planner/planned-items-filter-menu";
-import { PlannedItemsSearchInput } from "@/components/planner/planned-items-search-input";
 import { PlannedItemsList } from "@/components/planner/planned-items-list";
+import { PlannedItemsSearchInput } from "@/components/planner/planned-items-search-input";
 import { PlannedItemsTable } from "@/components/planner/planned-items-table";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +24,7 @@ import {
 } from "@/config/payplan-mobile";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { CONTROL_GAP, STACK_GAP } from "@/config/spacing";
+import { FunnelIcon, PlusIcon } from "@/lib/icons";
 import {
   countActivePlannedItemFilters,
   filterPlannedItems,
@@ -46,7 +46,9 @@ interface PlannedItemsManageProps {
     }
   >;
   filters: PlannedItemsFilters;
-  monthOccurrences?: Array<Omit<PlannedOccurrence, "dueAt"> & { dueAt: string }>;
+  monthOccurrences?: Array<
+    Omit<PlannedOccurrence, "dueAt"> & { dueAt: string }
+  >;
   className?: string;
   hideMobileSearchRow?: boolean;
 }
@@ -82,7 +84,8 @@ export function PlannedItemsManage({
     () =>
       filterPlannedItems(normalizedItems, filters, {
         monthOccurrences:
-          filters.paymentStatus !== "all" && normalizedMonthOccurrences.length > 0
+          filters.paymentStatus !== "all" &&
+          normalizedMonthOccurrences.length > 0
             ? normalizedMonthOccurrences
             : undefined,
       }),
@@ -93,10 +96,12 @@ export function PlannedItemsManage({
   const hasRichFilters = countActivePlannedItemFilters(filters) > 0;
 
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<PlannedItemRecord | null>(
     null,
   );
+  const [detailItem, setDetailItem] = useState<PlannedItemRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -110,6 +115,11 @@ export function PlannedItemsManage({
     setEditingItem(item);
     setError(null);
     setSheetOpen(true);
+  }
+
+  function openDetailSheet(item: PlannedItemRecord) {
+    setDetailItem(item);
+    setDetailOpen(true);
   }
 
   function handleDelete(item: PlannedItemRecord) {
@@ -195,6 +205,7 @@ export function PlannedItemsManage({
           items={filteredItems}
           disabled={isPending}
           filteredEmpty={filteredEmpty}
+          onViewDetail={openDetailSheet}
           onEdit={openEditSheet}
           onDelete={handleDelete}
         />
@@ -203,6 +214,7 @@ export function PlannedItemsManage({
           items={filteredItems}
           disabled={isPending}
           filteredEmpty={filteredEmpty}
+          onViewDetail={openDetailSheet}
           onEdit={openEditSheet}
           onDelete={handleDelete}
         />
@@ -215,6 +227,14 @@ export function PlannedItemsManage({
         onOpenChange={setFilterDialogOpen}
         filters={filters}
         layout={layout}
+      />
+
+      <PlannedItemDetailDialog
+        open={detailOpen}
+        item={detailItem}
+        onOpenChange={setDetailOpen}
+        onEdit={openEditSheet}
+        onDelete={handleDelete}
       />
 
       <PlannedItemFormDialog

@@ -24,6 +24,7 @@ interface PlannedItemsTableProps {
   items: PlannedItemRecord[];
   disabled?: boolean;
   filteredEmpty?: boolean;
+  onViewDetail: (item: PlannedItemRecord) => void;
   onEdit: (item: PlannedItemRecord) => void;
   onDelete: (item: PlannedItemRecord) => void;
 }
@@ -32,6 +33,7 @@ export function PlannedItemsTable({
   items,
   disabled = false,
   filteredEmpty = false,
+  onViewDetail,
   onEdit,
   onDelete,
 }: PlannedItemsTableProps) {
@@ -65,6 +67,7 @@ export function PlannedItemsTable({
                     <PlannedItemListRow
                       item={item}
                       disabled={disabled}
+                      onViewDetail={onViewDetail}
                       onEdit={onEdit}
                       onDelete={onDelete}
                     />
