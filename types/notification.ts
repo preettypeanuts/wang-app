@@ -41,3 +41,10 @@ export interface AppNotificationFeedPage {
   nextCursor: string | null;
   counts: AppNotificationCounts;
 }
+
+/** Lightweight head for cache revalidation — skip full feed fetch when unchanged. */
+export interface AppNotificationFeedMeta {
+  counts: AppNotificationCounts;
+  latestId: string | null;
+  latestCreatedAt: string | null;
+}

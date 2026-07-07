@@ -23,8 +23,10 @@ import {
   isDrawerMenuItemActive,
   mobileDrawerMenuItems,
 } from "@/config/mobile-nav";
+import { NOTIFICATIONS_ROUTE } from "@/config/navigation";
 import { SIDEBAR_APP_ICON_GRADIENTS } from "@/config/sidebar";
 import { useDrawerScrollLock } from "@/hooks/use-drawer-scroll-lock";
+import { prefetchNotificationsFeed } from "@/lib/notifications/fetch-notifications-feed";
 import { CaretRightIcon, GearSixIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
@@ -67,6 +69,11 @@ export function MobileNavDrawer({ trigger }: MobileNavDrawerProps) {
                   href={item.href}
                   key={item.id}
                   onClick={() => setOpen(false)}
+                  onPointerDown={() => {
+                    if (item.href === NOTIFICATIONS_ROUTE) {
+                      prefetchNotificationsFeed();
+                    }
+                  }}
                 >
                   <span
                     className={cn(MOBILE_DRAWER_TILE, item.drawerTileClass)}

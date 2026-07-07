@@ -2,7 +2,17 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { NOTIFICATIONS_FEED_PAGE_SIZE } from "@/config/notifications-page";
+import {
+  fetchNotificationsFeedMeta,
+  fetchNotificationsFeedPage,
+} from "@/lib/notifications/fetch-notifications-feed";
+import {
+  feedMetaFromPage,
+  isFeedMetaCurrent,
+  patchNotificationsFeedCache,
+  readNotificationsFeedCache,
+  writeNotificationsFeedCache,
+} from "@/lib/notifications/notifications-feed-cache";
 import type {
   AppNotificationCounts,
   AppNotificationFeedPage,
@@ -24,66 +34,144 @@ interface UseNotificationsFeedResult {
 
 const EMPTY_COUNTS: AppNotificationCounts = { total: 0, unread: 0 };
 
-export function useNotificationsFeed(): UseNotificationsFeedResult {
-  const [items, setItems] = useState<AppNotificationRecord[]>([]);
-  const [counts, setCounts] = useState<AppNotificationCounts>(EMPTY_COUNTS);
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+function seedFromCache(initialFeed?: AppNotificationFeedPage) {
+  const cached = readNotificationsFeedCache();
+
+  if (cached) {
+    return {
+      items: cached.items,
+      counts: cached.counts,
+      nextCursor: cached.nextCursor,
+      isLoading: false,
+    };
+  }
+
+  if (initialFeed) {
+    return {
+      items: initialFeed.items,
+      counts: initialFeed.counts,
+      nextCursor: initialFeed.nextCursor,
+      isLoading: false,
+    };
+  }
+
+  return {
+    items: [] as AppNotificationRecord[],
+    counts: EMPTY_COUNTS,
+    nextCursor: null as string | null,
+    isLoading: true,
+  };
+}
+
+export function useNotificationsFeed(
+  initialFeed?: AppNotificationFeedPage,
+): UseNotificationsFeedResult {
+  const seeded = seedFromCache(initialFeed);
+  const [items, setItems] = useState<AppNotificationRecord[]>(seeded.items);
+  const [counts, setCounts] = useState<AppNotificationCounts>(seeded.counts);
+  const [nextCursor, setNextCursor] = useState<string | null>(seeded.nextCursor);
+  const [isLoading, setIsLoading] = useState(seeded.isLoading);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isFetchingRef = useRef(false);
+  const seededInitialRef = useRef(false);
 
-  const fetchPage = useCallback(async (cursor?: string) => {
+  const applyPage = useCallback(
+    (
+      page: {
+        items: AppNotificationRecord[];
+        nextCursor: string | null;
+        counts: AppNotificationCounts;
+      },
+      options?: { append?: boolean },
+    ) => {
+      setItems((current) => {
+        const nextItems = options?.append
+          ? [...current, ...page.items]
+          : page.items;
+
+        writeNotificationsFeedCache({
+          items: nextItems,
+          nextCursor: page.nextCursor,
+          counts: page.counts,
+          meta: {
+            counts: page.counts,
+            latestId: nextItems[0]?.id ?? null,
+            latestCreatedAt: nextItems[0]?.createdAt ?? null,
+          },
+        });
+
+        return nextItems;
+      });
+      setCounts(page.counts);
+      setNextCursor(page.nextCursor);
+      setError(null);
+    },
+    [],
+  );
+
+  useEffect(() => {
+    if (!initialFeed || seededInitialRef.current || readNotificationsFeedCache()) {
+      return;
+    }
+
+    seededInitialRef.current = true;
+    writeNotificationsFeedCache({
+      items: initialFeed.items,
+      nextCursor: initialFeed.nextCursor,
+      counts: initialFeed.counts,
+      meta: feedMetaFromPage(initialFeed),
+    });
+  }, [initialFeed]);
+
+  const revalidate = useCallback(async (options?: { force?: boolean }) => {
     if (isFetchingRef.current) {
       return;
     }
 
     isFetchingRef.current = true;
 
-    const params = new URLSearchParams({
-      limit: String(NOTIFICATIONS_FEED_PAGE_SIZE),
-    });
-
-    if (cursor) {
-      params.set("cursor", cursor);
-    }
-
     try {
-      const response = await fetch(`/api/notifications/feed?${params}`, {
-        cache: "no-store",
-      });
+      const cached = readNotificationsFeedCache();
 
-      if (!response.ok) {
+      if (!options?.force && cached) {
+        const meta = await fetchNotificationsFeedMeta();
+
+        if (meta && isFeedMetaCurrent(cached, meta)) {
+          setError(null);
+          return;
+        }
+      }
+
+      const page = await fetchNotificationsFeedPage();
+
+      if (!page) {
         throw new Error("Gagal memuat notifikasi.");
       }
 
-      const data = (await response.json()) as AppNotificationFeedPage;
-
-      setItems((current) =>
-        cursor ? [...current, ...data.items] : data.items,
-      );
-      setCounts(data.counts);
-      setNextCursor(data.nextCursor);
-      setError(null);
+      applyPage(page);
     } catch (fetchError) {
-      setError(
-        fetchError instanceof Error
-          ? fetchError.message
-          : "Gagal memuat notifikasi.",
-      );
+      if (!readNotificationsFeedCache() && !initialFeed) {
+        setError(
+          fetchError instanceof Error
+            ? fetchError.message
+            : "Gagal memuat notifikasi.",
+        );
+      }
     } finally {
       isFetchingRef.current = false;
+      setIsLoading(false);
     }
-  }, []);
+  }, [applyPage, initialFeed]);
 
   const refresh = useCallback(() => {
-    setIsLoading(true);
-    void fetchPage().finally(() => setIsLoading(false));
-  }, [fetchPage]);
+    setIsLoading(items.length === 0);
+    void revalidate({ force: true });
+  }, [items.length, revalidate]);
 
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    void revalidate();
+  }, [revalidate]);
 
   const loadMore = useCallback(() => {
     if (!nextCursor || isLoadingMore) {
@@ -91,8 +179,47 @@ export function useNotificationsFeed(): UseNotificationsFeedResult {
     }
 
     setIsLoadingMore(true);
-    void fetchPage(nextCursor).finally(() => setIsLoadingMore(false));
-  }, [fetchPage, isLoadingMore, nextCursor]);
+    void fetchNotificationsFeedPage(nextCursor)
+      .then((page) => {
+        if (!page) {
+          throw new Error("Gagal memuat notifikasi.");
+        }
+
+        applyPage(page, { append: true });
+      })
+      .catch((fetchError) => {
+        setError(
+          fetchError instanceof Error
+            ? fetchError.message
+            : "Gagal memuat notifikasi.",
+        );
+      })
+      .finally(() => setIsLoadingMore(false));
+  }, [applyPage, isLoadingMore, nextCursor]);
+
+  const setItemsWithCache: typeof setItems = useCallback((updater) => {
+    setItems((current) => {
+      const next =
+        typeof updater === "function"
+          ? (updater as (value: AppNotificationRecord[]) => AppNotificationRecord[])(current)
+          : updater;
+
+      patchNotificationsFeedCache({ items: next });
+      return next;
+    });
+  }, []);
+
+  const setCountsWithCache: typeof setCounts = useCallback((updater) => {
+    setCounts((current) => {
+      const next =
+        typeof updater === "function"
+          ? (updater as (value: AppNotificationCounts) => AppNotificationCounts)(current)
+          : updater;
+
+      patchNotificationsFeedCache({ counts: next });
+      return next;
+    });
+  }, []);
 
   return {
     items,
@@ -103,7 +230,7 @@ export function useNotificationsFeed(): UseNotificationsFeedResult {
     error,
     loadMore,
     refresh,
-    setItems,
-    setCounts,
+    setItems: setItemsWithCache,
+    setCounts: setCountsWithCache,
   };
 }

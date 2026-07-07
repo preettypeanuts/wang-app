@@ -1,16 +1,22 @@
 import { NotificationsFeed } from "@/components/notifications/notifications-feed";
 import { NotificationsPageShell } from "@/components/notifications/notifications-page-shell";
-import { OVERVIEW_CARD_PADDING } from "@/config/overview";
 import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
 import {
   NOTIFICATIONS_PAGE_ROOT,
   NOTIFICATIONS_PAGE_SCROLL,
 } from "@/config/notifications-page";
-import { SHELL_PADDING, STACK_GAP } from "@/config/spacing";
+import { STACK_GAP } from "@/config/spacing";
 import { cn } from "@/lib/utils";
 import { GLASS_SURFACE } from "@/config/glass";
+import type { AppNotificationFeedPage } from "@/types/notification";
 
-export function NotificationsScrollShell() {
+interface NotificationsScrollShellProps {
+  initialFeed: AppNotificationFeedPage;
+}
+
+export function NotificationsScrollShell({
+  initialFeed,
+}: NotificationsScrollShellProps) {
   return (
     <div className={NOTIFICATIONS_PAGE_ROOT}>
       <NotificationsPageShell className="min-h-0 flex-1">
@@ -29,7 +35,7 @@ export function NotificationsScrollShell() {
             Riwayat alert, ringkasan, dan pengingat keuangan.
           </p>
 
-          <NotificationsFeed />
+          <NotificationsFeed initialFeed={initialFeed} />
         </MobileScrollSurface>
       </NotificationsPageShell>
     </div>

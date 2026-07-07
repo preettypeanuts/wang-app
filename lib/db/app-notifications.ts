@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db/prisma";
 import { scopedByUser } from "@/lib/db/user-scope";
 import type {
   AppNotificationCounts,
+  AppNotificationFeedMeta,
   AppNotificationFeedPage,
   AppNotificationRecord,
   NotificationDraft,
@@ -144,6 +145,25 @@ export async function listAppNotificationFeedPage(
     items: pageRows.map(toRecord),
     nextCursor,
     counts,
+  };
+}
+
+export async function getAppNotificationFeedMeta(
+  userId: string,
+): Promise<AppNotificationFeedMeta> {
+  const [counts, latest] = await Promise.all([
+    getAppNotificationCounts(userId),
+    prisma.appNotification.findFirst({
+      where: scopedByUser(userId, {}),
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: { id: true, createdAt: true },
+    }),
+  ]);
+
+  return {
+    counts,
+    latestId: latest?.id ?? null,
+    latestCreatedAt: latest?.createdAt.toISOString() ?? null,
   };
 }
 
