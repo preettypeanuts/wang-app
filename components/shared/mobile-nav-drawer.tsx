@@ -23,6 +23,7 @@ import {
   isDrawerMenuItemActive,
   mobileDrawerMenuItems,
 } from "@/config/mobile-nav";
+import { prefetchInboxBootstrap } from "@/lib/inbox/fetch-inbox-bootstrap";
 import { SIDEBAR_APP_ICON_GRADIENTS } from "@/config/sidebar";
 import { useDrawerScrollLock } from "@/hooks/use-drawer-scroll-lock";
 import { CaretRightIcon, GearSixIcon } from "@/lib/icons";
@@ -67,6 +68,11 @@ export function MobileNavDrawer({ trigger }: MobileNavDrawerProps) {
                   href={item.href}
                   key={item.id}
                   onClick={() => setOpen(false)}
+                  onTouchStart={() => {
+                    if (item.id === "inbox") {
+                      prefetchInboxBootstrap();
+                    }
+                  }}
                 >
                   <span
                     className={cn(MOBILE_DRAWER_TILE, item.drawerTileClass)}

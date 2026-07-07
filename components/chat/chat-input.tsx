@@ -61,6 +61,7 @@ interface ChatInputProps {
   disabled?: boolean;
   draftText?: string | null;
   onDraftTextApplied?: () => void;
+  onSlashMenuOpenChange?: (open: boolean) => void;
 }
 
 export function ChatInput({
@@ -75,6 +76,7 @@ export function ChatInput({
   disabled = false,
   draftText = null,
   onDraftTextApplied,
+  onSlashMenuOpenChange,
 }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
@@ -131,6 +133,10 @@ export function ChatInput({
     [mentionQuery],
   );
   const isPickerOpen = isSlashOpen || isMentionOpen;
+
+  useEffect(() => {
+    onSlashMenuOpenChange?.(isSlashOpen);
+  }, [isSlashOpen, onSlashMenuOpenChange]);
 
   useEffect(() => {
     if (draftText === null) {

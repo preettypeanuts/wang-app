@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   checkSavingsGoalFromInboxAction,
@@ -26,6 +26,7 @@ import { CHAT_INPUT_DOCK } from "@/config/chat-layout";
 import { INBOX_CHAT_VIEW_ROOT } from "@/config/inbox-desktop";
 import { INBOX_CHAT_INPUT_DOCK } from "@/config/inbox-mobile";
 import { buildReceiptManualFallbackNotice } from "@/lib/ai/format-gemini-api-error";
+import { patchInboxBootstrapMessages } from "@/lib/inbox/inbox-bootstrap-cache";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import {
   getReceiptImageFromDataTransfer,
@@ -51,6 +52,7 @@ interface InboxViewProps {
   activePlanItems: ActivePlanChatItem[];
   activeSavingsItems: ActiveSavingsChatItem[];
   fixedMobileTopBar?: boolean;
+  onSlashMenuOpenChange?: (open: boolean) => void;
 }
 
 function createPendingId(): string {
@@ -63,6 +65,7 @@ export function InboxView({
   activePlanItems,
   activeSavingsItems,
   fixedMobileTopBar = false,
+  onSlashMenuOpenChange,
 }: InboxViewProps) {
   const router = useRouter();
   const isMobileViewport = useIsMobileViewport();
@@ -81,6 +84,14 @@ export function InboxView({
   );
   const [isDraggingReceipt, setIsDraggingReceipt] = useState(false);
   const dragDepthRef = useRef(0);
+
+  useEffect(() => {
+    setMessages(initialMessages);
+  }, [initialMessages]);
+
+  useEffect(() => {
+    patchInboxBootstrapMessages(messages);
+  }, [messages]);
 
   const handleDraftTextApplied = useCallback(() => {
     setDraftText(null);
@@ -506,6 +517,7 @@ export function InboxView({
         disabled={isProcessing || isParsingReceipt}
         draftText={draftText}
         onDraftTextApplied={handleDraftTextApplied}
+        onSlashMenuOpenChange={onSlashMenuOpenChange}
       />
     </div>
   );

@@ -1,3 +1,12 @@
+/** Horizontal inset so the capsule floats inside each tab (not edge-to-edge). */
+export const MOBILE_BOTTOM_NAV_INDICATOR_INSET_X = 1;
+
+/** Extra right gap when Plans is active. */
+export const MOBILE_BOTTOM_NAV_INDICATOR_PLANS_EXTRA_RIGHT = 2;
+
+/** Extra right gap when PayPlan is active — rightmost tab in the pill. */
+export const MOBILE_BOTTOM_NAV_INDICATOR_PAYPLAN_EXTRA_RIGHT = 1.5;
+
 /** Sliding active tab capsule — inset vertically so it floats inside the pill. */
 export const MOBILE_BOTTOM_NAV_INDICATOR_SURFACE =
   "absolute top-1 bottom-[3px] left-0 rounded-full bg-neutral-400/20 dark:bg-white/18";

@@ -14,14 +14,21 @@ interface InboxMobileLayoutProps {
   children: ReactNode;
   summary: TodaySummary;
   dailySummary: DailySummarySnapshot | null;
+  onOpenSummary?: () => void;
 }
 
 export function InboxMobileLayout({
   children,
   summary,
   dailySummary,
+  onOpenSummary,
 }: InboxMobileLayoutProps) {
   const [summaryOpen, setSummaryOpen] = useState(false);
+
+  function handleOpenSummary() {
+    onOpenSummary?.();
+    setSummaryOpen(true);
+  }
 
   return (
     <div
@@ -33,7 +40,7 @@ export function InboxMobileLayout({
       <FixedViewportPortal>
         <div className="md:hidden">
           <InboxMobileEdgeBlur />
-          <InboxMobileTopBar onOpenSummary={() => setSummaryOpen(true)} />
+          <InboxMobileTopBar onOpenSummary={handleOpenSummary} />
         </div>
       </FixedViewportPortal>
 

@@ -20,6 +20,12 @@ import {
   isNavItemActive,
   mobileBottomNavItems,
 } from "@/config/mobile-nav";
+import { PAYPLAN_ROUTE, PLANS_ROUTE } from "@/config/navigation";
+import {
+  MOBILE_BOTTOM_NAV_INDICATOR_INSET_X,
+  MOBILE_BOTTOM_NAV_INDICATOR_PAYPLAN_EXTRA_RIGHT,
+  MOBILE_BOTTOM_NAV_INDICATOR_PLANS_EXTRA_RIGHT,
+} from "@/config/mobile-bottom-nav-motion";
 import { shouldHideMobileBottomNav } from "@/config/inbox-mobile";
 import { MobileNavMenuIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -32,6 +38,7 @@ interface IndicatorMetrics {
 function readIndicatorMetrics(
   pill: HTMLUListElement,
   item: HTMLLIElement | null,
+  href?: string,
 ): IndicatorMetrics | null {
   if (!item) {
     return null;
@@ -39,10 +46,17 @@ function readIndicatorMetrics(
 
   const pillRect = pill.getBoundingClientRect();
   const itemRect = item.getBoundingClientRect();
+  const insetX = MOBILE_BOTTOM_NAV_INDICATOR_INSET_X;
+  const extraRight =
+    href === PLANS_ROUTE
+      ? MOBILE_BOTTOM_NAV_INDICATOR_PLANS_EXTRA_RIGHT
+      : href === PAYPLAN_ROUTE
+        ? MOBILE_BOTTOM_NAV_INDICATOR_PAYPLAN_EXTRA_RIGHT
+        : 0;
 
   return {
-    x: itemRect.left - pillRect.left,
-    width: itemRect.width,
+    x: itemRect.left - pillRect.left + insetX,
+    width: itemRect.width - insetX * 2 - extraRight,
   };
 }
 
@@ -67,7 +81,11 @@ export function MobileBottomNav() {
       isNavItemActive(pathname, item.href),
     );
     const node = activeItem ? itemRefs.current.get(activeItem.href) : null;
-    const metrics = readIndicatorMetrics(pill, node ?? null);
+    const metrics = readIndicatorMetrics(
+      pill,
+      node ?? null,
+      activeItem?.href,
+    );
 
     if (!metrics) {
       return;
