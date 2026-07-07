@@ -10,6 +10,7 @@ import {
 
 import { isPersistentMobileTabRoute } from "@/config/persistent-tabs";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import { useSession } from "@/lib/auth/auth-client";
 
 interface PersistentTabLayoutProps {
   children: ReactNode;
@@ -22,8 +23,14 @@ interface PersistentTabLayoutProps {
 export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
   const pathname = usePathname();
   const isMobile = useIsMobileViewport();
+  const { data: session } = useSession();
+  const userId = session?.user?.id ?? null;
   const tabPath = isPersistentMobileTabRoute(pathname) ? pathname : null;
   const [cache, setCache] = useState<Record<string, ReactNode>>({});
+
+  useLayoutEffect(() => {
+    setCache({});
+  }, [userId]);
 
   useLayoutEffect(() => {
     if (!isMobile || !tabPath) {

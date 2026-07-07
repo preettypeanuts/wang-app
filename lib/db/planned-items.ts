@@ -4,7 +4,6 @@ import {
 } from "@/config/planner-items";
 import { startOfDay } from "@/lib/finance/day-range";
 import { prisma } from "@/lib/db/prisma";
-import { scopedId } from "@/lib/db/user-scope";
 import type {
   PlannedItemFormInput,
   PlannedItemKind,
@@ -96,59 +95,25 @@ function buildCreateData(userId: string, input: PlannedItemFormInput) {
   };
 }
 
-async function ensureSamplePlannedItems(userId: string): Promise<void> {
-  const count = await prisma.plannedItem.count({
-    where: { userId },
+async function requirePlannedItem(
+  userId: string,
+  id: string,
+): Promise<PlannedItemRecord> {
+  const record = await prisma.plannedItem.findFirst({
+    where: { id, userId },
+    select: PLANNED_ITEM_SELECT,
   });
-  if (count > 0) {
-    return;
+
+  if (!record) {
+    throw new Error("Item tidak ditemukan.");
   }
 
-  const year = new Date().getFullYear();
-
-  await prisma.plannedItem.createMany({
-    data: [
-      {
-        userId,
-        name: "Apartemen",
-        kind: "bill",
-        repeat: "monthly",
-        amount: 2_500_000,
-        flowType: "expense",
-        category: "housing",
-        startAt: new Date(year, 6, 25),
-      },
-      {
-        userId,
-        name: "Netflix",
-        kind: "subscription",
-        repeat: "monthly",
-        amount: 69_000,
-        flowType: "expense",
-        category: "subscription",
-        startAt: new Date(year, 6, 8),
-      },
-      {
-        userId,
-        name: "MacBook",
-        kind: "installment",
-        repeat: "monthly",
-        amount: 1_250_000,
-        flowType: "expense",
-        category: "shopping",
-        startAt: new Date(year, 3, 1),
-        installmentCount: 12,
-        paidInstallmentCount: 3,
-      },
-    ],
-  });
+  return mapPlannedItem(record);
 }
 
 export async function listPlannedItems(
   userId: string,
 ): Promise<PlannedItemRecord[]> {
-  await ensureSamplePlannedItems(userId);
-
   const records = await prisma.plannedItem.findMany({
     where: { userId },
     orderBy: [{ createdAt: "asc" }],
@@ -181,22 +146,29 @@ export async function updatePlannedItem(
   id: string,
   input: PlannedItemFormInput,
 ): Promise<PlannedItemRecord> {
-  const record = await prisma.plannedItem.update({
-    where: scopedId(userId, id),
+  const updated = await prisma.plannedItem.updateMany({
+    where: { id, userId },
     data: buildCreateData(userId, input),
-    select: PLANNED_ITEM_SELECT,
   });
 
-  return mapPlannedItem(record);
+  if (updated.count === 0) {
+    throw new Error("Item tidak ditemukan.");
+  }
+
+  return requirePlannedItem(userId, id);
 }
 
 export async function deletePlannedItem(
   userId: string,
   id: string,
 ): Promise<void> {
-  await prisma.plannedItem.delete({
-    where: scopedId(userId, id),
+  const deleted = await prisma.plannedItem.deleteMany({
+    where: { id, userId },
   });
+
+  if (deleted.count === 0) {
+    throw new Error("Item tidak ditemukan.");
+  }
 }
 
 export async function markInstallmentPaid(
@@ -204,8 +176,8 @@ export async function markInstallmentPaid(
   id: string,
   installmentIndex: number,
 ): Promise<PlannedItemRecord> {
-  const existing = await prisma.plannedItem.findUnique({
-    where: scopedId(userId, id),
+  const existing = await prisma.plannedItem.findFirst({
+    where: { id, userId },
     select: {
       installmentCount: true,
       paidInstallmentCount: true,
@@ -229,11 +201,14 @@ export async function markInstallmentPaid(
 
   const nextPaid = Math.max(existing.paidInstallmentCount, installmentIndex + 1);
 
-  const record = await prisma.plannedItem.update({
-    where: scopedId(userId, id),
+  const updated = await prisma.plannedItem.updateMany({
+    where: { id, userId },
     data: { paidInstallmentCount: nextPaid },
-    select: PLANNED_ITEM_SELECT,
   });
 
-  return mapPlannedItem(record);
+  if (updated.count === 0) {
+    throw new Error("Item tidak ditemukan.");
+  }
+
+  return requirePlannedItem(userId, id);
 }
