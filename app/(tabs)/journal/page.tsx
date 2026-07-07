@@ -19,7 +19,7 @@ export default async function JournalPage({ searchParams }: JournalPageProps) {
   const filters = parseJournalSearchParams(params);
   const [result, daySummary, categoryBreakdown] = await Promise.all([
     listJournalTransactions(userId, filters),
-    getJournalDaySummary(userId),
+    getJournalDaySummary(userId, filters),
     getJournalCategoryExpenseBreakdown(userId, filters),
   ]);
 

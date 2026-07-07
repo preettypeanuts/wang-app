@@ -1,9 +1,14 @@
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
 import { isTransactionCategory } from "@/config/categories";
+import {
+  getDefaultJournalDateRange,
+  normalizeJournalDateRange,
+} from "@/lib/finance/journal-period";
 import type { JournalFilters } from "@/types/journal";
 import type { TransactionType } from "@/types/transaction";
 
 const VALID_TYPES = new Set<TransactionType>(["income", "expense"]);
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function readParam(
   searchParams: Record<string, string | string[] | undefined>,
@@ -17,6 +22,14 @@ function readParam(
   return value?.trim() ?? "";
 }
 
+function readDateParam(
+  searchParams: Record<string, string | string[] | undefined>,
+  key: string,
+): string {
+  const value = readParam(searchParams, key);
+  return DATE_ONLY_PATTERN.test(value) ? value : "";
+}
+
 export function parseJournalSearchParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): JournalFilters {
@@ -24,6 +37,8 @@ export function parseJournalSearchParams(
   const typeRaw = readParam(searchParams, "type");
   const categoryRaw = readParam(searchParams, "category");
   const pageRaw = Number.parseInt(readParam(searchParams, "page") || "1", 10);
+  const fromRaw = readDateParam(searchParams, "from");
+  const toRaw = readDateParam(searchParams, "to");
 
   const type =
     typeRaw && VALID_TYPES.has(typeRaw as TransactionType)
@@ -36,7 +51,20 @@ export function parseJournalSearchParams(
   const page =
     Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
-  return { q, type, category, page };
+  const defaults = getDefaultJournalDateRange();
+  const range = normalizeJournalDateRange(
+    fromRaw || defaults.from,
+    toRaw || defaults.to,
+  );
+
+  return {
+    q,
+    type,
+    category,
+    page,
+    from: range.from,
+    to: range.to,
+  };
 }
 
 export function buildJournalSearchParams(
@@ -44,6 +72,7 @@ export function buildJournalSearchParams(
   page = filters.page,
 ): URLSearchParams {
   const params = new URLSearchParams();
+  const defaults = getDefaultJournalDateRange();
 
   if (filters.q) {
     params.set("q", filters.q);
@@ -55,6 +84,11 @@ export function buildJournalSearchParams(
 
   if (filters.category !== "all") {
     params.set("category", filters.category);
+  }
+
+  if (filters.from !== defaults.from || filters.to !== defaults.to) {
+    params.set("from", filters.from);
+    params.set("to", filters.to);
   }
 
   if (page > 1) {

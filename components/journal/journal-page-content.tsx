@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { JournalCategoryBreakdown } from "@/components/journal/journal-category-breakdown";
 import { JournalAddFab } from "@/components/journal/journal-add-fab";
+import { JournalDateRangePicker } from "@/components/journal/journal-date-range-picker";
 import { JournalEntryCreateDialog } from "@/components/journal/journal-entry-create-dialog";
 import { JournalFiltersBar } from "@/components/journal/journal-filters-bar";
 import { JournalPagination } from "@/components/journal/journal-pagination";
@@ -16,10 +17,6 @@ import { JOURNAL_DESKTOP_SCROLL_SURFACE } from "@/config/journal-desktop";
 import { JOURNAL_DESKTOP_SCROLL_TRAIL } from "@/config/journal-desktop";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { STACK_GAP } from "@/config/spacing";
-import {
-  formatPlannerMonthLabel,
-  getCurrentMonthKey,
-} from "@/lib/planner/calendar";
 import { PlusIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type {
@@ -67,9 +64,7 @@ export function JournalPageContent({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <p className="text-right text-sm font-semibold capitalize text-foreground/90">
-                  {formatPlannerMonthLabel(getCurrentMonthKey(daySummary.date))}
-                </p>
+                <JournalDateRangePicker filters={filters} />
                 <Button
                   type="button"
                   className={cn(SEPARATED_CONTROL, "h-9 gap-1.5 px-3")}
@@ -86,9 +81,7 @@ export function JournalPageContent({
             <p className="text-[11px] text-muted-foreground">
               Semua transaksi — dari inbox atau input manual.
             </p>
-            <p className="shrink-0 text-[11px] font-semibold capitalize text-foreground/90">
-              {formatPlannerMonthLabel(getCurrentMonthKey(daySummary.date))}
-            </p>
+            <JournalDateRangePicker filters={filters} className="max-w-[58%]" />
           </div>
 
           <JournalSummaryWidget summary={daySummary} className="shrink-0" />

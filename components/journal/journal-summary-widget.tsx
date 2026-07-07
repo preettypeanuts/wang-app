@@ -45,7 +45,7 @@ export function JournalSummaryWidget({
           label="Keluar"
           value={formatAmount(summary.totalExpense)}
           delta={formatSignedDelta(summary.expenseDelta)}
-          deltaLabel="vs bulan lalu"
+          deltaLabel={summary.comparisonLabel}
           surfaceClassName={expense.surface}
           iconClassName={expense.iconColor}
           labelClassName={expense.labelColor}
@@ -57,7 +57,7 @@ export function JournalSummaryWidget({
           label="Masuk"
           value={formatAmount(summary.totalIncome)}
           delta={formatSignedDelta(summary.incomeDelta)}
-          deltaLabel="vs bulan lalu"
+          deltaLabel={summary.comparisonLabel}
           surfaceClassName={income.surface}
           iconClassName={income.iconColor}
           labelClassName={income.labelColor}
@@ -69,7 +69,7 @@ export function JournalSummaryWidget({
           label="Saldo"
           value={formatAmount(summary.cumulativeBalance)}
           delta={formatSignedDelta(summary.balanceDelta)}
-          deltaLabel="vs akhir bulan lalu"
+          deltaLabel={summary.comparisonLabel}
           surfaceClassName={balance.surface}
           iconClassName={balance.iconColor}
           labelClassName={balance.labelColor}

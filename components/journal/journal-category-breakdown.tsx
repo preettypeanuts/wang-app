@@ -27,7 +27,7 @@ export function JournalCategoryBreakdown({
         <div>
           <h3 className="text-sm font-semibold">Pengeluaran per kategori</h3>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            Persentase dari total pengeluaran yang terfilter.
+            Persentase dari total pengeluaran di periode terpilih.
           </p>
         </div>
         <p className="shrink-0 text-right text-[11px] text-muted-foreground">

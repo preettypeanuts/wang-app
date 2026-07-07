@@ -5,6 +5,8 @@ export interface JournalFilters {
   type: TransactionType | "all";
   category: string;
   page: number;
+  from: string;
+  to: string;
 }
 
 export interface JournalEntry {
@@ -39,16 +41,15 @@ export interface JournalCondition {
 }
 
 export interface JournalDaySummary {
-  /** First day of the active month shown in the widget. */
-  date: Date;
-  /** Month-to-date totals for the active month. */
+  /** Selected period label for the widget header. */
+  periodLabel: string;
+  /** Comparison period label shown under Keluar/Masuk deltas. */
+  comparisonLabel: string;
   totalExpense: number;
   totalIncome: number;
   cumulativeBalance: number;
-  /** Delta vs the previous full calendar month. */
   expenseDelta: number;
   incomeDelta: number;
-  /** Delta vs cumulative balance at end of previous month. */
   balanceDelta: number;
   condition: JournalCondition;
 }

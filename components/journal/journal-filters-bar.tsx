@@ -19,6 +19,7 @@ import { SEPARATED_CONTROL } from "@/config/shape";
 import { buildJournalSearchParams } from "@/lib/validations/journal";
 import { FunnelIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { isDefaultJournalDateRange } from "@/lib/finance/journal-period";
 import type { JournalFilters } from "@/types/journal";
 
 interface JournalFiltersBarProps {
@@ -33,7 +34,10 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
   const [category, setCategory] = useState(filters.category);
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  const hasRichFilters = type !== "all" || category !== "all";
+  const hasRichFilters =
+    type !== "all" ||
+    category !== "all" ||
+    !isDefaultJournalDateRange({ from: filters.from, to: filters.to });
 
   useEffect(() => {
     setQ(filters.q);
@@ -43,6 +47,7 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
 
   function applyFilters(next?: Partial<JournalFilters>) {
     const merged: JournalFilters = {
+      ...filters,
       q,
       type,
       category,

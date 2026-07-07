@@ -45,6 +45,14 @@ export const JOURNAL_FILTER_TRIGGER = [
 export const JOURNAL_FILTER_TRIGGER_ACTIVE =
   "ring-2 ring-primary/40 ring-offset-2 ring-offset-background";
 
+export const JOURNAL_DATE_RANGE_TRIGGER = [
+  "inline-flex min-w-0 max-w-full items-center justify-between gap-2",
+  "rounded-xl border border-border/60 bg-muted/40 px-3 py-2",
+  "text-left text-[11px] font-semibold text-foreground/90",
+  "transition-colors hover:bg-muted/60",
+  "md:text-sm",
+].join(" ");
+
 export const JOURNAL_EMPTY_STATE_MOBILE = [
   JOURNAL_MOBILE_SOLID_SURFACE,
   mobileOnly("!border-0"),

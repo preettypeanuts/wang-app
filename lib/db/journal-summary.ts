@@ -2,14 +2,19 @@ import { cache } from "react";
 
 import { buildTodaySummary } from "@/lib/finance/build-summary";
 import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
-import { endOfDay, startOfDay } from "@/lib/finance/day-range";
+import { endOfDay } from "@/lib/finance/day-range";
 import { getDayFlowTotals } from "@/lib/finance/get-day-flow-totals";
-import { getMonthRange } from "@/lib/planner/calendar";
+import {
+  formatJournalComparisonLabel,
+  formatJournalPeriodLabel,
+  getPreviousJournalDateRange,
+  resolveJournalDateRangeBounds,
+} from "@/lib/finance/journal-period";
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser } from "@/lib/db/user-scope";
-import type { JournalDaySummary } from "@/types/journal";
+import type { JournalDaySummary, JournalFilters } from "@/types/journal";
 
-async function getMonthTransactions(
+async function getRangeTransactions(
   userId: string,
   start: Date,
   end: Date,
@@ -56,55 +61,48 @@ async function getCumulativeBalance(userId: string, date: Date): Promise<number>
   return (incomeAgg._sum?.amount ?? 0) - (expenseAgg._sum?.amount ?? 0);
 }
 
-/** Journal header widget — current month (MTD) vs previous full month. */
+/** Journal header widget — totals for selected period vs previous equal-length period. */
 export const getJournalDaySummary = cache(
   async (
     userId: string,
-    date: Date = new Date(),
+    filters: JournalFilters,
   ): Promise<JournalDaySummary> => {
-    const anchor = startOfDay(date);
-    const year = anchor.getFullYear();
-    const month = anchor.getMonth();
-    const currentMonthStart = getMonthRange(year, month).start;
-    const currentMonthEnd = endOfDay(anchor);
-
-    const lastMonthAnchor = new Date(year, month - 1, 1);
-    const lastMonthRange = getMonthRange(
-      lastMonthAnchor.getFullYear(),
-      lastMonthAnchor.getMonth(),
-    );
+    const range = { from: filters.from, to: filters.to };
+    const { start, end } = resolveJournalDateRangeBounds(range);
+    const previousRange = getPreviousJournalDateRange(range);
+    const previousBounds = resolveJournalDateRangeBounds(previousRange);
 
     const [
-      currentMonthFlow,
-      lastMonthFlow,
-      monthTransactions,
+      currentFlow,
+      previousFlow,
+      rangeTransactions,
       cumulativeBalance,
-      lastMonthEndBalance,
+      previousEndBalance,
     ] = await Promise.all([
-      getDayFlowTotals(userId, currentMonthStart, currentMonthEnd),
-      getDayFlowTotals(userId, lastMonthRange.start, lastMonthRange.end),
-      getMonthTransactions(userId, currentMonthStart, currentMonthEnd),
-      getCumulativeBalance(userId, anchor),
-      getCumulativeBalance(userId, lastMonthRange.end),
+      getDayFlowTotals(userId, start, end),
+      getDayFlowTotals(userId, previousBounds.start, previousBounds.end),
+      getRangeTransactions(userId, start, end),
+      getCumulativeBalance(userId, end),
+      getCumulativeBalance(userId, previousBounds.end),
     ]);
 
-    const summary = buildTodaySummary(monthTransactions);
+    const summary = buildTodaySummary(rangeTransactions);
     const condition = buildFallbackJournalCondition(
-      monthTransactions,
+      rangeTransactions,
       summary.totalExpense,
       summary.totalIncome,
       cumulativeBalance,
     );
 
     return {
-      date: currentMonthStart,
-      totalExpense: currentMonthFlow.totalExpense,
-      totalIncome: currentMonthFlow.totalIncome,
+      periodLabel: formatJournalPeriodLabel(range),
+      comparisonLabel: formatJournalComparisonLabel(range),
+      totalExpense: currentFlow.totalExpense,
+      totalIncome: currentFlow.totalIncome,
       cumulativeBalance,
-      expenseDelta:
-        currentMonthFlow.totalExpense - lastMonthFlow.totalExpense,
-      incomeDelta: currentMonthFlow.totalIncome - lastMonthFlow.totalIncome,
-      balanceDelta: cumulativeBalance - lastMonthEndBalance,
+      expenseDelta: currentFlow.totalExpense - previousFlow.totalExpense,
+      incomeDelta: currentFlow.totalIncome - previousFlow.totalIncome,
+      balanceDelta: cumulativeBalance - previousEndBalance,
       condition,
     };
   },

@@ -1,6 +1,7 @@
 import { TRANSACTION_CATEGORIES, normalizeCategory } from "@/config/categories";
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
+import { resolveJournalDateRangeBounds } from "@/lib/finance/journal-period";
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import type {
@@ -60,6 +61,12 @@ function buildWhere(
           ]),
     ];
   }
+
+  const { start, end } = resolveJournalDateRangeBounds(filters);
+  where.occurredAt = {
+    gte: start,
+    lte: end,
+  };
 
   return where;
 }
