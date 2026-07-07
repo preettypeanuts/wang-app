@@ -89,9 +89,6 @@ export async function updateInboxMessage(
 }
 
 export async function getInboxMessages(userId: string): Promise<ChatMessage[]> {
-  await backfillInboxMessagesFromTransactions(userId);
-  await ensurePendingDailySummaries(userId);
-
   const records = await prisma.inboxMessage.findMany({
     where: { userId },
     orderBy: { createdAt: "asc" },
@@ -99,6 +96,12 @@ export async function getInboxMessages(userId: string): Promise<ChatMessage[]> {
   });
 
   return records.map(mapInboxMessage);
+}
+
+/** Backfill + daily summaries — run off the inbox hot path (client/cron). */
+export async function maintainInboxData(userId: string): Promise<void> {
+  await backfillInboxMessagesFromTransactions(userId);
+  await ensurePendingDailySummaries(userId);
 }
 
 export interface DeleteInboxMessagePairResult {

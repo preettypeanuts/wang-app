@@ -6,6 +6,7 @@ import {
 
 /** Bottom-nav destinations kept mounted on mobile for instant tab switches. */
 export const PERSISTENT_MOBILE_TAB_ROUTES = [
+  "/",
   OVERVIEW_ROUTE,
   PLANS_ROUTE,
   "/journal",
