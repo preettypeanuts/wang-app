@@ -13,6 +13,7 @@ import {
 import { useSidebar } from "@/components/ui/sidebar";
 import { APP_NAME } from "@/config/app";
 import { mainNavItems, utilityNavItems } from "@/config/navigation";
+import { warmRouteDataOnHover } from "@/lib/navigation/warm-route-data";
 import {
   SIDEBAR_APP_ICON_GLYPH,
   SIDEBAR_APP_ICON_GRADIENTS,
@@ -88,6 +89,7 @@ function DockAppButton({
           aria-label={label}
           aria-current={isActive ? "page" : undefined}
           className={DOCK_TRIGGER_CLASS}
+          onMouseEnter={() => warmRouteDataOnHover(href)}
         >
           {icon}
         </Link>
