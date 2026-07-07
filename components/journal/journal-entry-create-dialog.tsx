@@ -43,6 +43,7 @@ export function JournalEntryCreateDialog({
   const [category, setCategory] = useState<TransactionCategoryId>("food");
   const [occurredAtText, setOccurredAtText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [formKey, setFormKey] = useState(0);
 
   useEffect(() => {
     if (!open) {
@@ -53,6 +54,7 @@ export function JournalEntryCreateDialog({
     setCategory(getDefaultCategoryForType("expense"));
     setOccurredAtText(toDateInputValue(new Date()));
     setError(null);
+    setFormKey((current) => current + 1);
   }, [open]);
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -94,6 +96,7 @@ export function JournalEntryCreateDialog({
         >
           <div className={FORM_DIALOG_BODY_SCROLL}>
             <JournalEntryFormFields
+              key={formKey}
               amountDefault=""
               category={category}
               descriptionDefault=""

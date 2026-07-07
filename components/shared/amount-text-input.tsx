@@ -77,11 +77,11 @@ export function AmountTextInput({
         inputMode="numeric"
         autoComplete={autoComplete}
         spellCheck={spellCheck}
+        className={cn(FORM_FIELD_INPUT, "tabular-nums", className)}
+        {...props}
         value={displayValue}
         onChange={handleChange}
         required={required}
-        className={cn(FORM_FIELD_INPUT, "tabular-nums", className)}
-        {...props}
       />
       {name ? <input type="hidden" name={name} value={rawDigits} /> : null}
     </>
