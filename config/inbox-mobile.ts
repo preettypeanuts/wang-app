@@ -1,5 +1,6 @@
-import { INBOX_MESSAGE_BOTTOM_INSET, CHAT_INPUT_DOCK_INSET_X, INBOX_CHAT_INPUT_DOCK_SAFE_BOTTOM } from "@/config/chat-input-mobile";
+import { INBOX_MESSAGE_BOTTOM_INSET, CHAT_INPUT_DOCK_INSET_X } from "@/config/chat-input-mobile";
 import { INBOX_DESKTOP_INPUT_DOCK_PB } from "@/config/inbox-desktop";
+import { MOBILE_INPUT_DOCK_SAFE_BOTTOM } from "@/config/ios-safe-area";
 import {
   MOBILE_SAFE_HORIZONTAL_INSET,
 } from "@/config/ios-safe-area";
@@ -8,10 +9,6 @@ import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
 
 /** Page root wrapper for inbox mobile chrome. */
 export const INBOX_MOBILE_PAGE = "inbox-mobile-page";
-
-export function shouldHideMobileBottomNav(pathname: string): boolean {
-  return pathname === "/";
-}
 
 export const INBOX_MOBILE_TOP_BAR_ROOT = MOBILE_TOP_BAR_ROOT;
 
@@ -77,14 +74,14 @@ export const INBOX_MESSAGE_CONTENT_INSET = [
   INBOX_MESSAGE_BOTTOM_INSET,
 ].join(" ");
 
-/** Chat input — mobile: fixed viewport; desktop: absolute in chat column. */
+/** Chat input — mobile: fixed above bottom nav; desktop: absolute in chat column. */
 export const INBOX_CHAT_INPUT_DOCK = [
   "pointer-events-auto z-20",
-  "max-md:fixed max-md:inset-x-0 max-md:bottom-0",
+  "max-md:fixed max-md:inset-x-0 max-md:bottom-[var(--mobile-bottom-nav-offset)]",
   "md:absolute md:inset-x-0 md:bottom-0",
   CHAT_INPUT_DOCK_INSET_X,
   "md:px-3",
-  INBOX_CHAT_INPUT_DOCK_SAFE_BOTTOM,
+  MOBILE_INPUT_DOCK_SAFE_BOTTOM,
   INBOX_DESKTOP_INPUT_DOCK_PB,
   "max-md:pt-1.5 md:pt-1",
 ].join(" ");

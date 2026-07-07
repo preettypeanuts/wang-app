@@ -91,8 +91,13 @@ export function getMobilePageTitle(pathname: string): string | null {
   return null;
 }
 
-export function shouldShowMobileInboxButton(pathname: string): boolean {
+export function shouldShowMobileDrawerButton(pathname: string): boolean {
   return pathname !== "/" && pathname !== "/profile";
+}
+
+/** @deprecated Inbox lives on the bottom nav orb. */
+export function shouldShowMobileInboxButton(_pathname: string): boolean {
+  return false;
 }
 
 /** Routes with dedicated fixed mobile chrome (Inbox, Profile). */
@@ -142,10 +147,13 @@ export const MOBILE_TOP_BAR_ROW = [
   "h-[calc(var(--mobile-safe-top)+var(--mobile-top-bar-height))]",
 ].join(" ");
 
-/** Floating glass orb — opens Inbox from any main screen. */
-export const MOBILE_TOP_BAR_INBOX_BUTTON = [
+/** Floating glass orb — top bar actions (menu, shortcuts). */
+export const MOBILE_TOP_BAR_ORB_BUTTON = [
   "pointer-events-auto flex size-11 shrink-0 items-center justify-center rounded-full",
   MOBILE_LIQUID_GLASS_SURFACE,
   "text-foreground/90 transition-transform active:scale-95",
   "[&_svg]:size-[1.35rem]",
 ].join(" ");
+
+/** @deprecated Use MOBILE_TOP_BAR_ORB_BUTTON */
+export const MOBILE_TOP_BAR_INBOX_BUTTON = MOBILE_TOP_BAR_ORB_BUTTON;

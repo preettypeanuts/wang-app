@@ -11,7 +11,6 @@ import { GRID_GAP } from "@/config/spacing";
 import type { Icon } from "@/lib/icons";
 import {
   ChartBarIcon,
-  ChatIcon,
   BellIcon,
   MobileNavJournalIcon,
   MobileNavOverviewIcon,
@@ -138,13 +137,6 @@ export const mobileDrawerMenuItems: MobileDrawerMenuItem[] = [
     drawerTileClass: SIDEBAR_APP_ICON_GRADIENTS.notifications,
   },
   {
-    id: "inbox",
-    title: "Inbox",
-    href: "/",
-    icon: ChatIcon,
-    drawerTileClass: SIDEBAR_APP_ICON_GRADIENTS.inbox,
-  },
-  {
     id: "budget",
     title: "Budget",
     href: `${PAYPLAN_ROUTE}?tab=budget`,
@@ -205,10 +197,6 @@ export function isDrawerMenuItemActive(
 ): boolean {
   if (item.id === "budget") {
     return pathname === PAYPLAN_ROUTE && tab === "budget";
-  }
-
-  if (item.id === "inbox") {
-    return pathname === "/";
   }
 
   if (item.id === "notifications") {

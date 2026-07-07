@@ -417,7 +417,9 @@
 
   /* Keep in sync with INBOX_MOBILE_BOTTOM_BLUR in config/inbox-mobile.ts */
   .inbox-mobile-bottom-blur {
-    height: calc(4.5rem + var(--mobile-safe-bottom));
+    height: calc(
+      var(--mobile-bottom-nav-offset) + 4.5rem + var(--mobile-safe-bottom)
+    );
     -webkit-mask-image: linear-gradient(
       to top,
       rgba(0, 0, 0, 0.82) 0%,

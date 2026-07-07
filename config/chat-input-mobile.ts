@@ -29,10 +29,6 @@ export const CHAT_INPUT_HINT_BADGE = [
   "max-md:size-8 max-md:text-xs",
 ].join(" ");
 
-/** 10px closer to bottom edge than default input dock on mobile. */
-export const INBOX_CHAT_INPUT_DOCK_SAFE_BOTTOM =
-  "max-md:pb-[calc(0.75rem+var(--mobile-safe-bottom)-20px)]";
-
-/** Extra clearance when input dock is taller on mobile. */
+/** Extra clearance when input dock sits above bottom nav on mobile. */
 export const INBOX_MESSAGE_BOTTOM_INSET =
-  "max-md:pb-[calc(5.75rem+var(--mobile-safe-bottom))]";
+  "max-md:pb-[calc(6rem+var(--mobile-bottom-nav-offset))]";

@@ -9,11 +9,10 @@ import {
 } from "react";
 
 import { MobileBottomNavActiveIndicator } from "@/components/shared/mobile-bottom-nav-active-indicator";
+import { MobileBottomNavInboxLink } from "@/components/shared/mobile-bottom-nav-inbox-link";
 import { MobileBottomNavLink } from "@/components/shared/mobile-bottom-nav-link";
-import { MobileNavDrawer } from "@/components/shared/mobile-nav-drawer";
 import {
   MOBILE_BOTTOM_NAV_ITEM_WRAPPER,
-  MOBILE_BOTTOM_NAV_MENU_BUTTON,
   MOBILE_BOTTOM_NAV_PILL,
   MOBILE_BOTTOM_NAV_ROOT,
   MOBILE_LIQUID_GLASS_SURFACE,
@@ -26,8 +25,6 @@ import {
   MOBILE_BOTTOM_NAV_INDICATOR_PAYPLAN_EXTRA_RIGHT,
   MOBILE_BOTTOM_NAV_INDICATOR_PLANS_EXTRA_RIGHT,
 } from "@/config/mobile-bottom-nav-motion";
-import { shouldHideMobileBottomNav } from "@/config/inbox-mobile";
-import { MobileNavMenuIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 interface IndicatorMetrics {
@@ -115,10 +112,6 @@ export function MobileBottomNav() {
     return () => observer.disconnect();
   }, [syncIndicator]);
 
-  if (shouldHideMobileBottomNav(pathname)) {
-    return null;
-  }
-
   return (
     <nav aria-label="Navigasi utama" className={MOBILE_BOTTOM_NAV_ROOT}>
       <ul
@@ -155,20 +148,7 @@ export function MobileBottomNav() {
         ))}
       </ul>
 
-      <MobileNavDrawer
-        trigger={
-          <button
-            aria-label="Buka menu"
-            className={cn(
-              MOBILE_BOTTOM_NAV_MENU_BUTTON,
-              MOBILE_LIQUID_GLASS_SURFACE,
-            )}
-            type="button"
-          >
-            <MobileNavMenuIcon aria-hidden className="size-6" />
-          </button>
-        }
-      />
+      <MobileBottomNavInboxLink />
     </nav>
   );
 }

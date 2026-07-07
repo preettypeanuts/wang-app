@@ -1,38 +1,23 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-
+import { MobileTopBarDrawerButton } from "@/components/shared/mobile-top-bar-drawer-button";
 import {
   INBOX_MOBILE_TOP_BAR_ORB,
   INBOX_MOBILE_TOP_BAR_ROOT,
   INBOX_MOBILE_TOP_BAR_ROW,
   INBOX_MOBILE_TOP_BAR_TITLE,
 } from "@/config/inbox-mobile";
-import { OVERVIEW_ROUTE } from "@/config/navigation";
-import { CaretLeftIcon, ChartBarIcon } from "@/lib/icons";
+import { ChartBarIcon } from "@/lib/icons";
 
 interface InboxMobileTopBarProps {
   onOpenSummary: () => void;
 }
 
 export function InboxMobileTopBar({ onOpenSummary }: InboxMobileTopBarProps) {
-  const router = useRouter();
-
-  function handleBack() {
-    router.replace(OVERVIEW_ROUTE);
-  }
-
   return (
     <header className={INBOX_MOBILE_TOP_BAR_ROOT}>
       <div className={INBOX_MOBILE_TOP_BAR_ROW}>
-        <button
-          type="button"
-          aria-label="Ke Overview"
-          className={INBOX_MOBILE_TOP_BAR_ORB}
-          onClick={handleBack}
-        >
-          <CaretLeftIcon aria-hidden="true" />
-        </button>
+        <MobileTopBarDrawerButton />
 
         <p className={INBOX_MOBILE_TOP_BAR_TITLE}>Inbox</p>
 
