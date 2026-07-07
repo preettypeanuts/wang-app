@@ -8,6 +8,7 @@ import { SettingsAccentPanel } from "@/components/settings/settings-accent-panel
 import { SettingsAppearancePanel } from "@/components/settings/settings-appearance-panel";
 import { SettingsGlassPanel } from "@/components/settings/settings-glass-panel";
 import { SettingsIosProfileCard } from "@/components/settings/settings-ios-profile-card";
+import { SettingsPushNotificationRow } from "@/components/notifications/settings-push-notification-row";
 import { SettingsIosRow } from "@/components/settings/settings-ios-row";
 import { SettingsIosSection } from "@/components/settings/settings-ios-section";
 import { SettingsSignOutRow } from "@/components/settings/settings-sign-out-row";
@@ -92,6 +93,13 @@ export function SettingsPanelContent({
       </h2>
 
       <SettingsIosProfileCard />
+
+      <SettingsIosSection
+        label="Notifikasi"
+        footer="Aktifkan push untuk tagihan mendatang, ringkasan AI, dan alert penting. Cron harian via cron-job.org."
+      >
+        <SettingsPushNotificationRow />
+      </SettingsIosSection>
 
       <SettingsIosSection label="Tampilan">
         <SettingsIosRow

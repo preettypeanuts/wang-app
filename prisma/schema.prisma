@@ -27,6 +27,8 @@ model User {
   plannedItems    PlannedItem[]
   plans           Plan[]
   savingsGoals    SavingsGoal[]
+  pushSubscriptions PushSubscription[]
+  appNotifications  AppNotification[]
 
   @@unique([email])
   @@map("user")
@@ -254,5 +256,47 @@ model InboxMessage {
   @@unique([userId, summaryDate, kind])
   @@index([userId, createdAt])
   @@index([userId, kind])
+  @@schema("monmon_whethertie")
+}
+
+enum AppNotificationKind {
+  bill_reminder
+  daily_summary
+  ai_brief
+  alert
+  savings
+
+  @@schema("monmon_whethertie")
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@schema("monmon_whethertie")
+}
+
+model AppNotification {
+  id        String              @id @default(cuid())
+  userId    String
+  user      User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      AppNotificationKind
+  title     String
+  body      String
+  href      String              @default("/overview")
+  dedupeKey String
+  readAt    DateTime?
+  pushedAt  DateTime?
+  createdAt DateTime            @default(now())
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt, createdAt])
   @@schema("monmon_whethertie")
 }

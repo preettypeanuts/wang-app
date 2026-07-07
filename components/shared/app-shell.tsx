@@ -6,6 +6,8 @@ import { AppContentSurface } from "@/components/shared/app-content-surface";
 import { DesktopAppSidebar } from "@/components/shared/desktop-app-sidebar";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
+import { NotificationBannerStack } from "@/components/notifications/notification-banner-stack";
+import { PushNotificationManager } from "@/components/shared/push-notification-manager";
 import { MobileScrollChrome } from "@/components/shared/mobile-scroll-chrome";
 import { MobileScrollChromeProvider } from "@/components/shared/mobile-scroll-chrome-provider";
 import { PersistentSidebarProvider } from "@/components/shared/persistent-sidebar-provider";
@@ -40,6 +42,7 @@ export function AppShell({
       </FixedViewportPortal>
       <PwaHtmlBackgroundSync />
       <PwaStatusBarFix />
+      <PushNotificationManager />
       <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
         {isAuthRoute ? (
           <div
@@ -78,6 +81,7 @@ export function AppShell({
             </SidebarInset>
             <FixedViewportPortal>
               <MobileBottomNav />
+              <NotificationBannerStack />
             </FixedViewportPortal>
           </PersistentSidebarProvider>
         )}

@@ -10,7 +10,7 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 /** Bump when Prisma schema changes to invalidate dev hot-reload cache. */
-const PRISMA_CLIENT_VERSION = 13;
+const PRISMA_CLIENT_VERSION = 14;
 
 /** One connection per serverless instance — safe for low DB connection limits. */
 const SERVERLESS_POOL_MAX = 1;

@@ -12,6 +12,10 @@ function isPublicPath(pathname: string): boolean {
     return true;
   }
 
+  if (pathname.startsWith("/api/cron")) {
+    return true;
+  }
+
   return false;
 }
 
