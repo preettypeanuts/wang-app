@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   checkSavingsGoalFromInboxAction,
+  loadOlderInboxMessagesAction,
   markPlanDoneFromInboxAction,
   payPayPlanFromInboxAction,
   retryInboxMessageAction,
@@ -26,6 +27,11 @@ import { INBOX_CHAT_VIEW_ROOT } from "@/config/inbox-desktop";
 import { INBOX_CHAT_INPUT_DOCK } from "@/config/inbox-mobile";
 import { buildReceiptManualFallbackNotice } from "@/lib/ai/format-gemini-api-error";
 import { patchInboxBootstrapMessages } from "@/lib/inbox/inbox-bootstrap-cache";
+import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
+import {
+  mergeInboxMessageTail,
+  prependOlderInboxMessages,
+} from "@/lib/inbox/merge-inbox-messages";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import {
   getReceiptImageFromDataTransfer,
@@ -47,13 +53,17 @@ import type { ParsedTransaction, TransactionType } from "@/types/transaction";
 
 interface InboxViewProps {
   initialMessages: ChatMessage[];
+  initialHasMoreMessages?: boolean;
   unpaidPayPlanItems: UnpaidPayPlanChatItem[];
   activePlanItems: ActivePlanChatItem[];
   activeSavingsItems: ActiveSavingsChatItem[];
   fixedMobileTopBar?: boolean;
   onSlashMenuOpenChange?: (open: boolean) => void;
   onTransactionRecorded?: (transaction: ParsedTransaction) => void;
-  onMessagesChange?: (messages: ChatMessage[]) => void;
+  onMessagesChange?: (
+    messages: ChatMessage[],
+    hasMoreMessages?: boolean,
+  ) => void;
 }
 
 function createPendingId(prefix: "user" | "assistant"): string {
@@ -64,38 +74,9 @@ function isPendingMessageId(id: string): boolean {
   return id.startsWith("pending-");
 }
 
-function mergeServerMessages(
-  current: ChatMessage[],
-  initialMessages: ChatMessage[],
-): ChatMessage[] {
-  const pending = current.filter((message) => isPendingMessageId(message.id));
-
-  if (pending.length > 0) {
-    return [...initialMessages, ...pending];
-  }
-
-  if (initialMessages.length === 0 && current.length > 0) {
-    return current;
-  }
-
-  const currentIds = new Set(current.map((message) => message.id));
-  const initialIds = new Set(initialMessages.map((message) => message.id));
-  const currentIsLocalDeletion = [...currentIds].every((id) =>
-    initialIds.has(id),
-  );
-
-  if (
-    currentIsLocalDeletion &&
-    current.length < initialMessages.length
-  ) {
-    return current;
-  }
-
-  return initialMessages;
-}
-
 export function InboxView({
   initialMessages,
+  initialHasMoreMessages = false,
   unpaidPayPlanItems,
   activePlanItems,
   activeSavingsItems,
@@ -104,8 +85,11 @@ export function InboxView({
   onTransactionRecorded,
   onMessagesChange,
 }: InboxViewProps) {
+  const isActiveTab = usePersistentTabActive();
   const isMobileViewport = useIsMobileViewport();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const [hasMoreOlder, setHasMoreOlder] = useState(initialHasMoreMessages);
+  const [isLoadingOlder, setIsLoadingOlder] = useState(false);
   const [inFlightCount, setInFlightCount] = useState(0);
   const [draftText, setDraftText] = useState<string | null>(null);
   const [receiptDraft, setReceiptDraft] = useState<ReceiptDraft | null>(null);
@@ -123,7 +107,7 @@ export function InboxView({
 
   useEffect(() => {
     setMessages((current) => {
-      const merged = mergeServerMessages(current, initialMessages);
+      const merged = mergeInboxMessageTail(current, initialMessages);
 
       if (
         merged.length === current.length &&
@@ -136,6 +120,16 @@ export function InboxView({
     });
   }, [initialMessages]);
 
+  useEffect(() => {
+    setHasMoreOlder((current) => {
+      if (messages.length > initialMessages.length) {
+        return current;
+      }
+
+      return initialHasMoreMessages;
+    });
+  }, [initialHasMoreMessages, initialMessages.length, messages.length]);
+
   const isProcessing = inFlightCount > 0;
 
   function beginInFlight() {
@@ -147,8 +141,41 @@ export function InboxView({
   }
 
   useEffect(() => {
+    if (!isActiveTab) {
+      return;
+    }
+
     patchInboxBootstrapMessages(messages);
-  }, [messages]);
+  }, [isActiveTab, messages]);
+
+  const handleLoadOlder = useCallback(async () => {
+    if (isLoadingOlder || !hasMoreOlder) {
+      return;
+    }
+
+    const oldest = messages[0];
+    if (!oldest || isPendingMessageId(oldest.id)) {
+      return;
+    }
+
+    setIsLoadingOlder(true);
+
+    try {
+      const page = await loadOlderInboxMessagesAction({
+        createdAt: oldest.createdAt,
+        id: oldest.id,
+      });
+
+      setMessages((current) => {
+        const next = prependOlderInboxMessages(current, page.messages);
+        onMessagesChange?.(next, page.hasMore);
+        return next;
+      });
+      setHasMoreOlder(page.hasMore);
+    } finally {
+      setIsLoadingOlder(false);
+    }
+  }, [hasMoreOlder, isLoadingOlder, messages, onMessagesChange]);
 
   const handleDraftTextApplied = useCallback(() => {
     setDraftText(null);
@@ -406,7 +433,7 @@ export function InboxView({
       const next = current.filter(
         (message) => !result.removedIds.includes(message.id),
       );
-      onMessagesChange?.(next);
+      onMessagesChange?.(next, hasMoreOlder);
       return next;
     });
 
@@ -604,7 +631,10 @@ export function InboxView({
       <MessageList
         className="min-h-0 flex-1"
         fixedMobileTopBar={fixedMobileTopBar}
+        hasMoreOlder={hasMoreOlder}
+        isLoadingOlder={isLoadingOlder}
         messages={messages}
+        onLoadOlder={() => void handleLoadOlder()}
         onRetry={handleRetry}
         onEditMessage={handleEditMessage}
         onUndoMessage={handleUndoMessage}

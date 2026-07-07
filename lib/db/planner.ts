@@ -7,6 +7,7 @@ import {
   parseMonthKey,
 } from "@/lib/planner/calendar";
 import type {
+  PlannedItemRecord,
   PlannedOccurrence,
   PlannerDayMark,
   PlannerMonthData,
@@ -40,6 +41,7 @@ function buildDayMarks(items: PlannedOccurrence[]): PlannerDayMark[] {
 export async function getPlannerMonthData(
   userId: string,
   monthKey: string = getCurrentMonthKey(),
+  plannedItems?: PlannedItemRecord[],
 ): Promise<PlannerMonthData> {
   const parsed = parseMonthKey(monthKey) ?? {
     year: new Date().getFullYear(),
@@ -47,8 +49,9 @@ export async function getPlannerMonthData(
   };
 
   const { start, end } = getMonthRange(parsed.year, parsed.month);
-  const plannedItems = await getPlannedItemsForExpansion(userId);
-  const items = expandPlannedItems(plannedItems, start, end);
+  const itemsSource =
+    plannedItems ?? (await getPlannedItemsForExpansion(userId));
+  const items = expandPlannedItems(itemsSource, start, end);
 
   return {
     monthKey,

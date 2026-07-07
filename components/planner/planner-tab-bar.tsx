@@ -5,6 +5,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { usePayplanPageTab } from "@/components/planner/payplan-page-tab-context";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { PAYPLAN_ROUTE } from "@/config/navigation";
+import {
+  getPayplanTabState,
+  setPayplanTabState,
+  syncPayplanTabUrl,
+} from "@/lib/payplan/payplan-tab-store";
 import { cn } from "@/lib/utils";
 import type { PlannerTab } from "@/types/planner";
 
@@ -12,6 +18,10 @@ interface PlannerTabBarProps {
   tab: PlannerTab;
   monthKey: string;
   className?: string;
+}
+
+function isPayplanPath(pathname: string): boolean {
+  return pathname === PAYPLAN_ROUTE || pathname.startsWith(`${PAYPLAN_ROUTE}/`);
 }
 
 export function PlannerTabBar({
@@ -29,6 +39,15 @@ export function PlannerTabBar({
     if (tabContext) {
       tabContext.setTab(nextTab);
       return;
+    }
+
+    if (isPayplanPath(pathname)) {
+      const resolvedMonthKey = monthKey || getPayplanTabState().monthKey;
+      if (resolvedMonthKey) {
+        setPayplanTabState(nextTab, resolvedMonthKey);
+        syncPayplanTabUrl(nextTab, resolvedMonthKey);
+        return;
+      }
     }
 
     const params = new URLSearchParams(searchParams.toString());

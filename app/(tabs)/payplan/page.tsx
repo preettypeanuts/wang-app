@@ -18,9 +18,10 @@ export default async function PayPlanPage({ searchParams }: PayPlanPageProps) {
   const { monthKey, tab, calendarLayout, filters } =
     parsePlannerSearchParams(params);
 
-  const [data, plannedItems, budgets] = await Promise.all([
-    getPlannerMonthData(userId, monthKey),
-    listPlannedItems(userId),
+  const plannedItems = await listPlannedItems(userId);
+
+  const [data, budgets] = await Promise.all([
+    getPlannerMonthData(userId, monthKey, plannedItems),
     listBudgetsForMonth(userId, monthKey),
   ]);
 

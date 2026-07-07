@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 import {
-  fetchInboxBootstrap,
+  prefetchInboxBootstrap,
   triggerInboxMaintenance,
 } from "@/lib/inbox/fetch-inbox-bootstrap";
 
@@ -17,7 +17,7 @@ export function InboxBootstrapPrefetch() {
       return;
     }
 
-    void fetchInboxBootstrap();
+    prefetchInboxBootstrap();
     triggerInboxMaintenance();
   }, [pathname]);
 

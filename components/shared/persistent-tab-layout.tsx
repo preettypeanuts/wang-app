@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { isPersistentMobileTabRoute } from "@/config/persistent-tabs";
+import { PersistentTabActiveProvider } from "@/components/shared/persistent-tab-active-context";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useSession } from "@/lib/auth/auth-client";
 
@@ -67,7 +68,9 @@ export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
             hidden={path !== tabPath}
             className="flex h-full min-h-0 flex-1 flex-col overflow-hidden"
           >
-            {panel}
+            <PersistentTabActiveProvider active={path === tabPath}>
+              {panel}
+            </PersistentTabActiveProvider>
           </div>
         ),
       )}

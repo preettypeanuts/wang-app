@@ -1,4 +1,5 @@
 import { normalizeCategory } from "@/config/categories";
+import { INBOX_MESSAGE_PAGE_SIZE } from "@/config/inbox-messages";
 import { backfillInboxMessagesFromTransactions } from "@/lib/db/backfill-inbox-messages";
 import { ensurePendingDailySummaries } from "@/lib/db/daily-summary";
 import { prisma } from "@/lib/db/prisma";
@@ -97,13 +98,58 @@ export async function updateInboxMessage(
 }
 
 export async function getInboxMessages(userId: string): Promise<ChatMessage[]> {
+  const page = await getInboxMessagesPage(userId);
+  return page.messages;
+}
+
+export interface InboxMessagesPageCursor {
+  createdAt: string;
+  id: string;
+}
+
+export interface InboxMessagesPage {
+  messages: ChatMessage[];
+  hasMore: boolean;
+}
+
+export async function getInboxMessagesPage(
+  userId: string,
+  options: {
+    limit?: number;
+    before?: InboxMessagesPageCursor;
+  } = {},
+): Promise<InboxMessagesPage> {
+  const limit = options.limit ?? INBOX_MESSAGE_PAGE_SIZE;
+  const before = options.before;
+
+  const where: Prisma.InboxMessageWhereInput = scopedByUser(userId, {
+    kind: "chat",
+  });
+
+  if (before) {
+    where.OR = [
+      { createdAt: { lt: new Date(before.createdAt) } },
+      {
+        createdAt: new Date(before.createdAt),
+        id: { lt: before.id },
+      },
+    ];
+  }
+
   const records = await prisma.inboxMessage.findMany({
-    where: scopedByUser(userId, { kind: "chat" }),
-    orderBy: { createdAt: "asc" },
+    where,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
     include: { transaction: true },
   });
 
-  return records.map(mapInboxMessage);
+  const hasMore = records.length > limit;
+  const messages = records
+    .slice(0, limit)
+    .reverse()
+    .map((record) => mapInboxMessage(record));
+
+  return { messages, hasMore };
 }
 
 /** Backfill + daily summaries — run off the inbox hot path (client/cron). */

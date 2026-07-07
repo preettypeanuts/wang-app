@@ -9,6 +9,9 @@ import {
   createInboxMessage,
   type DeleteInboxMessagePairResult,
   deleteInboxMessagePair,
+  getInboxMessagesPage,
+  type InboxMessagesPage,
+  type InboxMessagesPageCursor,
   updateInboxMessage,
 } from "@/lib/db/inbox-messages";
 import {
@@ -216,6 +219,13 @@ export async function undoInboxMessageAction(
   revalidatePath("/journal");
 
   return result;
+}
+
+export async function loadOlderInboxMessagesAction(
+  before: InboxMessagesPageCursor,
+): Promise<InboxMessagesPage> {
+  const userId = await requireUserId();
+  return getInboxMessagesPage(userId, { before });
 }
 
 interface PayPayPlanFromInboxSuccess {

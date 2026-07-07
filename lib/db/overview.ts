@@ -43,8 +43,7 @@ export async function getOverviewPageData(
     upcomingImpact,
     todayFlow,
     yesterdayFlow,
-    todayAllTransactions,
-    todayActivityRows,
+    todayTransactionRows,
     monthTransactions,
   ] = await Promise.all([
     getAvailableBalance(userId, now),
@@ -62,23 +61,6 @@ export async function getOverviewPageData(
         },
       }),
       select: {
-        type: true,
-        amount: true,
-        category: true,
-        description: true,
-      },
-      orderBy: {
-        occurredAt: "asc",
-      },
-    }),
-    prisma.transaction.findMany({
-      where: scopedByUser(userId, {
-        occurredAt: {
-          gte: todayStart,
-          lte: todayEnd,
-        },
-      }),
-      select: {
         id: true,
         type: true,
         amount: true,
@@ -88,9 +70,8 @@ export async function getOverviewPageData(
         occurredAt: true,
       },
       orderBy: {
-        occurredAt: "desc",
+        occurredAt: "asc",
       },
-      take: 6,
     }),
     prisma.transaction.findMany({
       where: scopedByUser(userId, {
@@ -107,12 +88,19 @@ export async function getOverviewPageData(
     }),
   ]);
 
-  const journalTransactions = todayAllTransactions.map((transaction) => ({
+  const journalTransactions = todayTransactionRows.map((transaction) => ({
     type: transaction.type,
     amount: transaction.amount,
     category: transaction.category,
     description: transaction.description,
   }));
+
+  const todayActivityRows = [...todayTransactionRows]
+    .sort(
+      (left, right) =>
+        right.occurredAt.getTime() - left.occurredAt.getTime(),
+    )
+    .slice(0, 6);
 
   const todaySummary = buildTodaySummary(journalTransactions);
   const monthSummary = buildTodaySummary(monthTransactions);

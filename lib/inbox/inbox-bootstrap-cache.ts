@@ -1,11 +1,13 @@
 import type { ChatMessage } from "@/types/chat";
 import type { TodaySummary } from "@/types/summary";
+import { mergeInboxMessageTail } from "@/lib/inbox/merge-inbox-messages";
 
-const CACHE_KEY = "wang.inbox.bootstrap.v1";
+const CACHE_KEY = "wang.inbox.bootstrap.v2";
 
 export interface InboxBootstrapPayload {
   messages: ChatMessage[];
   summary: TodaySummary;
+  hasMoreMessages?: boolean;
 }
 
 export const EMPTY_TODAY_SUMMARY: TodaySummary = {
@@ -92,6 +94,8 @@ export function mergeInboxBootstrapPayload(
     return {
       summary: current.summary,
       messages: [...incoming.messages, ...pending],
+      hasMoreMessages:
+        incoming.hasMoreMessages ?? current.hasMoreMessages ?? false,
     };
   }
 
@@ -109,15 +113,21 @@ export function mergeInboxBootstrapPayload(
     return {
       summary: current.summary,
       messages: current.messages,
+      hasMoreMessages: current.hasMoreMessages,
     };
   }
 
   if (current.messages.length > incoming.messages.length) {
     return {
       summary: current.summary,
-      messages: current.messages,
+      messages: mergeInboxMessageTail(current.messages, incoming.messages),
+      hasMoreMessages: current.hasMoreMessages ?? incoming.hasMoreMessages,
     };
   }
 
-  return incoming;
+  return {
+    summary: incoming.summary,
+    messages: mergeInboxMessageTail(current.messages, incoming.messages),
+    hasMoreMessages: incoming.hasMoreMessages ?? false,
+  };
 }

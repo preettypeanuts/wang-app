@@ -34,6 +34,7 @@ interface InboxBootstrapState {
   messages: ChatMessage[];
   summary: TodaySummary;
   ready: boolean;
+  hasMoreMessages: boolean;
 }
 
 function toBootstrapState(
@@ -44,11 +45,14 @@ function toBootstrapState(
     messages: payload?.messages ?? [],
     summary: payload?.summary ?? EMPTY_TODAY_SUMMARY,
     ready,
+    hasMoreMessages: payload?.hasMoreMessages ?? false,
   };
 }
 
 interface InboxBootstrapOptions {
   initialBootstrap?: InboxBootstrapPayload | null;
+  /** Pause background sync when the inbox tab panel is hidden. */
+  enabled?: boolean;
 }
 
 function isPendingMessageId(id: string): boolean {
@@ -70,6 +74,7 @@ function applyForcedRefreshPayload(
   return {
     summary: incoming.summary,
     messages: [...incoming.messages, ...pending],
+    hasMoreMessages: incoming.hasMoreMessages ?? false,
   };
 }
 
@@ -80,8 +85,17 @@ function seedBootstrapCache(payload: InboxBootstrapPayload | null | undefined) {
 
   const cached = readInboxBootstrapCache();
 
-  if (cached && cached.messages.length >= payload.messages.length) {
-    return cached;
+  if (cached) {
+    const cachedTailId = cached.messages.at(-1)?.id;
+    const payloadTailId = payload.messages.at(-1)?.id;
+
+    if (
+      cachedTailId &&
+      cachedTailId === payloadTailId &&
+      cached.messages.length >= payload.messages.length
+    ) {
+      return cached;
+    }
   }
 
   writeInboxBootstrapCache(payload);
@@ -89,6 +103,7 @@ function seedBootstrapCache(payload: InboxBootstrapPayload | null | undefined) {
 }
 
 export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
+  const enabled = options.enabled ?? true;
   const [state, setState] = useState<InboxBootstrapState>(() => {
     const seeded = seedBootstrapCache(options.initialBootstrap ?? null);
     return toBootstrapState(seeded, Boolean(seeded));
@@ -100,6 +115,10 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const cached = readInboxBootstrapCache();
     const controller = new AbortController();
 
@@ -113,6 +132,7 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
           {
             messages: current.messages,
             summary: current.summary,
+            hasMoreMessages: current.hasMoreMessages,
           },
           payload,
         );
@@ -126,18 +146,10 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
     if (!cached) {
       triggerInboxMaintenance();
       void fetchInboxBootstrap().then(applyPayload).catch(() => {});
-      return () => controller.abort();
     }
 
-    const refreshId = window.setTimeout(() => {
-      void fetchInboxBootstrap().then(applyPayload).catch(() => {});
-    }, 4_000);
-
-    return () => {
-      controller.abort();
-      window.clearTimeout(refreshId);
-    };
-  }, []);
+    return () => controller.abort();
+  }, [enabled]);
 
   useEffect(() => {
     if (!slashRequested) {
@@ -194,18 +206,25 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
     });
   }
 
-  function applyMessages(messages: ChatMessage[]) {
+  function applyMessages(
+    messages: ChatMessage[],
+    hasMoreMessages?: boolean,
+  ) {
     setState((current) => {
       if (
         current.messages.length === messages.length &&
-        current.messages.every((message, index) => message.id === messages[index]?.id)
+        current.messages.every(
+          (message, index) => message.id === messages[index]?.id,
+        ) &&
+        hasMoreMessages === undefined
       ) {
         return current;
       }
 
-      const next = {
+      const next: InboxBootstrapPayload = {
         messages,
         summary: current.summary,
+        hasMoreMessages: hasMoreMessages ?? current.hasMoreMessages,
       };
 
       writeInboxBootstrapCache(next);
@@ -213,6 +232,7 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
       return {
         ...current,
         messages,
+        hasMoreMessages: next.hasMoreMessages ?? false,
         ready: true,
       };
     });
@@ -238,6 +258,7 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
           {
             messages: current.messages,
             summary: current.summary,
+            hasMoreMessages: current.hasMoreMessages,
           },
           payload,
         );

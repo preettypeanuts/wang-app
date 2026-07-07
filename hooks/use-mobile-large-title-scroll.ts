@@ -20,8 +20,11 @@ export function useMobileLargeTitleScroll(
 
   useEffect(() => {
     if (!enabled) {
+      setShowBlur(false);
+      setShowCompactTitle(false);
       return;
     }
+
     let scrollElement: HTMLElement | null = null;
     let frameId = 0;
     let attached = false;

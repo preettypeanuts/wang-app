@@ -2,6 +2,7 @@
 
 import { type ReactNode, useState } from "react";
 
+import { InboxMobileChromeProvider } from "@/components/inbox/inbox-mobile-chrome-context";
 import { InboxMobileEdgeBlur } from "@/components/inbox/inbox-mobile-edge-blur";
 import { InboxMobileTopBar } from "@/components/inbox/inbox-mobile-top-bar";
 import { InboxTodaySummaryDrawer } from "@/components/inbox/inbox-today-summary-drawer";
@@ -28,6 +29,7 @@ export function InboxMobileLayout({
   refreshing = false,
 }: InboxMobileLayoutProps) {
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [showTopBlur, setShowTopBlur] = useState(false);
 
   function handleOpenSummary() {
     onOpenSummary?.();
@@ -43,7 +45,7 @@ export function InboxMobileLayout({
     >
       <FixedViewportPortal>
         <div className="md:hidden">
-          <InboxMobileEdgeBlur />
+          <InboxMobileEdgeBlur showTopBlur={showTopBlur} />
           <InboxMobileTopBar
             onOpenSummary={handleOpenSummary}
             onRefresh={() => onRefresh?.()}
@@ -53,7 +55,9 @@ export function InboxMobileLayout({
       </FixedViewportPortal>
 
       <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-        {children}
+        <InboxMobileChromeProvider onTopBlurChange={setShowTopBlur}>
+          {children}
+        </InboxMobileChromeProvider>
       </div>
 
       <InboxTodaySummaryDrawer

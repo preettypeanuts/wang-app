@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { ChatMessageMenu } from "@/components/chat/chat-message-menu";
 import { ChatMessageRetryButton } from "@/components/chat/chat-message-retry-button";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageTimestamp } from "@/components/chat/message-timestamp";
 import { TransactionPreview } from "@/components/chat/transaction-preview";
+import { useInboxTopBlurSync } from "@/components/inbox/inbox-mobile-chrome-context";
 import { MobilePageTitle } from "@/components/shared/mobile-page-title";
 import { useSyncMobileScrollChrome } from "@/components/shared/mobile-scroll-chrome-provider";
 import {
@@ -20,6 +21,7 @@ import {
   INBOX_DESKTOP_MESSAGE_PT,
   INBOX_DESKTOP_MESSAGE_SCROLL_PADDING,
 } from "@/config/inbox-desktop";
+import { INBOX_LOAD_OLDER_SCROLL_THRESHOLD } from "@/config/inbox-messages";
 import { INBOX_MESSAGE_CONTENT_INSET } from "@/config/inbox-mobile";
 import { MOBILE_CHROME_SCROLL_INSET_TOP } from "@/config/mobile-chrome";
 import { STACK_GAP } from "@/config/spacing";
@@ -37,9 +39,20 @@ interface MessageListProps {
   actionsDisabled?: boolean;
   fixedMobileTopBar?: boolean;
   className?: string;
+  hasMoreOlder?: boolean;
+  isLoadingOlder?: boolean;
+  onLoadOlder?: () => void;
 }
 
 const SCROLLBAR_IDLE_MS = 700;
+const STICK_TO_BOTTOM_THRESHOLD = 96;
+
+function isNearBottom(element: HTMLElement): boolean {
+  return (
+    element.scrollHeight - element.scrollTop - element.clientHeight <
+    STICK_TO_BOTTOM_THRESHOLD
+  );
+}
 
 export function MessageList({
   messages,
@@ -49,12 +62,23 @@ export function MessageList({
   actionsDisabled = false,
   fixedMobileTopBar = false,
   className,
+  hasMoreOlder = false,
+  isLoadingOlder = false,
+  onLoadOlder,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRootRef = useRef<HTMLDivElement>(null);
   const scrollIdleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
+  const [inboxTopBlur, setInboxTopBlur] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const initialScrollDoneRef = useRef(false);
+  const stickToBottomRef = useRef(true);
+  const prevFirstIdRef = useRef<string | null>(null);
+  const prevLastIdRef = useRef<string | null>(null);
+  const prevLengthRef = useRef(0);
+  const loadingOlderRef = useRef(false);
+
   const { showBlur, showCompactTitle } = useMobileLargeTitleScroll(
     () => scrollRootRef.current,
     titleRef,
@@ -67,12 +91,56 @@ export function MessageList({
     showCompactTitle,
   );
 
+  useInboxTopBlurSync(inboxTopBlur, fixedMobileTopBar);
+
   useEffect(() => {
-    const behavior = messages.at(-1)?.id.startsWith("pending-")
-      ? "instant"
-      : "smooth";
-    bottomRef.current?.scrollIntoView({ behavior });
-  }, [messages]);
+    loadingOlderRef.current = isLoadingOlder;
+  }, [isLoadingOlder]);
+
+  useLayoutEffect(() => {
+    const element = scrollRootRef.current;
+
+    if (!element || messages.length === 0) {
+      return;
+    }
+
+    const firstId = messages[0]?.id ?? null;
+    const lastId = messages.at(-1)?.id ?? null;
+    const prevLength = prevLengthRef.current;
+
+    if (!initialScrollDoneRef.current) {
+      element.scrollTop = element.scrollHeight;
+      initialScrollDoneRef.current = true;
+      prevFirstIdRef.current = firstId;
+      prevLastIdRef.current = lastId;
+      prevLengthRef.current = messages.length;
+      if (fixedMobileTopBar) {
+        setInboxTopBlur(false);
+      }
+      return;
+    }
+
+    const prepended =
+      messages.length > prevLength &&
+      firstId !== prevFirstIdRef.current &&
+      lastId === prevLastIdRef.current;
+    const appended = lastId !== prevLastIdRef.current;
+    const pendingTail = lastId?.startsWith("pending-") ?? false;
+    const shrank = messages.length < prevLength;
+
+    if (prepended) {
+      const previousHeight = element.scrollHeight;
+      requestAnimationFrame(() => {
+        element.scrollTop = element.scrollHeight - previousHeight + element.scrollTop;
+      });
+    } else if (shrank || (appended && (stickToBottomRef.current || pendingTail))) {
+      element.scrollTop = element.scrollHeight;
+    }
+
+    prevFirstIdRef.current = firstId;
+    prevLastIdRef.current = lastId;
+    prevLengthRef.current = messages.length;
+  }, [fixedMobileTopBar, messages]);
 
   useEffect(() => {
     const element = scrollRootRef.current;
@@ -81,7 +149,28 @@ export function MessageList({
     }
 
     function handleScroll() {
+      if (!element) {
+        return;
+      }
+
       setIsScrolling(true);
+      stickToBottomRef.current = isNearBottom(element);
+
+      if (fixedMobileTopBar) {
+        setInboxTopBlur(
+          element.scrollTop > 4 && !isNearBottom(element),
+        );
+      }
+
+      if (
+        hasMoreOlder &&
+        onLoadOlder &&
+        !loadingOlderRef.current &&
+        element.scrollTop < INBOX_LOAD_OLDER_SCROLL_THRESHOLD
+      ) {
+        onLoadOlder();
+      }
+
       if (scrollIdleRef.current) {
         clearTimeout(scrollIdleRef.current);
       }
@@ -98,7 +187,7 @@ export function MessageList({
         clearTimeout(scrollIdleRef.current);
       }
     };
-  }, []);
+  }, [fixedMobileTopBar, hasMoreOlder, onLoadOlder]);
 
   const contentClassName = fixedMobileTopBar
     ? cn(
@@ -147,6 +236,13 @@ export function MessageList({
           <div className={cn("flex flex-col", STACK_GAP, contentClassName)}>
             {!fixedMobileTopBar ? (
               <MobilePageTitle ref={titleRef}>Inbox</MobilePageTitle>
+            ) : null}
+            {hasMoreOlder ? (
+              <div className="flex justify-center py-1">
+                <p className="text-[11px] text-muted-foreground">
+                  {isLoadingOlder ? "Memuat pesan lama..." : "Gulir ke atas untuk muat lebih"}
+                </p>
+              </div>
             ) : null}
             {messages.map((message, index) => {
               const isUser = message.role === "user";

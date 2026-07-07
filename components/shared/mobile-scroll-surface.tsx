@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 
+import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
 import { MobilePageTitle } from "@/components/shared/mobile-page-title";
 import { useSyncMobileScrollChrome } from "@/components/shared/mobile-scroll-chrome-provider";
 import {
@@ -31,16 +32,17 @@ export function MobileScrollSurface({
 }: MobileScrollSurfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const isActiveTab = usePersistentTabActive();
   const syncGlobalChrome = Boolean(title) && !fixedMobileTopBar;
   const showLargeTitle = Boolean(title);
   const { showBlur, showCompactTitle } = useMobileLargeTitleScroll(
     () => scrollRef.current,
     titleRef,
-    { enabled: syncGlobalChrome },
+    { enabled: syncGlobalChrome && isActiveTab },
   );
 
   useSyncMobileScrollChrome(
-    syncGlobalChrome ? title : undefined,
+    syncGlobalChrome && isActiveTab ? title : undefined,
     showBlur,
     showCompactTitle,
   );

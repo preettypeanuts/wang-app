@@ -8,10 +8,20 @@ import {
   PAYPLAN_TOP_BAR_TABS_LIST,
   PAYPLAN_TOP_BAR_TABS_TRIGGER,
 } from "@/config/payplan-mobile";
+import { PAYPLAN_ROUTE } from "@/config/navigation";
 import { getCurrentMonthKey } from "@/lib/planner/calendar";
+import {
+  getPayplanTabState,
+  setPayplanTabState,
+  syncPayplanTabUrl,
+} from "@/lib/payplan/payplan-tab-store";
 import { CalendarBlankIcon, ChartBarIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type { PlannerTab } from "@/types/planner";
+
+function isPayplanPath(pathname: string): boolean {
+  return pathname === PAYPLAN_ROUTE || pathname.startsWith(`${PAYPLAN_ROUTE}/`);
+}
 
 export function PlannerMobileTopBarTabs() {
   const router = useRouter();
@@ -28,6 +38,15 @@ export function PlannerMobileTopBarTabs() {
     if (tabContext) {
       tabContext.setTab(nextTab);
       return;
+    }
+
+    if (isPayplanPath(pathname)) {
+      const resolvedMonthKey = monthKey || getPayplanTabState().monthKey;
+      if (resolvedMonthKey) {
+        setPayplanTabState(nextTab, resolvedMonthKey);
+        syncPayplanTabUrl(nextTab, resolvedMonthKey);
+        return;
+      }
     }
 
     const params = new URLSearchParams(searchParams.toString());

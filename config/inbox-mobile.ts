@@ -4,7 +4,10 @@ import { MOBILE_INPUT_DOCK_SAFE_BOTTOM } from "@/config/ios-safe-area";
 import {
   MOBILE_SAFE_HORIZONTAL_INSET,
 } from "@/config/ios-safe-area";
-import { MOBILE_TOP_BAR_ROOT } from "@/config/mobile-chrome";
+import {
+  MOBILE_SCROLL_TOP_BLUR,
+  MOBILE_TOP_BAR_ROOT,
+} from "@/config/mobile-chrome";
 import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
 
 /** Page root wrapper for inbox mobile chrome. */
@@ -12,12 +15,8 @@ export const INBOX_MOBILE_PAGE = "inbox-mobile-page";
 
 export const INBOX_MOBILE_TOP_BAR_ROOT = MOBILE_TOP_BAR_ROOT;
 
-/** Linear fade under top bar — shared mobile top blur (Inbox strength). */
-export const INBOX_MOBILE_TOP_BLUR = [
-  "pointer-events-none fixed inset-x-0 top-0 z-[29]",
-  "inbox-mobile-top-blur",
-  "md:hidden",
-].join(" ");
+/** Linear fade under top bar — scroll-gated, same layer as other mobile pages. */
+export const INBOX_MOBILE_TOP_BLUR = MOBILE_SCROLL_TOP_BLUR;
 
 /** Linear fade above chat input — sync with `.inbox-mobile-bottom-blur` in globals.css */
 export const INBOX_MOBILE_BOTTOM_BLUR = [
@@ -73,7 +72,7 @@ export { INBOX_MESSAGE_BOTTOM_INSET };
 
 export const INBOX_MESSAGE_CONTENT_INSET = [
   "px-3",
-  "max-md:pt-[var(--mobile-top-bar-offset)]",
+  "max-md:pt-[calc(var(--mobile-top-bar-offset)+5px)]",
   INBOX_MESSAGE_BOTTOM_INSET,
 ].join(" ");
 

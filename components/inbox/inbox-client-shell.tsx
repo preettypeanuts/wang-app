@@ -10,6 +10,7 @@ import {
   INBOX_SUMMARY_ASIDE,
 } from "@/config/inbox-desktop";
 import type { InboxBootstrapPayload } from "@/lib/inbox/inbox-bootstrap-cache";
+import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
 import { useInboxBootstrap } from "@/hooks/use-inbox-bootstrap";
 
 interface InboxClientShellProps {
@@ -19,6 +20,7 @@ interface InboxClientShellProps {
 export function InboxClientShell({
   initialBootstrap,
 }: InboxClientShellProps) {
+  const isActiveTab = usePersistentTabActive();
   const {
     messages,
     summary,
@@ -29,9 +31,10 @@ export function InboxClientShell({
     requestDailySummary,
     refreshInbox,
     isRefreshing,
+    hasMoreMessages,
     applyTransactionSummary,
     applyMessages,
-  } = useInboxBootstrap({ initialBootstrap });
+  } = useInboxBootstrap({ initialBootstrap, enabled: isActiveTab });
 
   return (
     <div className={INBOX_PAGE_ROW}>
@@ -50,6 +53,7 @@ export function InboxClientShell({
               activePlanItems={slash.activePlanItems}
               activeSavingsItems={slash.activeSavingsItems}
               fixedMobileTopBar
+              initialHasMoreMessages={hasMoreMessages}
               initialMessages={messages}
               onMessagesChange={applyMessages}
               onSlashMenuOpenChange={(open) => {

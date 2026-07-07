@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { usePayplanPageTab } from "@/components/planner/payplan-page-tab-context";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import { syncPayplanTabUrl } from "@/lib/payplan/payplan-tab-store";
 import type { PlannerCalendarLayout } from "@/types/planner";
 
-/** Mobile combines calendar + list — strip manage layout from URL. */
+/** Mobile combines calendar + list — strip manage layout from URL without RSC navigation. */
 export function PayplanMobileLayoutGuard({
   layout,
   monthKey,
@@ -15,21 +16,16 @@ export function PayplanMobileLayoutGuard({
   monthKey: string;
 }) {
   const isMobile = useIsMobileViewport();
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const tabContext = usePayplanPageTab();
+  const tab = tabContext?.tab ?? "calendar";
 
   useEffect(() => {
-    if (!isMobile || layout === "month") {
+    if (!isMobile || layout === "month" || tab === "budget") {
       return;
     }
 
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", "calendar");
-    params.set("month", monthKey);
-    params.delete("layout");
-    router.replace(`${pathname}?${params.toString()}`);
-  }, [isMobile, layout, monthKey, pathname, router, searchParams]);
+    syncPayplanTabUrl("calendar", monthKey, { stripLayout: true });
+  }, [isMobile, layout, monthKey, tab]);
 
   return null;
 }

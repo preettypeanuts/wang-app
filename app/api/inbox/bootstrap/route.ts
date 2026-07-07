@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getApiUserId } from "@/lib/auth/api-session";
-import { getInboxMessages } from "@/lib/db/inbox-messages";
+import { getInboxMessagesPage } from "@/lib/db/inbox-messages";
 import { getTodaySummary } from "@/lib/db/transactions";
 
 export async function GET() {
@@ -11,10 +11,14 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const [messages, summary] = await Promise.all([
-    getInboxMessages(userId),
+  const [messagesPage, summary] = await Promise.all([
+    getInboxMessagesPage(userId),
     getTodaySummary(userId),
   ]);
 
-  return NextResponse.json({ messages, summary });
+  return NextResponse.json({
+    messages: messagesPage.messages,
+    hasMoreMessages: messagesPage.hasMore,
+    summary,
+  });
 }
