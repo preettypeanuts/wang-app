@@ -20,6 +20,9 @@ import {
   CHAT_INPUT_MENU_BUTTON,
   CHAT_INPUT_SEND_BUTTON,
   CHAT_INPUT_TEXTAREA,
+  INBOX_CHAT_INPUT_GLASS,
+  INBOX_CHAT_INPUT_GLASS_RESET,
+  INBOX_CHAT_INPUT_MENU_BUTTON_GLASS,
 } from "@/config/chat-input-mobile";
 import { GLASS_SURFACE } from "@/config/glass";
 import { RECEIPT_ACCEPT_ATTRIBUTE } from "@/config/receipt";
@@ -406,6 +409,7 @@ export function ChatInput({
                   CONTROL_MIN_HEIGHT,
                   CHAT_INPUT_MENU_BUTTON,
                   GLASS_SURFACE,
+                  INBOX_CHAT_INPUT_MENU_BUTTON_GLASS,
                   "shrink-0 rounded-full p-0",
                 )}
               />
@@ -440,9 +444,12 @@ export function ChatInput({
             CONTROL_MIN_HEIGHT,
             CHAT_INPUT_FIELD,
             GLASS_SURFACE,
-            "flex max-h-28 min-w-0 flex-1 items-center overflow-hidden rounded-full py-0",
+            INBOX_CHAT_INPUT_GLASS,
+            INBOX_CHAT_INPUT_GLASS_RESET,
+            "flex max-h-28 min-w-0 flex-1 rounded-full py-0",
           )}
         >
+          <div className="flex min-w-0 flex-1 items-center overflow-hidden">
           <Textarea
             ref={textareaRef}
             value={value}
@@ -485,6 +492,7 @@ export function ChatInput({
               onInsert={handleInsertHint}
             />
           ) : null}
+          </div>
         </div>
       </div>
     </div>
