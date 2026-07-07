@@ -1,4 +1,5 @@
 import { JournalCategoryCombobox } from "@/components/journal/journal-category-combobox";
+import { JournalEntryTypeToggle } from "@/components/journal/journal-entry-type-toggle";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
 import { FormDatePicker } from "@/components/shared/form-date-picker";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
@@ -15,12 +16,7 @@ import {
   FORM_FIELD_INPUT,
   FORM_GROUP,
   FORM_NOTE,
-  FORM_SEGMENT,
-  FORM_SEGMENT_ACTIVE,
-  FORM_SEGMENT_INACTIVE,
-  FORM_SEGMENTED,
 } from "@/config/form-dialog";
-import { cn } from "@/lib/utils";
 import type { TransactionType } from "@/types/transaction";
 
 export function getDefaultCategoryForType(
@@ -82,35 +78,7 @@ export function JournalEntryFormFields({
   return (
     <>
       <div className={FORM_GROUP}>
-        <fieldset className="border-0 px-4 py-3">
-          <legend className="sr-only">Jenis transaksi</legend>
-          <div className={FORM_SEGMENTED}>
-            <button
-              type="button"
-              aria-pressed={type === "expense"}
-              onClick={() => handleTypeChange("expense")}
-              className={cn(
-                FORM_SEGMENT,
-                type === "expense"
-                  ? FORM_SEGMENT_ACTIVE
-                  : FORM_SEGMENT_INACTIVE,
-              )}
-            >
-              Keluar
-            </button>
-            <button
-              type="button"
-              aria-pressed={type === "income"}
-              onClick={() => handleTypeChange("income")}
-              className={cn(
-                FORM_SEGMENT,
-                type === "income" ? FORM_SEGMENT_ACTIVE : FORM_SEGMENT_INACTIVE,
-              )}
-            >
-              Masuk
-            </button>
-          </div>
-        </fieldset>
+        <JournalEntryTypeToggle value={type} onChange={handleTypeChange} />
 
         <div className={FORM_FIELD_GRID_ROW}>
           <FormDialogField
@@ -139,11 +107,13 @@ export function JournalEntryFormFields({
           </FormDialogField>
         </div>
 
-        <FormDialogField label="Deskripsi" htmlFor="journal-description">
+        <FormDialogField
+          label="Deskripsi (opsional)"
+          htmlFor="journal-description"
+        >
           <Input
             id="journal-description"
             name="description"
-            required
             defaultValue={descriptionDefault}
             className={FORM_FIELD_INPUT}
             placeholder="Belanja harian, gaji, dll."

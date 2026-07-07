@@ -2,6 +2,7 @@ import {
   isTransactionCategory,
   normalizeCategory,
   resolveCategoryForType,
+  getCategoryLabel,
 } from "@/config/categories";
 import { parseAmount } from "@/lib/finance/parse-amount";
 import { isValidDateInput } from "@/lib/validations/planned-item";
@@ -46,9 +47,7 @@ function parseOccurredAtDateInput(
 export function parseJournalEntryFormData(
   formData: FormData,
   existingOccurredAt?: Date | string,
-):
-  | { ok: true; data: JournalEntryFormInput }
-  | { ok: false; error: string } {
+): { ok: true; data: JournalEntryFormInput } | { ok: false; error: string } {
   const typeRaw = readString(formData, "type");
 
   if (!VALID_TYPES.has(typeRaw as TransactionType)) {
@@ -65,11 +64,7 @@ export function parseJournalEntryFormData(
     return { ok: false, error: "Nominal tidak valid." };
   }
 
-  const description = readString(formData, "description");
-
-  if (!description) {
-    return { ok: false, error: "Deskripsi wajib diisi." };
-  }
+  const descriptionInput = readString(formData, "description");
 
   const category = resolveCategoryForType(
     normalizeCategory(readString(formData, "category")),
@@ -80,6 +75,7 @@ export function parseJournalEntryFormData(
     return { ok: false, error: "Kategori tidak valid." };
   }
 
+  const description = descriptionInput || getCategoryLabel(category);
   const rawInput = readString(formData, "rawInput") || description;
   const occurredAt = parseOccurredAtDateInput(
     readString(formData, "occurredAt"),
