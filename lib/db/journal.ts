@@ -119,6 +119,24 @@ export async function getJournalCategoryExpenseBreakdown(
   );
 }
 
+export async function createJournalTransaction(
+  userId: string,
+  data: JournalEntryFormInput,
+): Promise<JournalEntry> {
+  return prisma.transaction.create({
+    data: {
+      userId,
+      type: data.type,
+      amount: data.amount,
+      category: data.category,
+      description: data.description,
+      rawInput: data.rawInput,
+      occurredAt: data.occurredAt,
+    },
+    select: JOURNAL_ENTRY_SELECT,
+  });
+}
+
 export async function updateJournalTransaction(
   userId: string,
   id: string,

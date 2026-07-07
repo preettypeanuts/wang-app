@@ -16,6 +16,7 @@
     "db:push": "prisma db push",
     "db:seed-demo": "npx tsx scripts/seed-demo-user.ts",
     "db:reset": "ALLOW_DB_RESET=true npx tsx scripts/reset-dev-db.ts",
+    "db:reset-clean": "ALLOW_DB_RESET=true SKIP_DEMO_SEED=true npx tsx scripts/reset-dev-db.ts",
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio"
   },

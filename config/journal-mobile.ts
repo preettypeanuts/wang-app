@@ -1,4 +1,5 @@
 import { mobileOnly } from "@/config/mobile-layout";
+import { MOBILE_ADD_FAB } from "@/config/mobile-nav";
 
 /** Solid muted surface on mobile — sync with `.journal-mobile-solid-surface` in globals.css */
 export const JOURNAL_MOBILE_SOLID_SURFACE = "journal-mobile-solid-surface";
@@ -77,4 +78,7 @@ export const JOURNAL_CATEGORY_BREAKDOWN_SHELL = [
 
 export const JOURNAL_CATEGORY_BREAKDOWN_TRACK =
   "h-2 overflow-hidden rounded-full bg-black/8 dark:bg-white/10";
+
+/** Floating add button — mobile Journal page. */
+export const JOURNAL_ADD_FAB = MOBILE_ADD_FAB;
 

@@ -32,9 +32,10 @@ import type { JournalEntry } from "@/types/journal";
 
 interface JournalTableProps {
   items: JournalEntry[];
+  onAdd?: () => void;
 }
 
-export function JournalTable({ items }: JournalTableProps) {
+export function JournalTable({ items, onAdd }: JournalTableProps) {
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -48,8 +49,17 @@ export function JournalTable({ items }: JournalTableProps) {
       <div className={cn(JOURNAL_EMPTY_STATE, JOURNAL_EMPTY_STATE_MOBILE)}>
         <p className="text-sm font-medium">Belum ada transaksi</p>
         <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-          Catat lewat inbox atau ubah filter untuk melihat entri lain.
+          Tambah transaksi manual atau catat lewat inbox.
         </p>
+        {onAdd ? (
+          <button
+            type="button"
+            onClick={onAdd}
+            className="mt-4 text-sm font-medium text-primary transition-opacity active:opacity-70"
+          >
+            Tambah transaksi
+          </button>
+        ) : null}
       </div>
     );
   }

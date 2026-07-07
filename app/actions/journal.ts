@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireUserId } from "@/lib/auth/session";
 import {
+  createJournalTransaction,
   deleteJournalTransaction,
   updateJournalTransaction,
 } from "@/lib/db/journal";
@@ -58,6 +59,22 @@ export async function saveJournalEntryAction(
   }
 
   const entry = await updateJournalTransaction(userId, id, parsed.data);
+  revalidateJournal();
+
+  return { ok: true, entry };
+}
+
+export async function createJournalEntryAction(
+  formData: FormData,
+): Promise<JournalActionResult> {
+  const userId = await requireUserId();
+  const parsed = parseJournalEntryFormData(formData);
+
+  if (!parsed.ok) {
+    return parsed;
+  }
+
+  const entry = await createJournalTransaction(userId, parsed.data);
   revalidateJournal();
 
   return { ok: true, entry };
