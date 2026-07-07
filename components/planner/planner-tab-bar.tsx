@@ -3,6 +3,7 @@
 import { CalendarBlankIcon, ChartBarIcon } from "@/lib/icons";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { usePayplanPageTab } from "@/components/planner/payplan-page-tab-context";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { PlannerTab } from "@/types/planner";
@@ -14,15 +15,22 @@ interface PlannerTabBarProps {
 }
 
 export function PlannerTabBar({
-  tab,
+  tab: tabProp,
   monthKey,
   className,
 }: PlannerTabBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const tabContext = usePayplanPageTab();
+  const tab = tabContext?.tab ?? tabProp;
 
   function navigate(nextTab: PlannerTab) {
+    if (tabContext) {
+      tabContext.setTab(nextTab);
+      return;
+    }
+
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", nextTab);
     params.set("month", monthKey);

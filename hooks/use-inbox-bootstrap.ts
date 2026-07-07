@@ -47,10 +47,29 @@ function toBootstrapState(
   };
 }
 
-export function useInboxBootstrap() {
+interface InboxBootstrapOptions {
+  initialBootstrap?: InboxBootstrapPayload | null;
+}
+
+function seedBootstrapCache(payload: InboxBootstrapPayload | null | undefined) {
+  if (!payload) {
+    return readInboxBootstrapCache();
+  }
+
+  const cached = readInboxBootstrapCache();
+
+  if (cached && cached.messages.length >= payload.messages.length) {
+    return cached;
+  }
+
+  writeInboxBootstrapCache(payload);
+  return payload;
+}
+
+export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
   const [state, setState] = useState<InboxBootstrapState>(() => {
-    const cached = readInboxBootstrapCache();
-    return toBootstrapState(cached, Boolean(cached));
+    const seeded = seedBootstrapCache(options.initialBootstrap ?? null);
+    return toBootstrapState(seeded, Boolean(seeded));
   });
   const [dailySummary, setDailySummary] =
     useState<DailySummarySnapshot | null>(null);
@@ -58,33 +77,43 @@ export function useInboxBootstrap() {
   const [slashRequested, setSlashRequested] = useState(false);
 
   useEffect(() => {
-    triggerInboxMaintenance();
-
+    const cached = readInboxBootstrapCache();
     const controller = new AbortController();
 
-    void fetchInboxBootstrap()
-      .then((payload) => {
-        if (!payload || controller.signal.aborted) {
-          return;
-        }
+    function applyPayload(payload: InboxBootstrapPayload | null) {
+      if (!payload || controller.signal.aborted) {
+        return;
+      }
 
-        setState((current) => {
-          const merged = mergeInboxBootstrapPayload(
-            {
-              messages: current.messages,
-              summary: current.summary,
-            },
-            payload,
-          );
+      setState((current) => {
+        const merged = mergeInboxBootstrapPayload(
+          {
+            messages: current.messages,
+            summary: current.summary,
+          },
+          payload,
+        );
 
-          writeInboxBootstrapCache(merged);
+        writeInboxBootstrapCache(merged);
 
-          return toBootstrapState(merged, true);
-        });
-      })
-      .catch(() => {});
+        return toBootstrapState(merged, true);
+      });
+    }
 
-    return () => controller.abort();
+    if (!cached) {
+      triggerInboxMaintenance();
+      void fetchInboxBootstrap().then(applyPayload).catch(() => {});
+      return () => controller.abort();
+    }
+
+    const refreshId = window.setTimeout(() => {
+      void fetchInboxBootstrap().then(applyPayload).catch(() => {});
+    }, 4_000);
+
+    return () => {
+      controller.abort();
+      window.clearTimeout(refreshId);
+    };
   }, []);
 
   useEffect(() => {

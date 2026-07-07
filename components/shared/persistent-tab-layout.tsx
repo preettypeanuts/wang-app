@@ -38,7 +38,7 @@ export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
     }
 
     setCache((current) => {
-      if (current[tabPath] === children) {
+      if (current[tabPath]) {
         return current;
       }
 

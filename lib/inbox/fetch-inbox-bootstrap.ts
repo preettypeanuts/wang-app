@@ -5,11 +5,12 @@ import {
 } from "@/lib/inbox/inbox-bootstrap-cache";
 
 let inflight: Promise<InboxBootstrapPayload | null> | null = null;
+let lastMaintenanceAt = 0;
 
-export async function fetchInboxBootstrap(
-  options?: { force?: boolean },
-): Promise<InboxBootstrapPayload | null> {
-  if (!options?.force && inflight) {
+const MAINTENANCE_COOLDOWN_MS = 5 * 60 * 1000;
+
+export async function fetchInboxBootstrap(): Promise<InboxBootstrapPayload | null> {
+  if (inflight) {
     return inflight;
   }
 
@@ -40,5 +41,12 @@ export function prefetchInboxBootstrap() {
 }
 
 export function triggerInboxMaintenance() {
+  const now = Date.now();
+
+  if (now - lastMaintenanceAt < MAINTENANCE_COOLDOWN_MS) {
+    return;
+  }
+
+  lastMaintenanceAt = now;
   void fetch("/api/inbox/deferred", { method: "POST" }).catch(() => {});
 }

@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { usePayplanPageTab } from "@/components/planner/payplan-page-tab-context";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PAYPLAN_TOP_BAR_TABS_LIST,
@@ -16,10 +17,19 @@ export function PlannerMobileTopBarTabs() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const tab = (searchParams.get("tab") === "budget" ? "budget" : "calendar") as PlannerTab;
-  const monthKey = searchParams.get("month")?.trim() || getCurrentMonthKey();
+  const tabContext = usePayplanPageTab();
+  const tab = (tabContext?.tab ??
+    (searchParams.get("tab") === "budget" ? "budget" : "calendar")) as PlannerTab;
+  const monthKey =
+    tabContext?.monthKey ??
+    (searchParams.get("month")?.trim() || getCurrentMonthKey());
 
   function navigate(nextTab: PlannerTab) {
+    if (tabContext) {
+      tabContext.setTab(nextTab);
+      return;
+    }
+
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", nextTab);
     params.set("month", monthKey);

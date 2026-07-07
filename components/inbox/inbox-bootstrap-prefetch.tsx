@@ -5,11 +5,10 @@ import { usePathname } from "next/navigation";
 
 import {
   fetchInboxBootstrap,
-  prefetchInboxBootstrap,
   triggerInboxMaintenance,
 } from "@/lib/inbox/fetch-inbox-bootstrap";
 
-/** Warm inbox bootstrap + maintenance while user is on other tabs. */
+/** Warm inbox cache + maintenance while user is on other tabs. */
 export function InboxBootstrapPrefetch() {
   const pathname = usePathname();
 
@@ -18,16 +17,8 @@ export function InboxBootstrapPrefetch() {
       return;
     }
 
-    prefetchInboxBootstrap();
+    void fetchInboxBootstrap();
     triggerInboxMaintenance();
-  }, [pathname]);
-
-  useEffect(() => {
-    if (pathname !== "/") {
-      return;
-    }
-
-    void fetchInboxBootstrap({ force: true });
   }, [pathname]);
 
   return null;

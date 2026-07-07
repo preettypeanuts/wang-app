@@ -9,9 +9,16 @@ import {
   INBOX_PAGE_ROW,
   INBOX_SUMMARY_ASIDE,
 } from "@/config/inbox-desktop";
+import type { InboxBootstrapPayload } from "@/lib/inbox/inbox-bootstrap-cache";
 import { useInboxBootstrap } from "@/hooks/use-inbox-bootstrap";
 
-export function InboxClientShell() {
+interface InboxClientShellProps {
+  initialBootstrap?: InboxBootstrapPayload;
+}
+
+export function InboxClientShell({
+  initialBootstrap,
+}: InboxClientShellProps) {
   const {
     messages,
     summary,
@@ -21,7 +28,7 @@ export function InboxClientShell() {
     requestSlashContext,
     requestDailySummary,
     applyTransactionSummary,
-  } = useInboxBootstrap();
+  } = useInboxBootstrap({ initialBootstrap });
 
   return (
     <div className={INBOX_PAGE_ROW}>
