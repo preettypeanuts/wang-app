@@ -1,6 +1,7 @@
 import {
   CalendarBlankIcon,
   ChatIcon,
+  BellIcon,
   HeartIcon,
   NotebookIcon,
   SquaresFourIcon,
@@ -15,6 +16,7 @@ import {
 export const OVERVIEW_ROUTE = "/overview";
 export const PAYPLAN_ROUTE = "/payplan";
 export const PLANS_ROUTE = "/plans";
+export const NOTIFICATIONS_ROUTE = "/notifications";
 
 /** User-facing page title for `/plans` — internal route unchanged. */
 export const WISH_PAGE_TITLE = "Wish";
@@ -57,5 +59,14 @@ export const mainNavItems: NavItem[] = [
     href: PLANS_ROUTE,
     icon: HeartIcon,
     gradient: SIDEBAR_APP_ICON_GRADIENTS.plans,
+  },
+];
+
+export const utilityNavItems: NavItem[] = [
+  {
+    title: "Notifikasi",
+    href: NOTIFICATIONS_ROUTE,
+    icon: BellIcon,
+    gradient: SIDEBAR_APP_ICON_GRADIENTS.notifications,
   },
 ];

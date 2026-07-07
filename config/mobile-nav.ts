@@ -1,6 +1,7 @@
 import {
   mainNavItems,
   type NavItem,
+  NOTIFICATIONS_ROUTE,
   OVERVIEW_ROUTE,
   PAYPLAN_ROUTE,
   PLANS_ROUTE,
@@ -11,6 +12,7 @@ import type { Icon } from "@/lib/icons";
 import {
   ChartBarIcon,
   ChatIcon,
+  BellIcon,
   MobileNavJournalIcon,
   MobileNavOverviewIcon,
   MobileNavPayPlanIcon,
@@ -35,7 +37,7 @@ export const MOBILE_BOTTOM_NAV_OFFSET = "var(--mobile-bottom-nav-offset)";
 
 /** iOS 26 liquid glass — frosted pill + menu orb. */
 export const MOBILE_LIQUID_GLASS_SURFACE =
-  "border border-white/28 bg-white/14 shadow-[0_8px_32px_rgba(0,0,0,0.16),inset_0_1px_0_0_rgba(255,255,255,0.48)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/12 dark:bg-black/14 dark:shadow-[0_8px_32px_rgba(0,0,0,0.38),inset_0_1px_0_0_rgba(255,255,255,0.1)]";
+  "border border-white/28 bg-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.16),inset_0_1px_0_0_rgba(255,255,255,0.48)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/12 dark:bg-black/20dark:shadow-[0_8px_32px_rgba(0,0,0,0.38),inset_0_1px_0_0_rgba(255,255,255,0.1)]";
 
 /** Horizontal inset — gutter + landscape notch safe area. */
 export const MOBILE_BOTTOM_NAV_INSET_X = [
@@ -129,6 +131,13 @@ export interface MobileDrawerMenuItem {
 /** Quick links in menu drawer — not on bottom pill. */
 export const mobileDrawerMenuItems: MobileDrawerMenuItem[] = [
   {
+    id: "notifications",
+    title: "Notifikasi",
+    href: NOTIFICATIONS_ROUTE,
+    icon: BellIcon,
+    drawerTileClass: SIDEBAR_APP_ICON_GRADIENTS.notifications,
+  },
+  {
     id: "inbox",
     title: "Inbox",
     href: "/",
@@ -200,6 +209,10 @@ export function isDrawerMenuItemActive(
 
   if (item.id === "inbox") {
     return pathname === "/";
+  }
+
+  if (item.id === "notifications") {
+    return pathname === NOTIFICATIONS_ROUTE;
   }
 
   return isNavItemActive(pathname, item.href);

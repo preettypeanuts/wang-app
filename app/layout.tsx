@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import Script from "next/script";
 import { cookies } from "next/headers";
 import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
 import {
@@ -9,12 +8,11 @@ import {
   PWA_ICON_192,
   PWA_ICON_512,
 } from "@/config/pwa";
-import { createAppleTouchIconBootstrapScript } from "@/lib/pwa/apple-touch-icon";
 import "./globals.css";
 import { AppThemeProvider } from "@/components/providers/app-theme-provider";
 import { AppShell } from "@/components/shared/app-shell";
+import { RootBootstrapScript } from "@/components/shared/root-bootstrap-script";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { createRootAppearanceBootstrapScript } from "@/lib/appearance/bootstrap-script";
 import { readServerAppearance } from "@/lib/appearance/cookies";
 import { readServerSidebarOpen } from "@/lib/sidebar/cookies";
 import { cn } from "@/lib/utils";
@@ -92,13 +90,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
         className="flex h-svh max-h-svh flex-col overflow-hidden font-sans"
         suppressHydrationWarning
       >
-        <Script
-          id="monmon-bootstrap"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `${createRootAppearanceBootstrapScript()}\n${createAppleTouchIconBootstrapScript()}`,
-          }}
-        />
+        <RootBootstrapScript />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <AppThemeProvider initialAppearance={appearance}>
             <TooltipProvider>

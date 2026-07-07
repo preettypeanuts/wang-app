@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { markNotificationReadAction } from "@/app/actions/notifications";
-import { IosNotificationAlert } from "@/components/notifications/ios-notification-alert";
+import { NotificationBannerItem } from "@/components/notifications/notification-banner-item";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
 import {
   IOS_NOTIFICATION_STACK_ROOT,
@@ -49,17 +49,27 @@ export function NotificationBannerStack() {
     return () => window.removeEventListener("focus", onFocus);
   }, [loadNotifications]);
 
-  async function dismissNotification(notificationId: string) {
+  const dismissNotification = useCallback(async (notificationId: string) => {
     setNotifications((current) =>
       current.filter((item) => item.id !== notificationId),
     );
     await markNotificationReadAction(notificationId);
-  }
+  }, []);
 
-  function openNotification(notification: AppNotificationRecord) {
-    void dismissNotification(notification.id);
-    router.push(notification.href);
-  }
+  const handleDismiss = useCallback(
+    (notificationId: string) => {
+      void dismissNotification(notificationId);
+    },
+    [dismissNotification],
+  );
+
+  const handleOpen = useCallback(
+    (notification: AppNotificationRecord) => {
+      void dismissNotification(notification.id);
+      router.push(notification.href);
+    },
+    [dismissNotification, router],
+  );
 
   if (notifications.length === 0) {
     return null;
@@ -69,11 +79,11 @@ export function NotificationBannerStack() {
     <FixedViewportPortal>
       <div className={IOS_NOTIFICATION_STACK_ROOT}>
         {notifications.map((notification) => (
-          <IosNotificationAlert
+          <NotificationBannerItem
             key={notification.id}
             notification={notification}
-            onDismiss={() => void dismissNotification(notification.id)}
-            onOpen={() => openNotification(notification)}
+            onDismiss={handleDismiss}
+            onOpen={handleOpen}
           />
         ))}
       </div>

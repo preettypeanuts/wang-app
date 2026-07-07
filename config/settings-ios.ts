@@ -2,7 +2,7 @@
 
 import { MOBILE_SAFE_HORIZONTAL_INSET } from "@/config/ios-safe-area";
 
-export const SETTINGS_IOS_SURFACE = "bg-[#F2F2F7] dark:bg-black";
+export const SETTINGS_IOS_SURFACE = "bg-[#E9E9EC] dark:bg-black";
 
 export const SETTINGS_IOS_SCROLL = [
   "flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto overscroll-contain",
@@ -48,6 +48,14 @@ export const SETTINGS_IOS_ROW_LABEL =
 
 export const SETTINGS_IOS_ROW_VALUE =
   "shrink-0 text-[17px] leading-snug text-muted-foreground";
+
+export const SETTINGS_IOS_PROFILE_ROW = [
+  SETTINGS_IOS_ROW,
+  "min-h-[4.75rem] items-center py-3",
+].join(" ");
+
+export const SETTINGS_IOS_PROFILE_GROUP =
+  "overflow-hidden rounded-xl bg-card shadow-none";
 
 export const SETTINGS_IOS_PROFILE_NAME =
   "truncate text-[17px] font-normal leading-snug text-foreground";

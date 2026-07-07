@@ -3,6 +3,7 @@ import { mobileOnly } from "@/config/mobile-layout";
 import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
 import {
   OVERVIEW_ROUTE,
+  NOTIFICATIONS_ROUTE,
   PAYPLAN_ROUTE,
   PLANS_ROUTE,
   WISH_PAGE_TITLE,
@@ -72,6 +73,7 @@ const MOBILE_PAGE_TITLES: Record<string, string> = {
   "/journal": "Journal",
   [PAYPLAN_ROUTE]: "PayPlan",
   [PLANS_ROUTE]: WISH_PAGE_TITLE,
+  [NOTIFICATIONS_ROUTE]: "Notifikasi",
 };
 
 export function getMobilePageTitle(pathname: string): string | null {

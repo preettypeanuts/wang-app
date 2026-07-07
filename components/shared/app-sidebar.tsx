@@ -14,7 +14,7 @@ import {
   SEPARATED_SIDEBAR_CLASS,
   SEPARATED_SIDEBAR_GUTTER,
 } from "@/config/sidebar";
-import { mainNavItems } from "@/config/navigation";
+import { mainNavItems, utilityNavItems } from "@/config/navigation";
 import {
   Sidebar,
   SidebarContent,
@@ -63,6 +63,23 @@ export function AppSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu className="gap-1">
                   {mainNavItems.map((item) => (
+                    <SidebarMenuItem key={item.href}>
+                      <SidebarMenuButton
+                        render={<Link href={item.href} />}
+                        isActive={pathname === item.href}
+                        tooltip={item.title}
+                        className={SEPARATED_MENU_ITEM}
+                      >
+                        <SidebarAppIcon
+                          icon={item.icon}
+                          gradient={item.gradient}
+                          isActive={pathname === item.href}
+                        />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                  {utilityNavItems.map((item) => (
                     <SidebarMenuItem key={item.href}>
                       <SidebarMenuButton
                         render={<Link href={item.href} />}

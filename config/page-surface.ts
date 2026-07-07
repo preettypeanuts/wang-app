@@ -1,7 +1,7 @@
-import { OVERVIEW_ROUTE } from "@/config/navigation";
+import { OVERVIEW_ROUTE, NOTIFICATIONS_ROUTE } from "@/config/navigation";
 
-/** Routes with wallpaper visible (Inbox + Overview only). */
-const WALLPAPER_ROUTES = ["/", OVERVIEW_ROUTE] as const;
+/** Routes with wallpaper visible (Inbox + Overview + Notifications on mobile). */
+const WALLPAPER_ROUTES = ["/", OVERVIEW_ROUTE, NOTIFICATIONS_ROUTE] as const;
 
 export function isWallpaperRoute(pathname: string): boolean {
   return WALLPAPER_ROUTES.some(

@@ -539,35 +539,6 @@
     }
   }
 
-  /* Keep in sync with OVERVIEW_MOBILE_TITLE_SCRIM in config/overview-mobile.ts */
-  @media (max-width: 767px) {
-    .overview-mobile-title-scrim {
-      position: relative;
-      z-index: 0;
-      isolation: isolate;
-      margin-top: calc(-1 * (var(--mobile-safe-top) + 4.75rem));
-      padding-top: calc(var(--mobile-safe-top) + 4.75rem);
-      padding-bottom: 0.5rem;
-    }
-
-    .overview-mobile-title-scrim::before {
-      content: "";
-      position: absolute;
-      z-index: -1;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      left: 0;
-      pointer-events: none;
-      background: linear-gradient(
-        to bottom,
-        color-mix(in srgb, var(--background) 62%, transparent) 0%,
-        color-mix(in srgb, var(--background) 38%, transparent) 55%,
-        transparent 100%
-      );
-    }
-  }
-
   /* Keep in sync with MOBILE_SCROLL_BOTTOM_SPACER in config/mobile-chrome.ts */
   .mobile-scroll-bottom-spacer {
     display: none;
@@ -700,7 +671,11 @@
     }
 
     .settings-drawer-popup [data-slot="drawer-content"] {
-      overflow: visible !important;
+      display: flex !important;
+      min-height: 0 !important;
+      flex: 1 1 auto !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
       padding-bottom: var(--mobile-drawer-inner-padding-bottom);
     }
 

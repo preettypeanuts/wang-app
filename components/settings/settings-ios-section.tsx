@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 interface SettingsIosSectionProps {
   label?: string;
   footer?: string;
+  footerClassName?: string;
   children: ReactNode;
   className?: string;
 }
@@ -18,6 +19,7 @@ interface SettingsIosSectionProps {
 export function SettingsIosSection({
   label,
   footer,
+  footerClassName,
   children,
   className,
 }: SettingsIosSectionProps) {
@@ -36,7 +38,11 @@ export function SettingsIosSection({
           </div>
         ))}
       </div>
-      {footer ? <p className={SETTINGS_IOS_SECTION_FOOTER}>{footer}</p> : null}
+      {footer ? (
+        <p className={cn(SETTINGS_IOS_SECTION_FOOTER, footerClassName)}>
+          {footer}
+        </p>
+      ) : null}
     </section>
   );
 }

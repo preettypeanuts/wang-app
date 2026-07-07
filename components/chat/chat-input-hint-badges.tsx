@@ -13,7 +13,7 @@ export function ChatInputHintBadges({
   showSlash = true,
 }: ChatInputHintBadgesProps) {
   return (
-    <div className="mr-0.5 flex shrink-0 items-center gap-1">
+    <div className="-mr-0.5 flex shrink-0 items-center gap-1">
       {showSlash ? (
         <button
           type="button"

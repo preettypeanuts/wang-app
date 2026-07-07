@@ -36,4 +36,7 @@ export const IOS_NOTIFICATION_STACK_ROOT = [
 
 export const NOTIFICATION_MAX_IN_APP_STACK = 3;
 
+/** In-app banner auto-dismiss — matches common iOS toast duration (~5s). */
+export const NOTIFICATION_IN_APP_AUTO_DISMISS_MS = 5000;
+
 export const NOTIFICATION_PUSH_ICON = "/icon-192.png";

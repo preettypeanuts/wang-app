@@ -2,10 +2,10 @@
 
 import { APP_TAGLINE } from "@/config/app";
 import {
-  SETTINGS_IOS_GROUP,
+  SETTINGS_IOS_PROFILE_GROUP,
   SETTINGS_IOS_PROFILE_NAME,
+  SETTINGS_IOS_PROFILE_ROW,
   SETTINGS_IOS_PROFILE_SUBTITLE,
-  SETTINGS_IOS_ROW,
 } from "@/config/settings-ios";
 import { useSession } from "@/lib/auth/auth-client";
 
@@ -16,8 +16,8 @@ export function SettingsIosProfileCard() {
   const initial = name.charAt(0).toUpperCase() || "W";
 
   return (
-    <div className={SETTINGS_IOS_GROUP}>
-      <div className={SETTINGS_IOS_ROW}>
+    <div className={SETTINGS_IOS_PROFILE_GROUP}>
+      <div className={SETTINGS_IOS_PROFILE_ROW}>
         <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-linear-to-b from-[#7C8CFF] via-[#5B6CFF] to-[#3B4FE0] text-lg font-semibold text-white shadow-sm">
           {initial}
         </span>

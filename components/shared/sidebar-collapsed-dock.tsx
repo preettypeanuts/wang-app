@@ -12,7 +12,7 @@ import {
 } from "@/components/shared/sidebar-dock";
 import { useSidebar } from "@/components/ui/sidebar";
 import { APP_NAME } from "@/config/app";
-import { mainNavItems } from "@/config/navigation";
+import { mainNavItems, utilityNavItems } from "@/config/navigation";
 import {
   SIDEBAR_APP_ICON_GLYPH,
   SIDEBAR_APP_ICON_GRADIENTS,
@@ -132,6 +132,24 @@ export function SidebarCollapsedDock() {
       </SidebarDockItem>
 
       {mainNavItems.map((item) => {
+        const itemIndex = index++;
+        const isActive = pathname === item.href;
+
+        return (
+          <SidebarDockItem key={item.href} index={itemIndex}>
+            <DockAppButton
+              href={item.href}
+              label={item.title}
+              gradient={item.gradient}
+              isActive={isActive}
+            >
+              <item.icon className={SIDEBAR_APP_ICON_GLYPH} />
+            </DockAppButton>
+          </SidebarDockItem>
+        );
+      })}
+
+      {utilityNavItems.map((item) => {
         const itemIndex = index++;
         const isActive = pathname === item.href;
 

@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser } from "@/lib/db/user-scope";
 import type {
+  AppNotificationCounts,
+  AppNotificationFeedPage,
   AppNotificationRecord,
   NotificationDraft,
 } from "@/types/notification";
@@ -81,6 +83,68 @@ export async function markAllAppNotificationsRead(userId: string) {
     where: scopedByUser(userId, { readAt: null }),
     data: { readAt: new Date() },
   });
+}
+
+export async function getAppNotificationCounts(
+  userId: string,
+): Promise<AppNotificationCounts> {
+  const [total, unread] = await Promise.all([
+    prisma.appNotification.count({
+      where: scopedByUser(userId, {}),
+    }),
+    prisma.appNotification.count({
+      where: scopedByUser(userId, { readAt: null }),
+    }),
+  ]);
+
+  return { total, unread };
+}
+
+const DEFAULT_FEED_PAGE_SIZE = 20;
+
+export async function listAppNotificationFeedPage(
+  userId: string,
+  options: { cursor?: string; limit?: number } = {},
+): Promise<AppNotificationFeedPage> {
+  const limit = options.limit ?? DEFAULT_FEED_PAGE_SIZE;
+  const cursorRow = options.cursor
+    ? await prisma.appNotification.findFirst({
+        where: scopedByUser(userId, { id: options.cursor }),
+        select: { createdAt: true, id: true },
+      })
+    : null;
+
+  const cursorFilter = cursorRow
+    ? {
+        OR: [
+          { createdAt: { lt: cursorRow.createdAt } },
+          {
+            createdAt: cursorRow.createdAt,
+            id: { lt: cursorRow.id },
+          },
+        ],
+      }
+    : {};
+
+  const rows = await prisma.appNotification.findMany({
+    where: scopedByUser(userId, cursorFilter),
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit + 1,
+  });
+
+  const hasMore = rows.length > limit;
+  const pageRows = hasMore ? rows.slice(0, limit) : rows;
+  const nextCursor = hasMore
+    ? (pageRows[pageRows.length - 1]?.id ?? null)
+    : null;
+
+  const counts = await getAppNotificationCounts(userId);
+
+  return {
+    items: pageRows.map(toRecord),
+    nextCursor,
+    counts,
+  };
 }
 
 export async function markAppNotificationPushed(

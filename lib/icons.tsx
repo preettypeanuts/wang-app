@@ -7,6 +7,7 @@ import {
   sfArrowUp,
   sfArrowUturnLeft,
   sfBagFill,
+  sfBellFill,
   sfBanknoteFill,
   sfBookFill,
   sfBubbleLeftAndBubbleRightFill,
@@ -93,6 +94,7 @@ function createSFIcon(symbol: IconDefinition, displayName: string): Icon {
 export const ArrowDownIcon = createSFIcon(sfArrowDown, "ArrowDownIcon");
 export const ArrowLeftIcon = createSFIcon(sfArrowLeft, "ArrowLeftIcon");
 export const ArrowUpIcon = createSFIcon(sfArrowUp, "ArrowUpIcon");
+export const BellIcon = createSFIcon(sfBellFill, "BellIcon");
 export const ArrowClockwiseIcon = createSFIcon(
   sfArrowClockwise,
   "ArrowClockwiseIcon",

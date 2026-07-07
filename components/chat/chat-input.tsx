@@ -458,16 +458,15 @@ export function ChatInput({
           {hasText && !isPickerOpen ? (
             <Button
               type="button"
-              size="icon-xs"
               onClick={() => void handleSubmit()}
               disabled={isInputDisabled}
               aria-label="Kirim pesan"
               className={cn(
                 CHAT_INPUT_SEND_BUTTON,
-                "mr-0.5 shrink-0 rounded-full",
+                "-mr-0.5 flex-1 rounded-full w-10 max-w-10",
               )}
             >
-              <ArrowUpIcon aria-hidden="true" />
+              <ArrowUpIcon aria-hidden="true"  weight={1} />
             </Button>
           ) : !isPickerOpen ? (
             <ChatInputHintBadges

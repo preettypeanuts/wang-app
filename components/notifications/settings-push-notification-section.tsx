@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 
-import { AuthErrorAlert } from "@/components/auth/auth-error-alert";
 import { SettingsIosRow } from "@/components/settings/settings-ios-row";
+import { SettingsIosSection } from "@/components/settings/settings-ios-section";
 import { SETTINGS_IOS_ICON_ACCENT } from "@/config/settings-ios";
 import { SparkleIcon } from "@/lib/icons";
 import {
@@ -12,8 +12,12 @@ import {
   subscribeToPushNotifications,
   unsubscribeFromPushNotifications,
 } from "@/lib/push/subscribe-client";
+import { cn } from "@/lib/utils";
 
-export function SettingsPushNotificationRow() {
+const PUSH_FOOTER_DEFAULT =
+  "Tagihan mendatang, ringkasan AI, dan alert penting.";
+
+export function SettingsPushNotificationSection() {
   const [enabled, setEnabled] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,24 +57,23 @@ export function SettingsPushNotificationRow() {
     }
   }
 
+  const footer = error ?? PUSH_FOOTER_DEFAULT;
+
   return (
-    <div className="space-y-2">
+    <SettingsIosSection
+      label="Notifikasi"
+      footer={footer}
+      className="shrink-0"
+      footerClassName={error ? "text-destructive" : undefined}
+    >
       <SettingsIosRow
         icon={<SparkleIcon aria-hidden />}
         iconClassName={SETTINGS_IOS_ICON_ACCENT}
         label="Notifikasi push"
-        value={enabled ? "Aktif" : "Nonaktif"}
+        value={pending ? "Memproses..." : enabled ? "Aktif" : "Nonaktif"}
         showChevron={false}
         onClick={() => void handleToggle()}
       />
-      {pending ? (
-        <p className="px-4 text-[13px] text-muted-foreground">Memproses...</p>
-      ) : null}
-      {error ? (
-        <div className="px-1">
-          <AuthErrorAlert message={error} />
-        </div>
-      ) : null}
-    </div>
+    </SettingsIosSection>
   );
 }

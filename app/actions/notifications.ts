@@ -12,10 +12,12 @@ export async function markNotificationReadAction(notificationId: string) {
   const userId = await requireUserId();
   await markAppNotificationRead(userId, notificationId);
   revalidatePath("/");
+  revalidatePath("/notifications");
 }
 
 export async function markAllNotificationsReadAction() {
   const userId = await requireUserId();
   await markAllAppNotificationsRead(userId);
   revalidatePath("/");
+  revalidatePath("/notifications");
 }

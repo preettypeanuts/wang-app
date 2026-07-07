@@ -30,3 +30,14 @@ export interface PushSubscriptionPayload {
     auth: string;
   };
 }
+
+export interface AppNotificationCounts {
+  total: number;
+  unread: number;
+}
+
+export interface AppNotificationFeedPage {
+  items: AppNotificationRecord[];
+  nextCursor: string | null;
+  counts: AppNotificationCounts;
+}
