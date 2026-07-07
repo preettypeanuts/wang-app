@@ -10,7 +10,8 @@ import {
   JOURNAL_MOBILE_SOLID_SURFACE,
 } from "@/config/journal-mobile";
 import { PLANS_MOBILE_SOLID_CARD, PLANS_WISH_CARD_MOBILE } from "@/config/plans";
-import { MOBILE_ADD_FAB, MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
+import { MOBILE_ADD_FAB } from "@/config/mobile-nav";
+import { MOBILE_TOP_BAR_GLASS_SURFACE } from "@/config/mobile-chrome";
 
 /** Reuse journal solid surface — same `.journal-mobile-solid-surface` in globals.css */
 export const PAYPLAN_MOBILE_SOLID_SURFACE = JOURNAL_MOBILE_SOLID_SURFACE;
@@ -74,7 +75,7 @@ export const PAYPLAN_ADD_FAB = MOBILE_ADD_FAB;
 /** Segmented Kalender/Budget — fixed top bar, aligned with Inbox orb. */
 export const PAYPLAN_TOP_BAR_TABS_LIST = [
   "pointer-events-auto !h-11 !w-auto shrink-0 items-center gap-0 !rounded-full !p-0 !bg-transparent",
-  MOBILE_LIQUID_GLASS_SURFACE,
+  MOBILE_TOP_BAR_GLASS_SURFACE,
 ].join(" ");
 
 /** Sync with `.payplan-top-bar-tab` in globals.css — active uses `--primary` (accent). */

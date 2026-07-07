@@ -1,6 +1,6 @@
-import { GLASS_TILE_HIGHLIGHT } from "@/config/glass";
 import { MOBILE_SAFE_HORIZONTAL_INSET } from "@/config/ios-safe-area";
 import { mobileOnly } from "@/config/mobile-layout";
+import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
 import {
   OVERVIEW_ROUTE,
   NOTIFICATIONS_ROUTE,
@@ -147,13 +147,11 @@ export const MOBILE_TOP_BAR_ROW = [
   "h-[calc(var(--mobile-safe-top)+var(--mobile-top-bar-height))]",
 ].join(" ");
 
-/** Floating top bar orbs — lighter than bottom nav pill glass. */
-export const MOBILE_TOP_BAR_ORB_SURFACE = [
-  "border border-white/28 bg-white/20",
-  GLASS_TILE_HIGHLIGHT,
-  "backdrop-blur-2xl backdrop-saturate-150",
-  "dark:border-white/12 dark:bg-black/20",
-].join(" ");
+/** Shared glass for top bar orbs and PayPlan Kalender/Budget tabs. */
+export const MOBILE_TOP_BAR_GLASS_SURFACE = MOBILE_LIQUID_GLASS_SURFACE;
+
+/** Floating top bar orbs — same glass as PayPlan segmented tabs. */
+export const MOBILE_TOP_BAR_ORB_SURFACE = MOBILE_TOP_BAR_GLASS_SURFACE;
 
 /** Floating glass orb — top bar actions (menu, shortcuts). */
 export const MOBILE_TOP_BAR_ORB_BUTTON = [

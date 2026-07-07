@@ -37,7 +37,7 @@ export const MOBILE_BOTTOM_NAV_OFFSET = "var(--mobile-bottom-nav-offset)";
 
 /** iOS 26 liquid glass — frosted pill + menu orb. */
 export const MOBILE_LIQUID_GLASS_SURFACE =
-  "border border-white/28 bg-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.16),inset_0_1px_0_0_rgba(255,255,255,0.48)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/12 dark:bg-black/20dark:shadow-[0_8px_32px_rgba(0,0,0,0.38),inset_0_1px_0_0_rgba(255,255,255,0.1)]";
+  "border border-white/28 bg-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.16),inset_0_1px_0_0_rgba(255,255,255,0.48)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/12 dark:bg-black/20 dark:shadow-[0_8px_32px_rgba(0,0,0,0.38),inset_0_1px_0_0_rgba(255,255,255,0.1)]";
 
 /** Horizontal inset — gutter + landscape notch safe area. */
 export const MOBILE_BOTTOM_NAV_INSET_X = [
