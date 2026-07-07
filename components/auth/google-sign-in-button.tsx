@@ -6,7 +6,6 @@ import { AuthErrorAlert } from "@/components/auth/auth-error-alert";
 import { AuthDivider } from "@/components/auth/auth-divider";
 import { Button } from "@/components/ui/button";
 import { signIn } from "@/lib/auth/auth-client";
-import { markAuthReturnPath } from "@/lib/auth/auth-return";
 import { formatAppError } from "@/lib/errors/format-app-error";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +36,6 @@ export function GoogleSignInButton({
     setPending(true);
 
     try {
-      markAuthReturnPath(callbackUrl);
-
       const result = await signIn.social({
         provider: "google",
         callbackURL: callbackUrl,
