@@ -32,3 +32,6 @@ export const CHAT_INPUT_HINT_BADGE = [
 /** Extra clearance when input dock sits above bottom nav on mobile. */
 export const INBOX_MESSAGE_BOTTOM_INSET =
   "max-md:pb-[calc(6rem+var(--mobile-bottom-nav-offset))]";
+
+/** Inbox input → bottom nav gap (mobile only). */
+export const INBOX_MOBILE_CHAT_INPUT_DOCK_PB = "max-md:pb-0.5";

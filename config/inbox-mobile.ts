@@ -1,6 +1,9 @@
-import { INBOX_MESSAGE_BOTTOM_INSET, CHAT_INPUT_DOCK_INSET_X } from "@/config/chat-input-mobile";
+import {
+  INBOX_MESSAGE_BOTTOM_INSET,
+  CHAT_INPUT_DOCK_INSET_X,
+  INBOX_MOBILE_CHAT_INPUT_DOCK_PB,
+} from "@/config/chat-input-mobile";
 import { INBOX_DESKTOP_INPUT_DOCK_PB } from "@/config/inbox-desktop";
-import { MOBILE_INPUT_DOCK_SAFE_BOTTOM } from "@/config/ios-safe-area";
 import {
   MOBILE_SAFE_HORIZONTAL_INSET,
 } from "@/config/ios-safe-area";
@@ -83,7 +86,7 @@ export const INBOX_CHAT_INPUT_DOCK = [
   "md:absolute md:inset-x-0 md:bottom-0",
   CHAT_INPUT_DOCK_INSET_X,
   "md:px-3",
-  MOBILE_INPUT_DOCK_SAFE_BOTTOM,
+  INBOX_MOBILE_CHAT_INPUT_DOCK_PB,
   INBOX_DESKTOP_INPUT_DOCK_PB,
   "max-md:pt-1.5 md:pt-1",
 ].join(" ");
