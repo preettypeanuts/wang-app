@@ -3,17 +3,27 @@
 import { useEffect, useState } from "react";
 
 import { FORM_FIELD_INPUT } from "@/config/form-dialog";
-import { formatAmountInput } from "@/lib/finance/format-amount-input";
+import {
+  extractAmountDigits,
+  formatAmountInput,
+} from "@/lib/finance/format-amount-input";
 import { cn } from "@/lib/utils";
 
 interface AmountTextInputProps
   extends Omit<
     React.ComponentProps<"input">,
-    "type" | "inputMode" | "onInput" | "onChange"
+    "type" | "inputMode" | "onInput" | "onChange" | "name"
   > {
   className?: string;
+  name?: string;
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onInput?: (event: React.FormEvent<HTMLInputElement>) => void;
+}
+
+function toDisplayValue(
+  value: string | number | readonly string[] | undefined,
+) {
+  return formatAmountInput(String(value ?? ""));
 }
 
 export function AmountTextInput({
@@ -22,13 +32,15 @@ export function AmountTextInput({
   spellCheck = false,
   value,
   defaultValue,
+  name,
   onChange,
   onInput,
+  required,
   ...props
 }: AmountTextInputProps) {
   const isControlled = value !== undefined;
   const [displayValue, setDisplayValue] = useState(() =>
-    formatAmountInput(String(defaultValue ?? value ?? "")),
+    toDisplayValue(defaultValue ?? value),
   );
 
   useEffect(() => {
@@ -36,38 +48,42 @@ export function AmountTextInput({
       return;
     }
 
-    setDisplayValue(formatAmountInput(String(value ?? "")));
+    setDisplayValue(toDisplayValue(value));
   }, [isControlled, value]);
 
-  function applyFormattedValue(
-    event: React.FormEvent<HTMLInputElement>,
-    formatted: string,
+  function notifyChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+    rawDigits: string,
   ) {
-    setDisplayValue(formatted);
-    event.currentTarget.value = formatted;
-  }
+    event.currentTarget.value = rawDigits;
 
-  function handleInput(event: React.FormEvent<HTMLInputElement>) {
-    const formatted = formatAmountInput(event.currentTarget.value);
-    applyFormattedValue(event, formatted);
-    onInput?.(event);
+    onChange?.(event);
+    onInput?.(event as unknown as React.FormEvent<HTMLInputElement>);
   }
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    onChange?.(event);
+    const rawDigits = extractAmountDigits(event.target.value);
+    const formatted = formatAmountInput(rawDigits);
+    setDisplayValue(formatted);
+    notifyChange(event, rawDigits);
   }
 
+  const rawDigits = extractAmountDigits(displayValue);
+
   return (
-    <input
-      type="text"
-      inputMode="numeric"
-      autoComplete={autoComplete}
-      spellCheck={spellCheck}
-      value={displayValue}
-      onInput={handleInput}
-      onChange={handleChange}
-      className={cn(FORM_FIELD_INPUT, "tabular-nums", className)}
-      {...props}
-    />
+    <>
+      <input
+        type="text"
+        inputMode="numeric"
+        autoComplete={autoComplete}
+        spellCheck={spellCheck}
+        value={displayValue}
+        onChange={handleChange}
+        required={required}
+        className={cn(FORM_FIELD_INPUT, "tabular-nums", className)}
+        {...props}
+      />
+      {name ? <input type="hidden" name={name} value={rawDigits} /> : null}
+    </>
   );
 }
