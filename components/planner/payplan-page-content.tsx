@@ -136,7 +136,7 @@ function PayplanPagePanels({
           </div>
 
           <div className={cn(!isCalendarTab && "hidden")}>
-            <div className={cn(isManage && "max-md:hidden")}>
+            <div className={cn(isManage && "hidden")}>
               <PlannerCalendar
                 monthKey={monthKeyData}
                 year={year}
