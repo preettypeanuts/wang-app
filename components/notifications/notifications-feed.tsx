@@ -15,13 +15,9 @@ import {
   NOTIFICATIONS_PAGE_SCROLL_INNER,
 } from "@/config/notifications-page";
 import { useNotificationsFeed } from "@/hooks/use-notifications-feed";
-import type { AppNotificationFeedPage, AppNotificationRecord } from "@/types/notification";
+import type { AppNotificationRecord } from "@/types/notification";
 
-interface NotificationsFeedProps {
-  initialFeed: AppNotificationFeedPage;
-}
-
-export function NotificationsFeed({ initialFeed }: NotificationsFeedProps) {
+export function NotificationsFeed() {
   const router = useRouter();
   const sentinelRef = useRef<HTMLDivElement>(null);
   const {
@@ -34,7 +30,7 @@ export function NotificationsFeed({ initialFeed }: NotificationsFeedProps) {
     loadMore,
     setItems,
     setCounts,
-  } = useNotificationsFeed(initialFeed);
+  } = useNotificationsFeed();
 
   useEffect(() => {
     const node = sentinelRef.current;

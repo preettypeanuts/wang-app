@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 import {
   NOTIFICATION_KIND_LABELS,
   NOTIFICATIONS_LIST_ITEM,
@@ -37,10 +35,13 @@ export function NotificationListItem({
       onClick={() => onOpen(notification)}
     >
       <div className={NOTIFICATIONS_LIST_ITEM_INNER}>
-        <Image
+        {/* biome-ignore lint/performance/noImgElement: static 40px icon — avoid per-row Next/Image overhead */}
+        <img
           alt=""
           className={NOTIFICATIONS_LIST_ITEM_ICON}
+          decoding="async"
           height={40}
+          loading="lazy"
           src={NOTIFICATION_PUSH_ICON}
           width={40}
         />

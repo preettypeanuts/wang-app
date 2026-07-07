@@ -1,5 +1,4 @@
-import { GLASS_SURFACE } from "@/config/glass";
-import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
+import { GLASS_BORDER, GLASS_FILL, GLASS_TILE_BASE } from "@/config/glass";
 import { SEPARATED_SURFACE } from "@/config/shape";
 import { STACK_GAP } from "@/config/spacing";
 
@@ -23,9 +22,10 @@ export const NOTIFICATIONS_PAGE_SCROLL_INNER = ["flex flex-col", STACK_GAP, "pb-
 /** iOS Notification Center — summary pill over wallpaper. */
 export const NOTIFICATIONS_SUMMARY_BAR = [
   SEPARATED_SURFACE,
-  GLASS_SURFACE,
+  GLASS_TILE_BASE,
+  GLASS_BORDER,
+  GLASS_FILL,
   "flex items-center justify-between gap-3 px-4 py-3",
-  "max-md:backdrop-blur-3xl",
 ].join(" ");
 
 export const NOTIFICATIONS_SUMMARY_TOTAL =
@@ -40,13 +40,13 @@ export const NOTIFICATIONS_MARK_ALL_BUTTON = [
   "hover:bg-primary/10 active:bg-primary/15",
 ].join(" ");
 
-/** Single notification card — glass over wallpaper. */
+/** Single notification card — one glass layer (avoid stacked blurs). */
 export const NOTIFICATIONS_LIST_ITEM = [
   SEPARATED_SURFACE,
-  MOBILE_LIQUID_GLASS_SURFACE,
-  GLASS_SURFACE,
+  GLASS_TILE_BASE,
+  GLASS_BORDER,
+  GLASS_FILL,
   "w-full text-left transition-opacity",
-  "max-md:backdrop-blur-3xl",
   "hover:opacity-95 active:opacity-90",
 ].join(" ");
 
@@ -73,9 +73,10 @@ export const NOTIFICATIONS_LIST_ITEM_KIND =
 
 export const NOTIFICATIONS_EMPTY_STATE = [
   SEPARATED_SURFACE,
-  GLASS_SURFACE,
+  GLASS_TILE_BASE,
+  GLASS_BORDER,
+  GLASS_FILL,
   "px-4 py-10 text-center",
-  "max-md:backdrop-blur-3xl",
 ].join(" ");
 
 export const NOTIFICATIONS_LOAD_MORE_SENTINEL = "h-8 w-full shrink-0";

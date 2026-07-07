@@ -8,15 +8,8 @@ import {
 import { STACK_GAP } from "@/config/spacing";
 import { cn } from "@/lib/utils";
 import { GLASS_SURFACE } from "@/config/glass";
-import type { AppNotificationFeedPage } from "@/types/notification";
 
-interface NotificationsScrollShellProps {
-  initialFeed: AppNotificationFeedPage;
-}
-
-export function NotificationsScrollShell({
-  initialFeed,
-}: NotificationsScrollShellProps) {
+export function NotificationsScrollShell() {
   return (
     <div className={NOTIFICATIONS_PAGE_ROOT}>
       <NotificationsPageShell className="min-h-0 flex-1">
@@ -35,7 +28,7 @@ export function NotificationsScrollShell({
             Riwayat alert, ringkasan, dan pengingat keuangan.
           </p>
 
-          <NotificationsFeed initialFeed={initialFeed} />
+          <NotificationsFeed />
         </MobileScrollSurface>
       </NotificationsPageShell>
     </div>

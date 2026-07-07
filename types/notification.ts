@@ -39,7 +39,8 @@ export interface AppNotificationCounts {
 export interface AppNotificationFeedPage {
   items: AppNotificationRecord[];
   nextCursor: string | null;
-  counts: AppNotificationCounts;
+  /** Omitted on cursor pages — client keeps existing counts. */
+  counts?: AppNotificationCounts;
 }
 
 /** Lightweight head for cache revalidation — skip full feed fetch when unchanged. */

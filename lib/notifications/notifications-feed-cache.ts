@@ -18,9 +18,10 @@ export function feedMetaFromPage(
   page: AppNotificationFeedPage,
 ): AppNotificationFeedMeta {
   const head = page.items[0];
+  const counts = page.counts ?? { total: 0, unread: 0 };
 
   return {
-    counts: page.counts,
+    counts,
     latestId: head?.id ?? null,
     latestCreatedAt: head?.createdAt ?? null,
   };
@@ -71,6 +72,10 @@ export function writeNotificationsFeedCache(
 }
 
 export function writeNotificationsFeedPage(page: AppNotificationFeedPage) {
+  if (!page.counts) {
+    return;
+  }
+
   writeNotificationsFeedCache({
     items: page.items,
     nextCursor: page.nextCursor,

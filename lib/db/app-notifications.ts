@@ -89,16 +89,15 @@ export async function markAllAppNotificationsRead(userId: string) {
 export async function getAppNotificationCounts(
   userId: string,
 ): Promise<AppNotificationCounts> {
-  const [total, unread] = await Promise.all([
-    prisma.appNotification.count({
-      where: scopedByUser(userId, {}),
-    }),
-    prisma.appNotification.count({
-      where: scopedByUser(userId, { readAt: null }),
-    }),
-  ]);
+  const [row] = await prisma.$queryRaw<Array<{ total: number; unread: number }>>`
+    SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE "readAt" IS NULL)::int AS unread
+    FROM "monmon_whethertie"."AppNotification"
+    WHERE "userId" = ${userId}
+  `;
 
-  return { total, unread };
+  return row ?? { total: 0, unread: 0 };
 }
 
 const DEFAULT_FEED_PAGE_SIZE = 20;
@@ -138,6 +137,13 @@ export async function listAppNotificationFeedPage(
   const nextCursor = hasMore
     ? (pageRows[pageRows.length - 1]?.id ?? null)
     : null;
+
+  if (options.cursor) {
+    return {
+      items: pageRows.map(toRecord),
+      nextCursor,
+    };
+  }
 
   const counts = await getAppNotificationCounts(userId);
 
