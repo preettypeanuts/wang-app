@@ -24,3 +24,10 @@ export const PWA_FULLSCREEN_BLEED = "pwa-fullscreen-bleed";
 
 /** Dimming overlay — skips status bar / Dynamic Island band on mobile. */
 export const PWA_WALLPAPER_MASK = "pwa-wallpaper-mask";
+
+/**
+ * Standalone PWA viewport — disables pinch/double-tap zoom (native-like).
+ * Applied via bootstrap script only when installed, not in mobile browser.
+ */
+export const PWA_STANDALONE_VIEWPORT_CONTENT =
+  "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover";

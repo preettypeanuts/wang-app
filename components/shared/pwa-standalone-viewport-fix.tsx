@@ -2,15 +2,15 @@
 
 import { useEffect } from "react";
 
-import { applyStandaloneAppHeight } from "@/lib/pwa/standalone-viewport";
+import { applyStandaloneChrome } from "@/lib/pwa/standalone-viewport";
 
-/** Keeps `--app-height: 100vh` after resume / viewport changes in standalone PWA. */
+/** Keeps standalone PWA viewport + zoom lock after resume / rotation. */
 export function PwaStandaloneViewportFix() {
   useEffect(() => {
-    applyStandaloneAppHeight();
+    applyStandaloneChrome();
 
     const onViewportChange = () => {
-      applyStandaloneAppHeight();
+      applyStandaloneChrome();
     };
 
     window.addEventListener("resize", onViewportChange);

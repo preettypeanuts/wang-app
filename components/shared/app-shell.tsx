@@ -13,6 +13,7 @@ import { MobileScrollChrome } from "@/components/shared/mobile-scroll-chrome";
 import { MobileScrollChromeProvider } from "@/components/shared/mobile-scroll-chrome-provider";
 import { PersistentSidebarProvider } from "@/components/shared/persistent-sidebar-provider";
 import { PwaHtmlBackgroundSync } from "@/components/shared/pwa-html-background-sync";
+import { PwaStandaloneViewportFix } from "@/components/shared/pwa-standalone-viewport-fix";
 import { PwaStatusBarFix } from "@/components/shared/pwa-status-bar-fix";
 import { WallpaperBackground } from "@/components/shared/wallpaper-background";
 import { WallpaperProvider } from "@/components/shared/wallpaper-provider";
@@ -43,6 +44,7 @@ export function AppShell({
       </FixedViewportPortal>
       <PwaHtmlBackgroundSync />
       <PwaStatusBarFix />
+      <PwaStandaloneViewportFix />
       <PushNotificationManager />
       <InboxBootstrapPrefetch />
       <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">

@@ -1,3 +1,5 @@
+import { PWA_STANDALONE_VIEWPORT_CONTENT } from "@/config/pwa";
+
 /** Detect iOS / installed PWA standalone mode. */
 export function isStandalonePwa(): boolean {
   if (typeof window === "undefined") {
@@ -24,6 +26,30 @@ export function applyStandaloneAppHeight(): void {
   document.documentElement.style.setProperty("--app-height", "100vh");
 }
 
+/** Lock zoom in standalone PWA — native apps don't pinch-zoom. */
+export function applyStandaloneZoomLock(): void {
+  if (!isStandalonePwa()) {
+    return;
+  }
+
+  const viewportMeta = document.querySelector('meta[name="viewport"]');
+
+  if (!viewportMeta) {
+    return;
+  }
+
+  viewportMeta.setAttribute("content", PWA_STANDALONE_VIEWPORT_CONTENT);
+}
+
+function applyStandaloneChrome(): void {
+  if (!isStandalonePwa()) {
+    return;
+  }
+
+  applyStandaloneAppHeight();
+  applyStandaloneZoomLock();
+}
+
 /** Inline bootstrap — runs before first paint in root layout. */
 export const PWA_STANDALONE_BOOTSTRAP_SCRIPT = `
 (function () {
@@ -33,5 +59,14 @@ export const PWA_STANDALONE_BOOTSTRAP_SCRIPT = `
   if (!standalone) return;
   document.documentElement.dataset.standalone = "true";
   document.documentElement.style.setProperty("--app-height", "100vh");
+  var viewportMeta = document.querySelector('meta[name="viewport"]');
+  if (viewportMeta) {
+    viewportMeta.setAttribute(
+      "content",
+      ${JSON.stringify(PWA_STANDALONE_VIEWPORT_CONTENT)},
+    );
+  }
 })();
 `.trim();
+
+export { applyStandaloneChrome };
