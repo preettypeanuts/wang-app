@@ -123,11 +123,15 @@ export const MOBILE_COMPACT_TITLE = [
   "transition-opacity duration-200",
 ].join(" ");
 
-/** Linear blur fade — visible when scroll surface is scrolled. */
+/** Soft gradient + fading blur scrim — visible after scroll (see isMobileTopBlurActive). */
 export const MOBILE_SCROLL_TOP_BLUR = [
   "pointer-events-none fixed inset-x-0 top-0 z-[29]",
   "opacity-0 transition-opacity duration-200",
-  "mobile-scroll-top-blur",
+  "h-28",
+  "bg-linear-to-b from-background/30 via-background/10 to-transparent",
+  "backdrop-blur-xs",
+  "[-webkit-mask-image:linear-gradient(to_bottom,black_10%,transparent)]",
+  "mask-[linear-gradient(to_bottom,black_35%,transparent)]",
   "md:hidden",
 ].join(" ");
 

@@ -7,9 +7,10 @@ import { ChatMessageRetryButton } from "@/components/chat/chat-message-retry-but
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageTimestamp } from "@/components/chat/message-timestamp";
 import { TransactionPreview } from "@/components/chat/transaction-preview";
-import { useInboxTopBlurSync } from "@/components/inbox/inbox-mobile-chrome-context";
 import { MobilePageTitle } from "@/components/shared/mobile-page-title";
+import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
 import { useSyncMobileScrollChrome } from "@/components/shared/mobile-scroll-chrome-provider";
+import { useSyncMobileTopBlur } from "@/components/shared/mobile-top-blur-provider";
 import {
   CHAT_MESSAGE_INSET_BOTTOM,
   CHAT_MESSAGE_INSET_TOP,
@@ -26,6 +27,7 @@ import { INBOX_MESSAGE_CONTENT_INSET } from "@/config/inbox-mobile";
 import { MOBILE_CHROME_SCROLL_INSET_TOP } from "@/config/mobile-chrome";
 import { STACK_GAP } from "@/config/spacing";
 import { useMobileLargeTitleScroll } from "@/hooks/use-mobile-large-title-scroll";
+import { useMobileTopBlurScroll } from "@/hooks/use-mobile-top-blur-scroll";
 import { getInboxRetryContext } from "@/lib/chat/inbox-error";
 import { canManageSentUserMessage } from "@/lib/chat/inbox-message-actions";
 import { cn } from "@/lib/utils";
@@ -70,8 +72,8 @@ export function MessageList({
   const scrollRootRef = useRef<HTMLDivElement>(null);
   const scrollIdleRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isScrolling, setIsScrolling] = useState(false);
-  const [inboxTopBlur, setInboxTopBlur] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const isActiveTab = usePersistentTabActive();
   const initialScrollDoneRef = useRef(false);
   const stickToBottomRef = useRef(true);
   const prevFirstIdRef = useRef<string | null>(null);
@@ -79,11 +81,15 @@ export function MessageList({
   const prevLengthRef = useRef(0);
   const loadingOlderRef = useRef(false);
 
-  const { showBlur, showCompactTitle } = useMobileLargeTitleScroll(
-    () => scrollRootRef.current,
-    titleRef,
-    { enabled: !fixedMobileTopBar },
-  );
+  const { showBlur: showLargeTitleBlur, showCompactTitle } =
+    useMobileLargeTitleScroll(() => scrollRootRef.current, titleRef, {
+      enabled: !fixedMobileTopBar,
+    });
+  const showFixedBarBlur = useMobileTopBlurScroll(() => scrollRootRef.current, {
+    enabled: fixedMobileTopBar && isActiveTab,
+    anchor: "bottom",
+  });
+  const showBlur = fixedMobileTopBar ? showFixedBarBlur : showLargeTitleBlur;
 
   useSyncMobileScrollChrome(
     fixedMobileTopBar ? undefined : "Inbox",
@@ -91,7 +97,7 @@ export function MessageList({
     showCompactTitle,
   );
 
-  useInboxTopBlurSync(inboxTopBlur, fixedMobileTopBar);
+  useSyncMobileTopBlur(showBlur, isActiveTab);
 
   useEffect(() => {
     loadingOlderRef.current = isLoadingOlder;
@@ -114,9 +120,6 @@ export function MessageList({
       prevFirstIdRef.current = firstId;
       prevLastIdRef.current = lastId;
       prevLengthRef.current = messages.length;
-      if (fixedMobileTopBar) {
-        setInboxTopBlur(false);
-      }
       return;
     }
 
@@ -155,12 +158,6 @@ export function MessageList({
 
       setIsScrolling(true);
       stickToBottomRef.current = isNearBottom(element);
-
-      if (fixedMobileTopBar) {
-        setInboxTopBlur(
-          element.scrollTop > 4 && !isNearBottom(element),
-        );
-      }
 
       if (
         hasMoreOlder &&

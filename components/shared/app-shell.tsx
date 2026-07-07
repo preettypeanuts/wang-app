@@ -11,6 +11,8 @@ import { InboxBootstrapPrefetch } from "@/components/inbox/inbox-bootstrap-prefe
 import { PushNotificationManager } from "@/components/shared/push-notification-manager";
 import { MobileScrollChrome } from "@/components/shared/mobile-scroll-chrome";
 import { MobileScrollChromeProvider } from "@/components/shared/mobile-scroll-chrome-provider";
+import { MobileTopBlurLayer } from "@/components/shared/mobile-top-blur-layer";
+import { MobileTopBlurProvider } from "@/components/shared/mobile-top-blur-provider";
 import { PersistentSidebarProvider } from "@/components/shared/persistent-sidebar-provider";
 import { PwaHtmlBackgroundSync } from "@/components/shared/pwa-html-background-sync";
 import { PwaStandaloneViewportFix } from "@/components/shared/pwa-standalone-viewport-fix";
@@ -77,10 +79,13 @@ export function AppShell({
               )}
             >
               <MobileScrollChromeProvider>
-                <FixedViewportPortal>
-                  <MobileScrollChrome />
-                </FixedViewportPortal>
-                <AppContentSurface>{children}</AppContentSurface>
+                <MobileTopBlurProvider>
+                  <FixedViewportPortal>
+                    <MobileTopBlurLayer />
+                    <MobileScrollChrome />
+                  </FixedViewportPortal>
+                  <AppContentSurface>{children}</AppContentSurface>
+                </MobileTopBlurProvider>
               </MobileScrollChromeProvider>
             </SidebarInset>
             <FixedViewportPortal>

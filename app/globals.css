@@ -387,35 +387,6 @@
     backdrop-filter: none;
   }
 
-  /* Shared mobile top blur — sync with MOBILE_SCROLL_TOP_BLUR in config/mobile-chrome.ts */
-  .mobile-scroll-top-blur,
-  .inbox-mobile-top-blur {
-    height: calc(var(--mobile-top-bar-offset) + 1.25rem);
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.62) 0%,
-      rgba(0, 0, 0, 0.28) 45%,
-      rgba(0, 0, 0, 0.06) 80%,
-      transparent 100%
-    );
-    mask-image: linear-gradient(
-      to bottom,
-      rgba(0, 0, 0, 0.62) 0%,
-      rgba(0, 0, 0, 0.28) 45%,
-      rgba(0, 0, 0, 0.06) 80%,
-      transparent 100%
-    );
-    -webkit-backdrop-filter: blur(8px) saturate(105%);
-    backdrop-filter: blur(8px) saturate(105%);
-    background: linear-gradient(
-      to bottom,
-      color-mix(in srgb, var(--background) 10%, transparent) 0%,
-      color-mix(in srgb, var(--background) 6%, transparent) 50%,
-      color-mix(in srgb, var(--background) 2%, transparent) 85%,
-      transparent 100%
-    );
-  }
-
   /* Keep in sync with INBOX_MOBILE_BOTTOM_BLUR in config/inbox-mobile.ts */
   .inbox-mobile-bottom-blur {
     height: calc(

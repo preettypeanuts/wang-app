@@ -8,7 +8,6 @@ import { useMobileScrollChromeSnapshot } from "@/components/shared/mobile-scroll
 import { MobileTopBarDrawerButton } from "@/components/shared/mobile-top-bar-drawer-button";
 import {
   MOBILE_COMPACT_TITLE,
-  MOBILE_SCROLL_TOP_BLUR,
   MOBILE_TOP_BAR_ROOT,
   MOBILE_TOP_BAR_ROW,
   shouldHideMobileScrollChrome,
@@ -32,15 +31,10 @@ export function MobileScrollChrome() {
     return null;
   }
 
-  const showBlur = snapshot?.showBlur ?? false;
   const showCompactTitle = snapshot?.showCompactTitle ?? false;
 
   return (
     <>
-      <div
-        aria-hidden
-        className={cn(MOBILE_SCROLL_TOP_BLUR, showBlur && "opacity-100")}
-      />
       <header className={MOBILE_TOP_BAR_ROOT}>
         <div className={MOBILE_TOP_BAR_ROW}>
           {snapshot?.title ? (

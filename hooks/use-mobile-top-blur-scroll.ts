@@ -2,39 +2,34 @@
 
 import { type RefObject, useEffect, useRef, useState } from "react";
 
-import { isMobileTopBlurActive } from "@/lib/mobile/is-mobile-top-blur-active";
+import {
+  isMobileTopBlurActive,
+  type MobileTopBlurScrollAnchor,
+} from "@/lib/mobile/is-mobile-top-blur-active";
 
-export interface MobileLargeTitleScrollState {
-  showBlur: boolean;
-  showCompactTitle: boolean;
-}
-
-export function useMobileLargeTitleScroll(
+export function useMobileTopBlurScroll(
   resolveScrollElement: () => HTMLElement | null,
-  titleRef: RefObject<HTMLElement | null>,
-  options?: { enabled?: boolean },
-): MobileLargeTitleScrollState {
+  options?: { enabled?: boolean; anchor?: MobileTopBlurScrollAnchor },
+): boolean {
   const enabled = options?.enabled ?? true;
+  const anchor = options?.anchor ?? "top";
   const [showBlur, setShowBlur] = useState(false);
-  const [showCompactTitle, setShowCompactTitle] = useState(false);
   const resolveRef = useRef(resolveScrollElement);
   resolveRef.current = resolveScrollElement;
 
   useEffect(() => {
     if (!enabled) {
       setShowBlur(false);
-      setShowCompactTitle(false);
       return;
     }
 
     let scrollElement: HTMLElement | null = null;
     let frameId = 0;
     let attached = false;
-    let observer: IntersectionObserver | null = null;
 
     const onScroll = () => {
       if (scrollElement) {
-        setShowBlur(isMobileTopBlurActive(scrollElement, "top"));
+        setShowBlur(isMobileTopBlurActive(scrollElement, anchor));
       }
     };
 
@@ -47,18 +42,6 @@ export function useMobileLargeTitleScroll(
       attached = true;
       onScroll();
       scrollElement.addEventListener("scroll", onScroll, { passive: true });
-
-      const titleElement = titleRef.current;
-      if (titleElement) {
-        observer = new IntersectionObserver(
-          ([entry]) => {
-            setShowCompactTitle(!entry.isIntersecting);
-          },
-          { root: scrollElement, threshold: 0 },
-        );
-        observer.observe(titleElement);
-      }
-
       return true;
     };
 
@@ -70,12 +53,11 @@ export function useMobileLargeTitleScroll(
 
     return () => {
       cancelAnimationFrame(frameId);
-      observer?.disconnect();
       if (scrollElement) {
         scrollElement.removeEventListener("scroll", onScroll);
       }
     };
-  }, [enabled, titleRef]);
+  }, [anchor, enabled]);
 
-  return { showBlur, showCompactTitle };
+  return showBlur;
 }

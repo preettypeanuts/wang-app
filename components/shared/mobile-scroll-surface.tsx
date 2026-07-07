@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
 import { MobilePageTitle } from "@/components/shared/mobile-page-title";
 import { useSyncMobileScrollChrome } from "@/components/shared/mobile-scroll-chrome-provider";
+import { useSyncMobileTopBlur } from "@/components/shared/mobile-top-blur-provider";
 import {
   MOBILE_CHROME_SCROLL_INSET,
   MOBILE_FIXED_TOP_BAR_SCROLL_INSET,
@@ -12,6 +13,7 @@ import {
   MOBILE_SCROLL_BOTTOM_SPACER,
 } from "@/config/mobile-chrome";
 import { useMobileLargeTitleScroll } from "@/hooks/use-mobile-large-title-scroll";
+import { useMobileTopBlurScroll } from "@/hooks/use-mobile-top-blur-scroll";
 import { cn } from "@/lib/utils";
 
 interface MobileScrollSurfaceProps {
@@ -34,18 +36,25 @@ export function MobileScrollSurface({
   const titleRef = useRef<HTMLHeadingElement>(null);
   const isActiveTab = usePersistentTabActive();
   const syncGlobalChrome = Boolean(title) && !fixedMobileTopBar;
+  const syncTopBlur = isActiveTab && (syncGlobalChrome || fixedMobileTopBar);
   const showLargeTitle = Boolean(title);
-  const { showBlur, showCompactTitle } = useMobileLargeTitleScroll(
-    () => scrollRef.current,
-    titleRef,
-    { enabled: syncGlobalChrome && isActiveTab },
-  );
+  const { showBlur: showLargeTitleBlur, showCompactTitle } =
+    useMobileLargeTitleScroll(() => scrollRef.current, titleRef, {
+      enabled: syncGlobalChrome && isActiveTab,
+    });
+  const showFixedBarBlur = useMobileTopBlurScroll(() => scrollRef.current, {
+    enabled: syncTopBlur && fixedMobileTopBar,
+    anchor: "top",
+  });
+  const showBlur = fixedMobileTopBar ? showFixedBarBlur : showLargeTitleBlur;
 
   useSyncMobileScrollChrome(
     syncGlobalChrome && isActiveTab ? title : undefined,
     showBlur,
     showCompactTitle,
   );
+
+  useSyncMobileTopBlur(showBlur, syncTopBlur);
 
   const scrollInset = fixedMobileTopBar
     ? showLargeTitle

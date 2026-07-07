@@ -8,7 +8,6 @@ import {
   MOBILE_SAFE_HORIZONTAL_INSET,
 } from "@/config/ios-safe-area";
 import {
-  MOBILE_SCROLL_TOP_BLUR,
   MOBILE_TOP_BAR_ORB_BUTTON,
   MOBILE_TOP_BAR_ROOT,
 } from "@/config/mobile-chrome";
@@ -17,9 +16,6 @@ import {
 export const INBOX_MOBILE_PAGE = "inbox-mobile-page";
 
 export const INBOX_MOBILE_TOP_BAR_ROOT = MOBILE_TOP_BAR_ROOT;
-
-/** Linear fade under top bar — scroll-gated, same layer as other mobile pages. */
-export const INBOX_MOBILE_TOP_BLUR = MOBILE_SCROLL_TOP_BLUR;
 
 /** Linear fade above chat input — sync with `.inbox-mobile-bottom-blur` in globals.css */
 export const INBOX_MOBILE_BOTTOM_BLUR = [
