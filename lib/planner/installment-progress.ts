@@ -1,63 +1,61 @@
-import { endOfDay, startOfDay } from "@/lib/finance/day-range";
+import {
+  clampDateOnlyDay,
+  dateOnlyFromParts,
+  getDateOnlyParts,
+  startOfDay,
+} from "@/lib/finance/day-range";
 import { formatDayMonth } from "@/lib/finance/format-datetime";
 import type { PlannedItemRecord, PlannedRepeatInterval } from "@/types/planner";
 
-function clampDayOfMonth(year: number, month: number, day: number): Date {
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  return startOfDay(new Date(year, month, Math.min(day, lastDay)));
-}
-
-function addMonthsPreserveDay(
+function addMonthsDateOnly(
   value: Date,
   months: number,
   anchorDay: number,
 ): Date {
-  const next = new Date(value.getFullYear(), value.getMonth() + months, 1);
-  return clampDayOfMonth(next.getFullYear(), next.getMonth(), anchorDay);
+  const { year, month } = getDateOnlyParts(value);
+  const targetMonth = month + months;
+  const targetYear = year + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+  return clampDateOnlyDay(targetYear, normalizedMonth, anchorDay);
 }
 
-function addWeeks(value: Date, weeks: number): Date {
-  const next = new Date(value);
-  next.setDate(next.getDate() + weeks * 7);
-  return startOfDay(next);
+function addWeeksDateOnly(value: Date, weeks: number): Date {
+  const { year, month, day } = getDateOnlyParts(value);
+  const next = dateOnlyFromParts(year, month, day);
+  next.setUTCDate(next.getUTCDate() + weeks * 7);
+  return next;
 }
 
-function addYearsPreserveDay(
-  value: Date,
-  years: number,
-  anchorDay: number,
-): Date {
-  const next = new Date(value.getFullYear() + years, value.getMonth(), 1);
-  return clampDayOfMonth(next.getFullYear(), next.getMonth(), anchorDay);
+function addYearsDateOnly(value: Date, years: number, anchorDay: number): Date {
+  const { year, month } = getDateOnlyParts(value);
+  return clampDateOnlyDay(year + years, month, anchorDay);
 }
 
 function getFirstDueDate(item: PlannedItemRecord): Date {
   switch (item.repeat) {
     case "weekly":
-      return startOfDay(item.startAt);
-    case "yearly":
-      return clampDayOfMonth(
-        item.startAt.getFullYear(),
-        item.startAt.getMonth(),
-        item.startAt.getDate(),
-      );
-    default:
-      return clampDayOfMonth(
-        item.startAt.getFullYear(),
-        item.startAt.getMonth(),
-        item.startAt.getDate(),
-      );
+      return item.startAt;
+    case "yearly": {
+      const { year, month, day } = getDateOnlyParts(item.startAt);
+      return clampDateOnlyDay(year, month, day);
+    }
+    default: {
+      const { year, month, day } = getDateOnlyParts(item.startAt);
+      return clampDateOnlyDay(year, month, day);
+    }
   }
 }
 
 function getNextDueDate(item: PlannedItemRecord, current: Date): Date {
+  const anchorDay = getDateOnlyParts(item.startAt).day;
+
   switch (item.repeat) {
     case "weekly":
-      return addWeeks(current, 1);
+      return addWeeksDateOnly(current, 1);
     case "yearly":
-      return addYearsPreserveDay(current, 1, item.startAt.getDate());
+      return addYearsDateOnly(current, 1, anchorDay);
     default:
-      return addMonthsPreserveDay(current, 1, item.startAt.getDate());
+      return addMonthsDateOnly(current, 1, anchorDay);
   }
 }
 
@@ -136,7 +134,7 @@ function isOccurrenceBeforeEnd(item: PlannedItemRecord, date: Date): boolean {
     return true;
   }
 
-  return date.getTime() <= endOfDay(item.endAt).getTime();
+  return date.getTime() <= item.endAt.getTime();
 }
 
 function countElapsedPeriods(
@@ -144,7 +142,7 @@ function countElapsedPeriods(
   referenceDate: Date = new Date(),
 ): number {
   const today = startOfDay(referenceDate);
-  const start = startOfDay(item.startAt);
+  const start = item.startAt;
   let cursor = getFirstDueDate(item);
   let completed = 0;
   let index = 0;
@@ -340,7 +338,7 @@ export function computeInstallmentScheduleFromAmounts(
     amount: paymentAmount,
     flowType: "expense",
     category: "shopping",
-    startAt: startOfDay(startAt),
+    startAt,
     endAt: null,
     installmentCount,
     paidInstallmentCount: 0,

@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-
+import { PlannedItemPriorPaymentFields } from "@/components/planner/planned-item-prior-payment-fields";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
 import { FormDatePicker } from "@/components/shared/form-date-picker";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
-import { PlannedItemPriorPaymentFields } from "@/components/planner/planned-item-prior-payment-fields";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,10 +28,10 @@ import {
   FORM_DIALOG_FOOTER,
   FORM_DIALOG_HEADER,
   FORM_FIELD_GRID_ROW,
-  FORM_GROUP_DIVIDER,
   FORM_FIELD_INPUT,
   FORM_FIELD_SELECT,
   FORM_GROUP,
+  FORM_GROUP_DIVIDER,
   FORM_NOTE,
   FORM_PREVIEW_COMPACT,
   FORM_PREVIEW_COMPACT_AMOUNT,
@@ -53,6 +52,7 @@ import {
   PLANNER_SELECT_TRIGGER,
 } from "@/config/planner-manage";
 import { SEPARATED_CONTROL } from "@/config/shape";
+import { parseDateOnlyInput } from "@/lib/finance/day-range";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { formatFullPayoffDate } from "@/lib/finance/format-datetime";
 import { parseAmount } from "@/lib/finance/parse-amount";
@@ -62,6 +62,7 @@ import {
   getPlannedItemEndMode,
   isValidDateInput,
   toDateInputValue,
+  todayDateInputValue,
 } from "@/lib/validations/planned-item";
 import type {
   PlannedEndMode,
@@ -123,7 +124,7 @@ export function PlannedItemFormDialog({
   const isInstallmentKind = kind === "installment";
 
   const fallbackStartAt = useMemo(
-    () => defaultStartAt ?? toDateInputValue(new Date()),
+    () => defaultStartAt ?? todayDateInputValue(),
     [defaultStartAt],
   );
 
@@ -142,8 +143,13 @@ export function PlannedItemFormDialog({
       return null;
     }
 
+    const startDate = parseDateOnlyInput(startAtText);
+    if (!startDate) {
+      return null;
+    }
+
     return computeInstallmentScheduleFromAmounts(
-      new Date(`${startAtText}T00:00:00`),
+      startDate,
       repeat,
       totalAmount,
       paymentAmount,
@@ -360,7 +366,11 @@ export function PlannedItemFormDialog({
 
               {!isInstallmentKind ? (
                 <div className={FORM_FIELD_GRID_ROW}>
-                  <FormDialogField label="Jenis" htmlFor="planned-kind" gridItem>
+                  <FormDialogField
+                    label="Jenis"
+                    htmlFor="planned-kind"
+                    gridItem
+                  >
                     <Select
                       value={kind}
                       onValueChange={(value) => {
@@ -399,7 +409,11 @@ export function PlannedItemFormDialog({
                     </Select>
                   </FormDialogField>
 
-                  <FormDialogField label="Ulang" htmlFor="planned-repeat" gridItem>
+                  <FormDialogField
+                    label="Ulang"
+                    htmlFor="planned-repeat"
+                    gridItem
+                  >
                     <Select
                       value={repeat}
                       onValueChange={(value) => {
@@ -433,7 +447,10 @@ export function PlannedItemFormDialog({
                   </FormDialogField>
                 </div>
               ) : (
-                <FormDialogField label="Jenis" htmlFor="planned-kind-installment">
+                <FormDialogField
+                  label="Jenis"
+                  htmlFor="planned-kind-installment"
+                >
                   <Select
                     value={kind}
                     onValueChange={(value) => {
@@ -545,7 +562,9 @@ export function PlannedItemFormDialog({
                   <PlannedItemPriorPaymentFields
                     isNewFromStart={isNewInstallment}
                     paidPriorCount={paidPriorCount}
-                    maxInstallments={installmentSchedule?.installmentCount ?? null}
+                    maxInstallments={
+                      installmentSchedule?.installmentCount ?? null
+                    }
                     onIsNewFromStartChange={setIsNewInstallment}
                     onPaidPriorCountChange={setPaidPriorCount}
                   />
@@ -655,7 +674,10 @@ export function PlannedItemFormDialog({
                       )}
                     </div>
                   ) : (
-                    <FormDialogField label="Tanggal lunas" htmlFor="planned-end-date">
+                    <FormDialogField
+                      label="Tanggal lunas"
+                      htmlFor="planned-end-date"
+                    >
                       <FormDatePicker
                         id="planned-end-date"
                         name="endAt"

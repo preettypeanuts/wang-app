@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import type { TransactionCategoryId } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_DIALOG_CONTENT_WIDE,
@@ -24,8 +25,7 @@ import {
 } from "@/config/form-dialog";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { cn } from "@/lib/utils";
-import { toDateInputValue } from "@/lib/validations/planned-item";
-import type { TransactionCategoryId } from "@/config/categories";
+import { todayDateInputValue } from "@/lib/validations/planned-item";
 import type { TransactionType } from "@/types/transaction";
 
 interface JournalEntryCreateDialogProps {
@@ -52,7 +52,7 @@ export function JournalEntryCreateDialog({
 
     setType("expense");
     setCategory(getDefaultCategoryForType("expense"));
-    setOccurredAtText(toDateInputValue(new Date()));
+    setOccurredAtText(todayDateInputValue());
     setError(null);
     setFormKey((current) => current + 1);
   }, [open]);

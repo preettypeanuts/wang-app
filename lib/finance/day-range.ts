@@ -68,6 +68,39 @@ export function parseDayKey(dayKey: string): Date {
   return new Date(year, month - 1, day);
 }
 
+/** Today's calendar day as YYYY-MM-DD in local time. */
+export function todayDateInputValue(): string {
+  return dateInputFromCalendarDate(new Date());
+}
+
+export function getDateOnlyParts(value: Date) {
+  return {
+    year: value.getUTCFullYear(),
+    month: value.getUTCMonth(),
+    day: value.getUTCDate(),
+  };
+}
+
+/** UTC noon for a calendar day — stable for date-only storage and comparisons. */
+export function dateOnlyFromParts(
+  year: number,
+  month: number,
+  day: number,
+): Date {
+  return new Date(Date.UTC(year, month, day, 12, 0, 0, 0));
+}
+
+export function clampDateOnlyDay(
+  year: number,
+  month: number,
+  day: number,
+): Date {
+  const lastDay = new Date(
+    Date.UTC(year, month + 1, 0, 12, 0, 0, 0),
+  ).getUTCDate();
+  return dateOnlyFromParts(year, month, Math.min(day, lastDay));
+}
+
 export function getYesterday(): Date {
   return addDays(startOfDay(new Date()), -1);
 }

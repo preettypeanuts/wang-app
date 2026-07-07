@@ -1,3 +1,8 @@
+import {
+  parseDateOnlyInput,
+  toDayKey,
+  todayDateInputValue,
+} from "@/lib/finance/day-range";
 import { parseAmount } from "@/lib/finance/parse-amount";
 import { computeInstallmentScheduleFromAmounts } from "@/lib/planner/installment-progress";
 import type {
@@ -55,16 +60,7 @@ function parsePositiveInteger(value: string): number | null {
 }
 
 function parseDateInput(value: string): string | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return null;
-  }
-
-  const date = new Date(`${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return value;
+  return parseDateOnlyInput(value) ? value : null;
 }
 
 export function isValidDateInput(value: string): boolean {
@@ -126,8 +122,13 @@ export function parsePlannedItemFormData(
       return { ok: false, error: "Total cicilan wajib diisi." };
     }
 
+    const startDate = parseDateOnlyInput(startAt);
+    if (!startDate) {
+      return { ok: false, error: "Tanggal mulai tidak valid." };
+    }
+
     const schedule = computeInstallmentScheduleFromAmounts(
-      new Date(`${startAt}T00:00:00`),
+      startDate,
       repeat,
       installmentTotal,
       amount,
@@ -230,9 +231,12 @@ export function getPlannedItemEndMode(
 }
 
 export function toDateInputValue(value: Date | string): string {
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return value;
+  }
+
   const date = value instanceof Date ? value : new Date(value);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return toDayKey(date);
 }
+
+export { todayDateInputValue };

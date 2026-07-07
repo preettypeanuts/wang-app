@@ -1,27 +1,34 @@
 import {
-  addDays,
+  clampDateOnlyDay,
+  dateOnlyFromParts,
   endOfDay,
+  getDateOnlyParts,
   startOfDay,
 } from "@/lib/finance/day-range";
 import type { PlannedItemRecord, PlannedOccurrence } from "@/types/planner";
 
-function clampDayOfMonth(year: number, month: number, day: number): Date {
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  return startOfDay(new Date(year, month, Math.min(day, lastDay)));
+function addMonthsDateOnly(
+  value: Date,
+  months: number,
+  anchorDay: number,
+): Date {
+  const { year, month } = getDateOnlyParts(value);
+  const targetMonth = month + months;
+  const targetYear = year + Math.floor(targetMonth / 12);
+  const normalizedMonth = ((targetMonth % 12) + 12) % 12;
+  return clampDateOnlyDay(targetYear, normalizedMonth, anchorDay);
 }
 
-function addMonthsPreserveDay(value: Date, months: number, anchorDay: number): Date {
-  const next = new Date(value.getFullYear(), value.getMonth() + months, 1);
-  return clampDayOfMonth(next.getFullYear(), next.getMonth(), anchorDay);
+function addWeeksDateOnly(value: Date, weeks: number): Date {
+  const { year, month, day } = getDateOnlyParts(value);
+  const next = dateOnlyFromParts(year, month, day);
+  next.setUTCDate(next.getUTCDate() + weeks * 7);
+  return next;
 }
 
-function addWeeks(value: Date, weeks: number): Date {
-  return addDays(value, weeks * 7);
-}
-
-function addYearsPreserveDay(value: Date, years: number, anchorDay: number): Date {
-  const next = new Date(value.getFullYear() + years, value.getMonth(), 1);
-  return clampDayOfMonth(next.getFullYear(), next.getMonth(), anchorDay);
+function addYearsDateOnly(value: Date, years: number, anchorDay: number): Date {
+  const { year, month } = getDateOnlyParts(value);
+  return clampDateOnlyDay(year + years, month, anchorDay);
 }
 
 function isWithinInstallmentLimit(
@@ -40,7 +47,7 @@ function isBeforeEndDate(item: PlannedItemRecord, date: Date): boolean {
     return true;
   }
 
-  return date.getTime() <= endOfDay(item.endAt).getTime();
+  return date.getTime() <= item.endAt.getTime();
 }
 
 function toOccurrence(
@@ -69,13 +76,10 @@ function expandMonthly(
   rangeStart: Date,
   rangeEnd: Date,
 ): PlannedOccurrence[] {
-  const anchorDay = item.startAt.getDate();
+  const anchorDay = getDateOnlyParts(item.startAt).day;
+  const startParts = getDateOnlyParts(item.startAt);
   const occurrences: PlannedOccurrence[] = [];
-  let cursor = clampDayOfMonth(
-    item.startAt.getFullYear(),
-    item.startAt.getMonth(),
-    anchorDay,
-  );
+  let cursor = clampDateOnlyDay(startParts.year, startParts.month, anchorDay);
   let index = 0;
 
   while (cursor.getTime() <= rangeEnd.getTime()) {
@@ -93,7 +97,7 @@ function expandMonthly(
     }
 
     index += 1;
-    cursor = addMonthsPreserveDay(cursor, 1, anchorDay);
+    cursor = addMonthsDateOnly(cursor, 1, anchorDay);
 
     if (index > 600) {
       break;
@@ -109,7 +113,7 @@ function expandWeekly(
   rangeEnd: Date,
 ): PlannedOccurrence[] {
   const occurrences: PlannedOccurrence[] = [];
-  let cursor = startOfDay(item.startAt);
+  let cursor = item.startAt;
   let index = 0;
 
   while (cursor.getTime() <= rangeEnd.getTime()) {
@@ -126,7 +130,7 @@ function expandWeekly(
     }
 
     index += 1;
-    cursor = addWeeks(cursor, 1);
+    cursor = addWeeksDateOnly(cursor, 1);
 
     if (index > 520) {
       break;
@@ -141,13 +145,10 @@ function expandYearly(
   rangeStart: Date,
   rangeEnd: Date,
 ): PlannedOccurrence[] {
-  const anchorDay = item.startAt.getDate();
+  const anchorDay = getDateOnlyParts(item.startAt).day;
+  const startParts = getDateOnlyParts(item.startAt);
   const occurrences: PlannedOccurrence[] = [];
-  let cursor = clampDayOfMonth(
-    item.startAt.getFullYear(),
-    item.startAt.getMonth(),
-    anchorDay,
-  );
+  let cursor = clampDateOnlyDay(startParts.year, startParts.month, anchorDay);
   let index = 0;
 
   while (cursor.getTime() <= rangeEnd.getTime()) {
@@ -165,7 +166,7 @@ function expandYearly(
     }
 
     index += 1;
-    cursor = addYearsPreserveDay(cursor, 1, anchorDay);
+    cursor = addYearsDateOnly(cursor, 1, anchorDay);
 
     if (index > 50) {
       break;

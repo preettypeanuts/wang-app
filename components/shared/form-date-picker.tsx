@@ -11,7 +11,7 @@ import {
 import { FORM_FIELD_DATE } from "@/config/form-dialog";
 import {
   dateInputFromCalendarDate,
-  parseDateOnlyInput,
+  parseDayKey,
 } from "@/lib/finance/day-range";
 import { formatJournalDate } from "@/lib/finance/format-datetime";
 import { CalendarBlankIcon } from "@/lib/icons";
@@ -29,7 +29,11 @@ interface FormDatePickerProps {
 }
 
 function dateFromInputValue(value: string): Date | undefined {
-  return parseDateOnlyInput(value) ?? undefined;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return undefined;
+  }
+
+  return parseDayKey(value);
 }
 
 export function FormDatePicker({

@@ -20,11 +20,11 @@ import {
   FORM_GROUP,
 } from "@/config/form-dialog";
 import { GRID_GAP } from "@/config/spacing";
+import { dateInputFromCalendarDate } from "@/lib/finance/day-range";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { formatDayMonth, formatWeekday } from "@/lib/finance/format-datetime";
 import { PlusIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import { toDateInputValue } from "@/lib/validations/planned-item";
 import type { PlannedOccurrence } from "@/types/planner";
 
 interface PlannerCalendarDayDialogProps {
@@ -46,7 +46,7 @@ export function PlannerCalendarDayDialog({
   const [formOpen, setFormOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasItems = items.length > 0;
-  const defaultStartAt = toDateInputValue(date);
+  const defaultStartAt = dateInputFromCalendarDate(date);
 
   function openCreateForm() {
     setError(null);

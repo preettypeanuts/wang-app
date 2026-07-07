@@ -1,4 +1,4 @@
-import { addDays, toDayKey } from "@/lib/finance/day-range";
+import { addDays, parseDayKey, toDayKey } from "@/lib/finance/day-range";
 
 const WEEKDAY_FORMAT = new Intl.DateTimeFormat("id-ID", {
   weekday: "long",
@@ -68,7 +68,9 @@ export function formatFullPayoffDate(
   }
 
   const date =
-    typeof value === "string" ? new Date(`${value}T00:00:00`) : toDate(value);
+    typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+      ? parseDayKey(value)
+      : parseDayKey(toDayKey(value));
   if (Number.isNaN(date.getTime())) {
     return null;
   }

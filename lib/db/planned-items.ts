@@ -2,9 +2,9 @@ import {
   getDefaultCategoryForKind,
   getFlowTypeForKind,
 } from "@/config/planner-items";
-import { startOfDay } from "@/lib/finance/day-range";
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
+import { parseDateOnlyInput } from "@/lib/finance/day-range";
 import type {
   PlannedItemFormInput,
   PlannedItemKind,
@@ -57,16 +57,26 @@ function mapPlannedItem(record: {
   };
 }
 
+function parseStoredDateInput(value: string): Date {
+  const parsed = parseDateOnlyInput(value);
+
+  if (!parsed) {
+    throw new Error("Tanggal tidak valid.");
+  }
+
+  return parsed;
+}
+
 function buildEndFields(input: PlannedItemFormInput) {
   switch (input.endMode) {
     case "installments":
       return {
-        endAt: input.endAt ? startOfDay(new Date(input.endAt)) : null,
+        endAt: input.endAt ? parseStoredDateInput(input.endAt) : null,
         installmentCount: input.installmentCount ?? null,
       };
     case "date":
       return {
-        endAt: input.endAt ? startOfDay(new Date(input.endAt)) : null,
+        endAt: input.endAt ? parseStoredDateInput(input.endAt) : null,
         installmentCount: null,
       };
     default:
@@ -88,7 +98,7 @@ function buildCreateData(userId: string, input: PlannedItemFormInput) {
     amount: input.amount,
     flowType: getFlowTypeForKind(input.kind),
     category: getDefaultCategoryForKind(input.kind),
-    startAt: startOfDay(new Date(input.startAt)),
+    startAt: parseStoredDateInput(input.startAt),
     note: input.note?.trim() || null,
     paidInstallmentCount:
       input.kind === "installment" ? (input.paidInstallmentCount ?? 0) : 0,
@@ -200,7 +210,10 @@ export async function markInstallmentPaid(
     throw new Error("Periode tidak valid.");
   }
 
-  const nextPaid = Math.max(existing.paidInstallmentCount, installmentIndex + 1);
+  const nextPaid = Math.max(
+    existing.paidInstallmentCount,
+    installmentIndex + 1,
+  );
 
   const updated = await prisma.plannedItem.updateMany({
     where: scopedId(userId, id),
