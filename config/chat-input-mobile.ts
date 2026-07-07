@@ -1,5 +1,32 @@
 /** Inbox chat input — mobile sizing & no iOS focus zoom (16px min). */
 
+import { mobileOnly } from "@/config/mobile-layout";
+
+/**
+ * Mobile inbox input glass — sync with `.inbox-chat-input-glass` in globals.css.
+ * Pseudo-element backdrop avoids iOS losing blur when `overflow-hidden` clips the shell.
+ */
+export const INBOX_CHAT_INPUT_GLASS = mobileOnly("inbox-chat-input-glass");
+
+/** Neutralize GLASS_SURFACE on mobile when INBOX_CHAT_INPUT_GLASS owns the shell. */
+export const INBOX_CHAT_INPUT_GLASS_RESET = [
+  mobileOnly("!bg-transparent"),
+  mobileOnly("border-0"),
+  mobileOnly("shadow-none"),
+  mobileOnly("[backdrop-filter:none]"),
+  mobileOnly("[-webkit-backdrop-filter:none]"),
+].join(" ");
+
+/** Keep ghost Button fills from overriding glass on mobile. */
+export const INBOX_CHAT_INPUT_MENU_BUTTON_GLASS = [
+  INBOX_CHAT_INPUT_GLASS,
+  INBOX_CHAT_INPUT_GLASS_RESET,
+  mobileOnly("hover:!bg-transparent"),
+  mobileOnly("active:!bg-transparent"),
+  mobileOnly("aria-expanded:!bg-transparent"),
+  mobileOnly("dark:hover:!bg-transparent"),
+].join(" ");
+
 export const CHAT_INPUT_DOCK_INSET_X = [
   "max-md:pl-[calc(var(--mobile-chrome-gutter)+var(--mobile-safe-left))]",
   "max-md:pr-[calc(var(--mobile-chrome-gutter)+var(--mobile-safe-right))]",
