@@ -1,4 +1,5 @@
 import {
+  isIncomeCategory,
   normalizeCategory,
   resolveCategoryForType,
   type TransactionCategoryId,
@@ -55,29 +56,54 @@ export function detectCategoryMentionRange(
   };
 }
 
+function matchesCategoryMentionQuery(
+  option: CategoryMentionOption,
+  normalized: string,
+): boolean {
+  if (option.token.startsWith(normalized) || option.id.startsWith(normalized)) {
+    return true;
+  }
+
+  if (option.label.toLowerCase().includes(normalized)) {
+    return true;
+  }
+
+  return option.searchTerms.some((term) => term.includes(normalized));
+}
+
+export function getCategoryMentionOptionsForType(
+  type: TransactionType,
+): CategoryMentionOption[] {
+  return CATEGORY_MENTION_OPTIONS.filter((option) =>
+    type === "income"
+      ? isIncomeCategory(option.id)
+      : !isIncomeCategory(option.id),
+  );
+}
+
 export function filterCategoryMentionOptions(
   query: string,
+  options: CategoryMentionOption[] = CATEGORY_MENTION_OPTIONS,
 ): CategoryMentionOption[] {
   const normalized = normalizeQuery(query);
 
   if (!normalized) {
-    return CATEGORY_MENTION_OPTIONS;
+    return options;
   }
 
-  return CATEGORY_MENTION_OPTIONS.filter((option) => {
-    if (
-      option.token.startsWith(normalized) ||
-      option.id.startsWith(normalized)
-    ) {
-      return true;
-    }
+  return options.filter((option) =>
+    matchesCategoryMentionQuery(option, normalized),
+  );
+}
 
-    if (option.label.toLowerCase().includes(normalized)) {
-      return true;
-    }
-
-    return option.searchTerms.some((term) => term.includes(normalized));
-  });
+export function filterCategoryMentionOptionsForType(
+  query: string,
+  type: TransactionType,
+): CategoryMentionOption[] {
+  return filterCategoryMentionOptions(
+    query,
+    getCategoryMentionOptionsForType(type),
+  );
 }
 
 export function insertCategoryMention(

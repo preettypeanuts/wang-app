@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { FormCalendar } from "@/components/shared/form-calendar";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
@@ -70,7 +70,7 @@ export function FormDatePicker({
           <CalendarBlankIcon className="size-4 shrink-0 text-muted-foreground" />
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <FormCalendar
+          <Calendar
             mode="single"
             selected={selected}
             defaultMonth={selected}

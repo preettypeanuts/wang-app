@@ -1,14 +1,8 @@
+import { JournalCategoryCombobox } from "@/components/journal/journal-category-combobox";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
 import { FormDatePicker } from "@/components/shared/form-date-picker";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
   isIncomeCategory,
@@ -19,7 +13,6 @@ import {
   FORM_FIELD_DATE,
   FORM_FIELD_GRID_ROW,
   FORM_FIELD_INPUT,
-  FORM_FIELD_SELECT,
   FORM_GROUP,
   FORM_NOTE,
   FORM_SEGMENT,
@@ -27,11 +20,6 @@ import {
   FORM_SEGMENT_INACTIVE,
   FORM_SEGMENTED,
 } from "@/config/form-dialog";
-import {
-  PLANNER_SELECT_CONTENT,
-  PLANNER_SELECT_ITEM,
-  PLANNER_SELECT_TRIGGER,
-} from "@/config/planner-manage";
 import { cn } from "@/lib/utils";
 import type { TransactionType } from "@/types/transaction";
 
@@ -86,12 +74,6 @@ export function JournalEntryFormFields({
   onCategoryChange,
   onOccurredAtTextChange,
 }: JournalEntryFormFieldsProps) {
-  const categoryOptions = TRANSACTION_CATEGORIES.filter((item) =>
-    type === "income"
-      ? isIncomeCategory(item.id as TransactionCategoryId)
-      : !isIncomeCategory(item.id as TransactionCategoryId),
-  );
-
   function handleTypeChange(nextType: TransactionType) {
     onTypeChange(nextType);
     onCategoryChange(resolveCategoryForEntry(nextType, category));
@@ -122,9 +104,7 @@ export function JournalEntryFormFields({
               onClick={() => handleTypeChange("income")}
               className={cn(
                 FORM_SEGMENT,
-                type === "income"
-                  ? FORM_SEGMENT_ACTIVE
-                  : FORM_SEGMENT_INACTIVE,
+                type === "income" ? FORM_SEGMENT_ACTIVE : FORM_SEGMENT_INACTIVE,
               )}
             >
               Masuk
@@ -133,7 +113,11 @@ export function JournalEntryFormFields({
         </fieldset>
 
         <div className={FORM_FIELD_GRID_ROW}>
-          <FormDialogField label="Nominal (Rp)" htmlFor="journal-amount" gridItem>
+          <FormDialogField
+            label="Nominal (Rp)"
+            htmlFor="journal-amount"
+            gridItem
+          >
             <AmountTextInput
               id="journal-amount"
               name="amount"
@@ -167,32 +151,12 @@ export function JournalEntryFormFields({
         </FormDialogField>
 
         <FormDialogField label="Kategori" htmlFor="journal-category">
-          <Select
+          <JournalCategoryCombobox
+            id="journal-category"
+            type={type}
             value={category}
-            onValueChange={(value) => {
-              if (value) {
-                onCategoryChange(value as TransactionCategoryId);
-              }
-            }}
-          >
-            <SelectTrigger
-              id="journal-category"
-              className={cn(FORM_FIELD_SELECT, PLANNER_SELECT_TRIGGER)}
-            >
-              <SelectValue placeholder="Pilih kategori" />
-            </SelectTrigger>
-            <SelectContent className={PLANNER_SELECT_CONTENT}>
-              {categoryOptions.map((item) => (
-                <SelectItem
-                  key={item.id}
-                  value={item.id}
-                  className={PLANNER_SELECT_ITEM}
-                >
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={onCategoryChange}
+          />
         </FormDialogField>
       </div>
 
