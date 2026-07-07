@@ -64,7 +64,7 @@ export async function updatePlan(
   id: string,
   input: PlanFormInput,
 ): Promise<PlanRecord> {
-  const existing = await prisma.plan.findUnique({
+  const existing = await prisma.plan.findFirst({
     where: scopedId(userId, id),
   });
 
@@ -72,7 +72,7 @@ export async function updatePlan(
     throw new Error("Wish tidak ditemukan.");
   }
 
-  const record = await prisma.plan.update({
+  const updated = await prisma.plan.updateMany({
     where: scopedId(userId, id),
     data: {
       name: input.name,
@@ -81,6 +81,14 @@ export async function updatePlan(
       status: input.status as PrismaPlanStatus,
       note: input.note?.trim() || null,
     },
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Wish tidak ditemukan.");
+  }
+
+  const record = await prisma.plan.findFirstOrThrow({
+    where: scopedId(userId, id),
   });
 
   const plan = mapPlan(record);
@@ -93,14 +101,20 @@ export async function updatePlan(
 }
 
 export async function deletePlan(userId: string, id: string): Promise<void> {
-  await prisma.plan.delete({ where: scopedId(userId, id) });
+  const deleted = await prisma.plan.deleteMany({
+    where: scopedId(userId, id),
+  });
+
+  if (deleted.count === 0) {
+    throw new Error("Wish tidak ditemukan.");
+  }
 }
 
 export async function markPlanDone(
   userId: string,
   id: string,
 ): Promise<PlanRecord> {
-  const existing = await prisma.plan.findUnique({
+  const existing = await prisma.plan.findFirst({
     where: scopedId(userId, id),
   });
 
@@ -112,9 +126,17 @@ export async function markPlanDone(
     return mapPlan(existing);
   }
 
-  const record = await prisma.plan.update({
+  const updated = await prisma.plan.updateMany({
     where: scopedId(userId, id),
     data: { status: "done" },
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Wish tidak ditemukan.");
+  }
+
+  const record = await prisma.plan.findFirstOrThrow({
+    where: scopedId(userId, id),
   });
 
   const plan = mapPlan(record);

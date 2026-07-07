@@ -98,7 +98,7 @@ export async function updateSavingsGoal(
     input.status,
   );
 
-  const record = await prisma.savingsGoal.update({
+  const updated = await prisma.savingsGoal.updateMany({
     where: scopedId(userId, id),
     data: {
       name: input.name,
@@ -109,6 +109,14 @@ export async function updateSavingsGoal(
     },
   });
 
+  if (updated.count === 0) {
+    throw new Error("Tabungan tidak ditemukan.");
+  }
+
+  const record = await prisma.savingsGoal.findFirstOrThrow({
+    where: scopedId(userId, id),
+  });
+
   return mapSavingsGoal(record);
 }
 
@@ -116,7 +124,13 @@ export async function deleteSavingsGoal(
   userId: string,
   id: string,
 ): Promise<void> {
-  await prisma.savingsGoal.delete({ where: scopedId(userId, id) });
+  const deleted = await prisma.savingsGoal.deleteMany({
+    where: scopedId(userId, id),
+  });
+
+  if (deleted.count === 0) {
+    throw new Error("Tabungan tidak ditemukan.");
+  }
 }
 
 export async function depositSavingsGoal(
@@ -128,7 +142,7 @@ export async function depositSavingsGoal(
     throw new Error("Nominal setoran harus lebih dari 0.");
   }
 
-  const existing = await prisma.savingsGoal.findUnique({
+  const existing = await prisma.savingsGoal.findFirst({
     where: scopedId(userId, id),
   });
 
@@ -160,12 +174,20 @@ export async function depositSavingsGoal(
     existing.status as SavingsGoalStatus,
   );
 
-  const record = await prisma.savingsGoal.update({
+  const record = await prisma.savingsGoal.updateMany({
     where: scopedId(userId, id),
     data: { savedAmount, status: status as PrismaSavingsGoalStatus },
   });
 
-  return mapSavingsGoal(record);
+  if (record.count === 0) {
+    throw new Error("Tabungan tidak ditemukan.");
+  }
+
+  const updated = await prisma.savingsGoal.findFirstOrThrow({
+    where: scopedId(userId, id),
+  });
+
+  return mapSavingsGoal(updated);
 }
 
 export async function withdrawSavingsGoal(
@@ -177,7 +199,7 @@ export async function withdrawSavingsGoal(
     throw new Error("Nominal penarikan harus lebih dari 0.");
   }
 
-  const existing = await prisma.savingsGoal.findUnique({
+  const existing = await prisma.savingsGoal.findFirst({
     where: scopedId(userId, id),
   });
 
@@ -195,9 +217,17 @@ export async function withdrawSavingsGoal(
       ? ("active" as PrismaSavingsGoalStatus)
       : (existing.status as PrismaSavingsGoalStatus);
 
-  const record = await prisma.savingsGoal.update({
+  const updated = await prisma.savingsGoal.updateMany({
     where: scopedId(userId, id),
     data: { savedAmount, status },
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Tabungan tidak ditemukan.");
+  }
+
+  const record = await prisma.savingsGoal.findFirstOrThrow({
+    where: scopedId(userId, id),
   });
 
   return mapSavingsGoal(record);

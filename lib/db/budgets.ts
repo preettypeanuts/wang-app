@@ -271,22 +271,34 @@ export async function updateCategoryBudget(
   id: string,
   input: CategoryBudgetFormInput,
 ): Promise<CategoryBudgetRecord> {
-  const updated = await prisma.categoryBudget.update({
+  const updated = await prisma.categoryBudget.updateMany({
     where: scopedId(userId, id),
     data: toBudgetWriteData(input),
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Budget tidak ditemukan.");
+  }
+
+  const record = await prisma.categoryBudget.findFirstOrThrow({
+    where: scopedId(userId, id),
     select: BUDGET_SELECT,
   });
 
   await syncNextMonthBudget(userId, input);
 
-  return mapBudget(updated);
+  return mapBudget(record);
 }
 
 export async function deleteCategoryBudget(
   userId: string,
   id: string,
 ): Promise<void> {
-  await prisma.categoryBudget.delete({
+  const deleted = await prisma.categoryBudget.deleteMany({
     where: scopedId(userId, id),
   });
+
+  if (deleted.count === 0) {
+    throw new Error("Budget tidak ditemukan.");
+  }
 }

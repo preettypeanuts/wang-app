@@ -9,6 +9,7 @@ export function scopedByUser<const W extends Record<string, unknown>>(
   } as W & { userId: string };
 }
 
+/** Row lookup / mutation guard — always pair id with userId. */
 export function scopedId(userId: string, id: string) {
   return { id, userId };
 }

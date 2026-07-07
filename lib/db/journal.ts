@@ -123,7 +123,7 @@ export async function updateJournalTransaction(
   id: string,
   data: JournalEntryFormInput,
 ): Promise<JournalEntry> {
-  return prisma.transaction.update({
+  const updated = await prisma.transaction.updateMany({
     where: scopedId(userId, id),
     data: {
       type: data.type,
@@ -133,6 +133,14 @@ export async function updateJournalTransaction(
       rawInput: data.rawInput,
       occurredAt: data.occurredAt,
     },
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Transaksi tidak ditemukan.");
+  }
+
+  return prisma.transaction.findFirstOrThrow({
+    where: scopedId(userId, id),
     select: JOURNAL_ENTRY_SELECT,
   });
 }
@@ -141,7 +149,11 @@ export async function deleteJournalTransaction(
   userId: string,
   id: string,
 ): Promise<void> {
-  await prisma.transaction.delete({
+  const deleted = await prisma.transaction.deleteMany({
     where: scopedId(userId, id),
   });
+
+  if (deleted.count === 0) {
+    throw new Error("Transaksi tidak ditemukan.");
+  }
 }

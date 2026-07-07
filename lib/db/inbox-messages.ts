@@ -74,12 +74,20 @@ export async function updateInboxMessage(
   id: string,
   { content, transactionId }: UpdateInboxMessageInput,
 ): Promise<ChatMessage> {
-  const record = await prisma.inboxMessage.update({
+  const updated = await prisma.inboxMessage.updateMany({
     where: scopedId(userId, id),
     data: {
       content,
       transactionId: transactionId ?? null,
     },
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Pesan tidak ditemukan.");
+  }
+
+  const record = await prisma.inboxMessage.findFirstOrThrow({
+    where: scopedId(userId, id),
     include: {
       transaction: true,
     },
@@ -114,7 +122,7 @@ export async function deleteInboxMessagePair(
   userId: string,
   userMessageId: string,
 ): Promise<DeleteInboxMessagePairResult> {
-  const userRecord = await prisma.inboxMessage.findUnique({
+  const userRecord = await prisma.inboxMessage.findFirst({
     where: scopedId(userId, userMessageId),
     select: {
       id: true,
@@ -163,17 +171,17 @@ export async function deleteInboxMessagePair(
 
   await prisma.$transaction(async (tx) => {
     if (assistantRecord) {
-      await tx.inboxMessage.delete({
+      await tx.inboxMessage.deleteMany({
         where: scopedId(userId, assistantRecord.id),
       });
     }
 
-    await tx.inboxMessage.delete({
+    await tx.inboxMessage.deleteMany({
       where: scopedId(userId, userRecord.id),
     });
 
     if (transactionId) {
-      await tx.transaction.delete({
+      await tx.transaction.deleteMany({
         where: scopedId(userId, transactionId),
       });
     }

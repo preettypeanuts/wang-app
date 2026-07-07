@@ -20,6 +20,7 @@ export function InboxClientShell() {
     slash,
     requestSlashContext,
     requestDailySummary,
+    applyTransactionSummary,
   } = useInboxBootstrap();
 
   return (
@@ -43,6 +44,7 @@ export function InboxClientShell() {
                   requestSlashContext();
                 }
               }}
+              onTransactionRecorded={applyTransactionSummary}
               unpaidPayPlanItems={slash.unpaidPayPlanItems}
             />
           )}

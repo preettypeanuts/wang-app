@@ -41,7 +41,7 @@ export async function saveJournalEntryAction(
     return { ok: false, error: "Transaksi tidak ditemukan." };
   }
 
-  const existing = await prisma.transaction.findUnique({
+  const existing = await prisma.transaction.findFirst({
     where: scopedId(userId, id),
     select: { occurredAt: true },
   });

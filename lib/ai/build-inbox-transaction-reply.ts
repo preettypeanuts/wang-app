@@ -125,5 +125,6 @@ export async function buildInboxTransactionReplyForParsed(
     }
   }
 
-  return buildInboxTransactionReply(rawInput, transaction, budgetStatus);
+  // MVP hot path: warm template only — no second Gemini round-trip.
+  return buildWarmTransactionReply(transaction, budgetStatus);
 }

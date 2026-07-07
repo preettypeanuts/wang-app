@@ -4,9 +4,13 @@ import { useEffect, useState } from "react";
 
 import {
   EMPTY_TODAY_SUMMARY,
+  mergeInboxBootstrapPayload,
+  patchInboxBootstrapSummary,
   readInboxBootstrapCache,
+  writeInboxBootstrapCache,
   type InboxBootstrapPayload,
 } from "@/lib/inbox/inbox-bootstrap-cache";
+import { applyTransactionToSummary } from "@/lib/inbox/apply-transaction-to-summary";
 import {
   fetchInboxBootstrap,
   triggerInboxMaintenance,
@@ -18,6 +22,7 @@ import type {
   UnpaidPayPlanChatItem,
 } from "@/types/chat";
 import type { DailySummarySnapshot, TodaySummary } from "@/types/summary";
+import type { ParsedTransaction } from "@/types/transaction";
 
 const EMPTY_SLASH = {
   unpaidPayPlanItems: [] as UnpaidPayPlanChatItem[],
@@ -63,7 +68,19 @@ export function useInboxBootstrap() {
           return;
         }
 
-        setState(toBootstrapState(payload, true));
+        setState((current) => {
+          const merged = mergeInboxBootstrapPayload(
+            {
+              messages: current.messages,
+              summary: current.summary,
+            },
+            payload,
+          );
+
+          writeInboxBootstrapCache(merged);
+
+          return toBootstrapState(merged, true);
+        });
       })
       .catch(() => {});
 
@@ -117,11 +134,20 @@ export function useInboxBootstrap() {
       .catch(() => {});
   }
 
+  function applyTransactionSummary(transaction: ParsedTransaction) {
+    setState((current) => {
+      const summary = applyTransactionToSummary(current.summary, transaction);
+      patchInboxBootstrapSummary(summary);
+      return { ...current, summary };
+    });
+  }
+
   return {
     ...state,
     dailySummary,
     slash,
     requestSlashContext,
     requestDailySummary,
+    applyTransactionSummary,
   };
 }

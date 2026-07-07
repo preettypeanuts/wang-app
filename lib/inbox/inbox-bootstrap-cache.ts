@@ -57,3 +57,46 @@ export function patchInboxBootstrapMessages(messages: ChatMessage[]) {
     messages,
   });
 }
+
+export function patchInboxBootstrapSummary(summary: TodaySummary) {
+  const cached = readInboxBootstrapCache();
+
+  if (!cached) {
+    return;
+  }
+
+  writeInboxBootstrapCache({
+    ...cached,
+    summary,
+  });
+}
+
+function isPendingMessageId(id: string): boolean {
+  return id.startsWith("pending-");
+}
+
+/** Keep optimistic/pending chat rows when a background bootstrap refresh returns stale data. */
+export function mergeInboxBootstrapPayload(
+  current: InboxBootstrapPayload,
+  incoming: InboxBootstrapPayload,
+): InboxBootstrapPayload {
+  const pending = current.messages.filter((message) =>
+    isPendingMessageId(message.id),
+  );
+
+  if (pending.length > 0) {
+    return {
+      summary: current.summary,
+      messages: [...incoming.messages, ...pending],
+    };
+  }
+
+  if (current.messages.length > incoming.messages.length) {
+    return {
+      summary: current.summary,
+      messages: current.messages,
+    };
+  }
+
+  return incoming;
+}

@@ -44,7 +44,7 @@ import type {
   UnpaidPayPlanChatItem,
 } from "@/types/chat";
 import type { ReceiptDraft } from "@/types/receipt";
-import type { TransactionType } from "@/types/transaction";
+import type { ParsedTransaction, TransactionType } from "@/types/transaction";
 
 interface InboxViewProps {
   initialMessages: ChatMessage[];
@@ -53,10 +53,28 @@ interface InboxViewProps {
   activeSavingsItems: ActiveSavingsChatItem[];
   fixedMobileTopBar?: boolean;
   onSlashMenuOpenChange?: (open: boolean) => void;
+  onTransactionRecorded?: (transaction: ParsedTransaction) => void;
 }
 
-function createPendingId(): string {
-  return `pending-${crypto.randomUUID()}`;
+function createPendingId(prefix: "user" | "assistant"): string {
+  return `pending-${prefix}-${crypto.randomUUID()}`;
+}
+
+function isPendingMessageId(id: string): boolean {
+  return id.startsWith("pending-");
+}
+
+function mergeServerMessages(
+  current: ChatMessage[],
+  initialMessages: ChatMessage[],
+): ChatMessage[] {
+  const pending = current.filter((message) => isPendingMessageId(message.id));
+
+  if (pending.length === 0) {
+    return initialMessages;
+  }
+
+  return [...initialMessages, ...pending];
 }
 
 export function InboxView({
@@ -66,11 +84,12 @@ export function InboxView({
   activeSavingsItems,
   fixedMobileTopBar = false,
   onSlashMenuOpenChange,
+  onTransactionRecorded,
 }: InboxViewProps) {
   const router = useRouter();
   const isMobileViewport = useIsMobileViewport();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [inFlightCount, setInFlightCount] = useState(0);
   const [draftText, setDraftText] = useState<string | null>(null);
   const [receiptDraft, setReceiptDraft] = useState<ReceiptDraft | null>(null);
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(
@@ -86,8 +105,18 @@ export function InboxView({
   const dragDepthRef = useRef(0);
 
   useEffect(() => {
-    setMessages(initialMessages);
+    setMessages((current) => mergeServerMessages(current, initialMessages));
   }, [initialMessages]);
+
+  const isProcessing = inFlightCount > 0;
+
+  function beginInFlight() {
+    setInFlightCount((count) => count + 1);
+  }
+
+  function endInFlight() {
+    setInFlightCount((count) => Math.max(0, count - 1));
+  }
 
   useEffect(() => {
     patchInboxBootstrapMessages(messages);
@@ -151,7 +180,7 @@ export function InboxView({
     merchant: string;
     occurredAt: string;
   }) {
-    const pendingId = createPendingId();
+    const pendingId = createPendingId("user");
     const optimisticUser: ChatMessage = {
       id: pendingId,
       role: "user",
@@ -161,7 +190,7 @@ export function InboxView({
 
     closeReceiptConfirm();
     setMessages((current) => [...current, optimisticUser]);
-    setIsProcessing(true);
+    beginInFlight();
 
     try {
       const result = await submitInboxMessageFromReceipt(input);
@@ -172,8 +201,8 @@ export function InboxView({
         result.assistantMessage,
       ]);
 
-      if (result.ok) {
-        router.refresh();
+      if (result.ok && result.transaction) {
+        onTransactionRecorded?.(result.transaction);
       }
     } catch (error) {
       setMessages((current) =>
@@ -183,7 +212,7 @@ export function InboxView({
         error instanceof Error ? error.message : "Gagal mencatat struk.",
       );
     } finally {
-      setIsProcessing(false);
+      endInFlight();
     }
   }
 
@@ -242,40 +271,57 @@ export function InboxView({
       return;
     }
 
-    const pendingId = createPendingId();
+    const pendingUserId = createPendingId("user");
+    const pendingAssistantId = createPendingId("assistant");
     const optimisticUser: ChatMessage = {
-      id: pendingId,
+      id: pendingUserId,
       role: "user",
       content: trimmed,
       createdAt: new Date().toISOString(),
     };
+    const optimisticAssistant: ChatMessage = {
+      id: pendingAssistantId,
+      role: "assistant",
+      content: "Mencatat...",
+      createdAt: new Date().toISOString(),
+    };
 
-    setMessages((current) => [...current, optimisticUser]);
-    setIsProcessing(true);
+    setMessages((current) => [
+      ...current,
+      optimisticUser,
+      optimisticAssistant,
+    ]);
+    beginInFlight();
 
     try {
       const result = await submitInboxMessage(trimmed);
 
       setMessages((current) => [
-        ...current.filter((message) => message.id !== pendingId),
+        ...current.filter(
+          (message) =>
+            message.id !== pendingUserId && message.id !== pendingAssistantId,
+        ),
         result.userMessage,
         result.assistantMessage,
       ]);
 
-      if (result.ok) {
-        router.refresh();
+      if (result.ok && result.transaction) {
+        onTransactionRecorded?.(result.transaction);
       }
     } catch {
       setMessages((current) =>
-        current.filter((message) => message.id !== pendingId),
+        current.filter(
+          (message) =>
+            message.id !== pendingUserId && message.id !== pendingAssistantId,
+        ),
       );
     } finally {
-      setIsProcessing(false);
+      endInFlight();
     }
   }
 
   async function handleRetry(assistantMessageId: string) {
-    setIsProcessing(true);
+    beginInFlight();
     setMessages((current) =>
       current.map((message) =>
         message.id === assistantMessageId
@@ -305,8 +351,8 @@ export function InboxView({
         }),
       );
 
-      if (result.ok) {
-        router.refresh();
+      if (result.ok && result.transaction) {
+        onTransactionRecorded?.(result.transaction);
       }
     } catch {
       setMessages((current) =>
@@ -321,7 +367,7 @@ export function InboxView({
         ),
       );
     } finally {
-      setIsProcessing(false);
+      endInFlight();
     }
   }
 
@@ -338,29 +384,29 @@ export function InboxView({
   }
 
   async function handleUndoMessage(userMessageId: string) {
-    setIsProcessing(true);
+    beginInFlight();
 
     try {
       await removeMessagePair(userMessageId);
     } finally {
-      setIsProcessing(false);
+      endInFlight();
     }
   }
 
   async function handleEditMessage(userMessageId: string) {
-    setIsProcessing(true);
+    beginInFlight();
 
     try {
       const result = await removeMessagePair(userMessageId);
       setDraftText(result.content);
     } finally {
-      setIsProcessing(false);
+      endInFlight();
     }
   }
 
   async function handlePayPlan(item: UnpaidPayPlanChatItem) {
-    const pendingUserId = createPendingId();
-    const pendingAssistantId = createPendingId();
+    const pendingUserId = createPendingId("user");
+    const pendingAssistantId = createPendingId("assistant");
     const optimisticUser: ChatMessage = {
       id: pendingUserId,
       role: "user",
@@ -375,7 +421,7 @@ export function InboxView({
     };
 
     setMessages((current) => [...current, optimisticUser, optimisticAssistant]);
-    setIsProcessing(true);
+    beginInFlight();
 
     try {
       const result = await payPayPlanFromInboxAction(
@@ -391,8 +437,6 @@ export function InboxView({
         result.userMessage,
         result.assistantMessage,
       ]);
-
-      router.refresh();
     } catch {
       setMessages((current) =>
         current.filter(
@@ -401,13 +445,13 @@ export function InboxView({
         ),
       );
     } finally {
-      setIsProcessing(false);
+      endInFlight();
     }
   }
 
   async function handleMarkPlanDone(item: ActivePlanChatItem) {
-    const pendingUserId = createPendingId();
-    const pendingAssistantId = createPendingId();
+    const pendingUserId = createPendingId("user");
+    const pendingAssistantId = createPendingId("assistant");
     const optimisticUser: ChatMessage = {
       id: pendingUserId,
       role: "user",
@@ -422,7 +466,7 @@ export function InboxView({
     };
 
     setMessages((current) => [...current, optimisticUser, optimisticAssistant]);
-    setIsProcessing(true);
+    beginInFlight();
 
     try {
       const result = await markPlanDoneFromInboxAction(item.id);
@@ -435,8 +479,6 @@ export function InboxView({
         result.userMessage,
         result.assistantMessage,
       ]);
-
-      router.refresh();
     } catch {
       setMessages((current) =>
         current.filter(
@@ -445,13 +487,13 @@ export function InboxView({
         ),
       );
     } finally {
-      setIsProcessing(false);
+      endInFlight();
     }
   }
 
   async function handleCheckSavings(item: ActiveSavingsChatItem) {
-    const pendingUserId = createPendingId();
-    const pendingAssistantId = createPendingId();
+    const pendingUserId = createPendingId("user");
+    const pendingAssistantId = createPendingId("assistant");
     const optimisticUser: ChatMessage = {
       id: pendingUserId,
       role: "user",
@@ -466,7 +508,7 @@ export function InboxView({
     };
 
     setMessages((current) => [...current, optimisticUser, optimisticAssistant]);
-    setIsProcessing(true);
+    beginInFlight();
 
     try {
       const result = await checkSavingsGoalFromInboxAction(item.id);
@@ -479,8 +521,6 @@ export function InboxView({
         result.userMessage,
         result.assistantMessage,
       ]);
-
-      router.refresh();
     } catch {
       setMessages((current) =>
         current.filter(
@@ -489,7 +529,7 @@ export function InboxView({
         ),
       );
     } finally {
-      setIsProcessing(false);
+      endInFlight();
     }
   }
 
@@ -514,7 +554,7 @@ export function InboxView({
         unpaidPayPlanItems={unpaidPayPlanItems}
         activePlanItems={activePlanItems}
         activeSavingsItems={activeSavingsItems}
-        disabled={isProcessing || isParsingReceipt}
+        disabled={isParsingReceipt}
         draftText={draftText}
         onDraftTextApplied={handleDraftTextApplied}
         onSlashMenuOpenChange={onSlashMenuOpenChange}

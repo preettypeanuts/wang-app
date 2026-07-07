@@ -68,7 +68,10 @@ export function MessageList({
   );
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const behavior = messages.at(-1)?.id.startsWith("pending-")
+      ? "instant"
+      : "smooth";
+    bottomRef.current?.scrollIntoView({ behavior });
   }, [messages]);
 
   useEffect(() => {
@@ -153,11 +156,16 @@ export function MessageList({
                 Boolean(onEditMessage) &&
                 Boolean(onUndoMessage);
 
+              const isPending = message.id.startsWith("pending-");
+
               const bubble = (
                 <MessageBubble
                   role={message.role}
                   content={message.content}
-                  className={canManage ? "max-w-full" : undefined}
+                  className={cn(
+                    canManage ? "max-w-full" : undefined,
+                    isPending && "opacity-70",
+                  )}
                 />
               );
 

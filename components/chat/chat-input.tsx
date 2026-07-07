@@ -86,7 +86,7 @@ export function ChatInput({
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const hasText = value.trim().length > 0;
-  const isInputDisabled = disabled || isSubmitting;
+  const isInputDisabled = disabled;
   const slashMatch = value.match(/^\/(.*)$/);
   const hasSlashActions = Boolean(
     onPayPlan || onMarkPlanDone || onCheckSavings,
@@ -159,7 +159,7 @@ export function ChatInput({
     }
 
     const text = value.trim();
-    if (!text || isSubmitting || disabled) return;
+    if (!text || disabled) return;
 
     setIsSubmitting(true);
     setValue("");

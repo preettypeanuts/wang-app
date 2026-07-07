@@ -41,13 +41,17 @@ export function parseTransactionLocally(text: string): ParsedTransaction {
 export async function parseTransaction(
   text: string,
 ): Promise<ParsedTransaction> {
-  if (isGeminiConfigured()) {
+  try {
+    return parseTransactionLocally(text);
+  } catch (localError) {
+    if (!isGeminiConfigured()) {
+      throw localError;
+    }
+
     try {
       return await parseTransactionWithGemini(text);
     } catch {
-      return parseTransactionLocally(text);
+      throw localError;
     }
   }
-
-  return parseTransactionLocally(text);
 }

@@ -4,6 +4,7 @@ import {
 } from "@/config/planner-items";
 import { startOfDay } from "@/lib/finance/day-range";
 import { prisma } from "@/lib/db/prisma";
+import { scopedId } from "@/lib/db/user-scope";
 import type {
   PlannedItemFormInput,
   PlannedItemKind,
@@ -100,7 +101,7 @@ async function requirePlannedItem(
   id: string,
 ): Promise<PlannedItemRecord> {
   const record = await prisma.plannedItem.findFirst({
-    where: { id, userId },
+    where: scopedId(userId, id),
     select: PLANNED_ITEM_SELECT,
   });
 
@@ -147,7 +148,7 @@ export async function updatePlannedItem(
   input: PlannedItemFormInput,
 ): Promise<PlannedItemRecord> {
   const updated = await prisma.plannedItem.updateMany({
-    where: { id, userId },
+    where: scopedId(userId, id),
     data: buildCreateData(userId, input),
   });
 
@@ -163,7 +164,7 @@ export async function deletePlannedItem(
   id: string,
 ): Promise<void> {
   const deleted = await prisma.plannedItem.deleteMany({
-    where: { id, userId },
+    where: scopedId(userId, id),
   });
 
   if (deleted.count === 0) {
@@ -177,7 +178,7 @@ export async function markInstallmentPaid(
   installmentIndex: number,
 ): Promise<PlannedItemRecord> {
   const existing = await prisma.plannedItem.findFirst({
-    where: { id, userId },
+    where: scopedId(userId, id),
     select: {
       installmentCount: true,
       paidInstallmentCount: true,
@@ -202,7 +203,7 @@ export async function markInstallmentPaid(
   const nextPaid = Math.max(existing.paidInstallmentCount, installmentIndex + 1);
 
   const updated = await prisma.plannedItem.updateMany({
-    where: { id, userId },
+    where: scopedId(userId, id),
     data: { paidInstallmentCount: nextPaid },
   });
 

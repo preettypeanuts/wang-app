@@ -11,6 +11,10 @@ import {
   deleteInboxMessagePair,
   updateInboxMessage,
 } from "@/lib/db/inbox-messages";
+import {
+  submitInboxChatFailure,
+  submitInboxChatTransaction,
+} from "@/lib/db/inbox-submit";
 import { listPlannedItems, markInstallmentPaid } from "@/lib/db/planned-items";
 import { listPlans, markPlanDone } from "@/lib/db/plans";
 import { prisma } from "@/lib/db/prisma";
@@ -75,37 +79,20 @@ export async function submitInboxMessage(
     };
   }
 
-  const userMessage = await createInboxMessage({
-    userId,
-    role: "user",
-    content: trimmed,
-  });
-
   try {
     const transaction = await parseTransaction(trimmed);
-
-    const savedTransaction = await createTransaction({
-      userId,
-      rawInput: trimmed,
-      transaction,
-    });
-
     const content = await buildInboxTransactionReplyForParsed(
       userId,
       trimmed,
       transaction,
     );
 
-    const assistantMessage = await createInboxMessage({
+    const { userMessage, assistantMessage } = await submitInboxChatTransaction({
       userId,
-      role: "assistant",
-      content,
-      transactionId: savedTransaction.id,
+      rawInput: trimmed,
+      transaction,
+      assistantContent: content,
     });
-
-    revalidatePath("/");
-    revalidatePath("/journal");
-    revalidatePath("/payplan");
 
     return {
       ok: true,
@@ -117,10 +104,10 @@ export async function submitInboxMessage(
   } catch (error) {
     const content = formatInboxProcessingError(error);
 
-    const assistantMessage = await createInboxMessage({
+    const { userMessage, assistantMessage } = await submitInboxChatFailure({
       userId,
-      role: "assistant",
-      content,
+      rawInput: trimmed,
+      assistantContent: content,
     });
 
     return {
@@ -137,7 +124,7 @@ export async function retryInboxMessageAction(
 ): Promise<SubmitInboxMessageResult> {
   const userId = await requireUserId();
 
-  const assistantRecord = await prisma.inboxMessage.findUnique({
+  const assistantRecord = await prisma.inboxMessage.findFirst({
     where: scopedId(userId, assistantMessageId),
     select: {
       id: true,
@@ -194,10 +181,6 @@ export async function retryInboxMessageAction(
       content,
       transactionId: savedTransaction.id,
     });
-
-    revalidatePath("/");
-    revalidatePath("/journal");
-    revalidatePath("/payplan");
 
     return {
       ok: true,
