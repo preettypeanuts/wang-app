@@ -1,6 +1,6 @@
+import { GLASS_TILE_HIGHLIGHT } from "@/config/glass";
 import { MOBILE_SAFE_HORIZONTAL_INSET } from "@/config/ios-safe-area";
 import { mobileOnly } from "@/config/mobile-layout";
-import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
 import {
   OVERVIEW_ROUTE,
   NOTIFICATIONS_ROUTE,
@@ -123,11 +123,11 @@ export const MOBILE_COMPACT_TITLE = [
   "transition-opacity duration-200",
 ].join(" ");
 
-/** Linear blur fade — inbox strength; visible when scroll surface is scrolled. */
+/** Linear blur fade — visible when scroll surface is scrolled. */
 export const MOBILE_SCROLL_TOP_BLUR = [
   "pointer-events-none fixed inset-x-0 top-0 z-[29]",
   "opacity-0 transition-opacity duration-200",
-  "inbox-mobile-top-blur",
+  "mobile-scroll-top-blur",
   "md:hidden",
 ].join(" ");
 
@@ -147,10 +147,18 @@ export const MOBILE_TOP_BAR_ROW = [
   "h-[calc(var(--mobile-safe-top)+var(--mobile-top-bar-height))]",
 ].join(" ");
 
+/** Floating top bar orbs — lighter than bottom nav pill glass. */
+export const MOBILE_TOP_BAR_ORB_SURFACE = [
+  "border border-white/28 bg-white/20",
+  GLASS_TILE_HIGHLIGHT,
+  "backdrop-blur-2xl backdrop-saturate-150",
+  "dark:border-white/12 dark:bg-black/20",
+].join(" ");
+
 /** Floating glass orb — top bar actions (menu, shortcuts). */
 export const MOBILE_TOP_BAR_ORB_BUTTON = [
   "pointer-events-auto flex size-11 shrink-0 items-center justify-center rounded-full",
-  MOBILE_LIQUID_GLASS_SURFACE,
+  MOBILE_TOP_BAR_ORB_SURFACE,
   "text-foreground/90 transition-transform active:scale-95",
   "[&_svg]:size-[1.35rem]",
 ].join(" ");

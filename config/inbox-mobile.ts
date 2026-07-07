@@ -9,9 +9,9 @@ import {
 } from "@/config/ios-safe-area";
 import {
   MOBILE_SCROLL_TOP_BLUR,
+  MOBILE_TOP_BAR_ORB_BUTTON,
   MOBILE_TOP_BAR_ROOT,
 } from "@/config/mobile-chrome";
-import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
 
 /** Page root wrapper for inbox mobile chrome. */
 export const INBOX_MOBILE_PAGE = "inbox-mobile-page";
@@ -35,13 +35,8 @@ export const INBOX_MOBILE_TOP_BAR_ROW = [
   "h-[calc(var(--mobile-safe-top)+var(--mobile-top-bar-height))]",
 ].join(" ");
 
-/** iOS-style circular orb — matches Inbox shortcut on other screens. */
-export const INBOX_MOBILE_TOP_BAR_ORB = [
-  "pointer-events-auto flex size-11 shrink-0 items-center justify-center rounded-full",
-  MOBILE_LIQUID_GLASS_SURFACE,
-  "text-foreground/90 transition-transform active:scale-95",
-  "[&_svg]:size-[1.35rem]",
-].join(" ");
+/** Top bar orb — shared with other mobile pages. */
+export const INBOX_MOBILE_TOP_BAR_ORB = MOBILE_TOP_BAR_ORB_BUTTON;
 
 export const INBOX_MOBILE_TOP_BAR_TITLE = [
   "pointer-events-none absolute inset-x-0 text-center",

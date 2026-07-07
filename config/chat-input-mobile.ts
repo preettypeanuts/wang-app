@@ -34,4 +34,4 @@ export const INBOX_MESSAGE_BOTTOM_INSET =
   "max-md:pb-[calc(6rem+var(--mobile-bottom-nav-offset))]";
 
 /** Inbox input → bottom nav gap (mobile only). */
-export const INBOX_MOBILE_CHAT_INPUT_DOCK_PB = "max-md:pb-0.5";
+export const INBOX_MOBILE_CHAT_INPUT_DOCK_PB = "max-md:pb-3";
