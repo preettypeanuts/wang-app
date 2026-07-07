@@ -4,9 +4,7 @@ import {
   INBOX_MOBILE_CHAT_INPUT_DOCK_PB,
 } from "@/config/chat-input-mobile";
 import { INBOX_DESKTOP_INPUT_DOCK_PB } from "@/config/inbox-desktop";
-import {
-  MOBILE_SAFE_HORIZONTAL_INSET,
-} from "@/config/ios-safe-area";
+import { MOBILE_SAFE_HORIZONTAL_INSET } from "@/config/ios-safe-area";
 import {
   MOBILE_TOP_BAR_ORB_BUTTON,
   MOBILE_TOP_BAR_ROOT,
@@ -46,8 +44,7 @@ export const INBOX_MOBILE_TOP_BAR_ACTIONS =
 export const INBOX_SUMMARY_DRAWER_POPUP = "inbox-summary-drawer-popup";
 
 /** Drawer body — fills safe-area-bounded panel. */
-export const INBOX_SUMMARY_DRAWER_BODY =
-  "flex h-full min-h-0 flex-col";
+export const INBOX_SUMMARY_DRAWER_BODY = "flex h-full min-h-0 flex-col";
 
 /** Visual only — keep transform defaults for slide animation. */
 export const INBOX_SUMMARY_DRAWER_SURFACE = [
@@ -64,9 +61,12 @@ export const INBOX_SUMMARY_DRAWER_SURFACE = [
 /** Message thread inset when fixed top bar is used (no scrolling large title). */
 export { INBOX_MESSAGE_BOTTOM_INSET };
 
+/** Gap between fixed top bar and first chat bubble on mobile. */
+export const INBOX_MOBILE_MESSAGE_TOP_GAP = "1rem";
+
 export const INBOX_MESSAGE_CONTENT_INSET = [
   "px-3",
-  "max-md:pt-[calc(var(--mobile-top-bar-offset)+5px)]",
+  "max-md:pt-[calc(var(--mobile-top-bar-offset)+1rem)]",
   INBOX_MESSAGE_BOTTOM_INSET,
 ].join(" ");
 
