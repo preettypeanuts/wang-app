@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "prisma generate && next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build --webpack",
     "start": "next start",
     "lint": "biome check",
     "format": "biome format --write",
@@ -27,6 +27,7 @@
     "@google/genai": "^2.10.0",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@serwist/next": "^9.5.11",
     "better-auth": "^1.6.23",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -52,6 +53,7 @@
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
     "prisma": "^7.8.0",
+    "serwist": "^9.5.11",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
     "typescript": "^5"

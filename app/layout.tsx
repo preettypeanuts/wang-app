@@ -5,6 +5,7 @@ import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
 import { PWA_APPLE_TOUCH_ICON, PWA_ICON_192, PWA_ICON_512 } from "@/config/pwa";
 import "./globals.css";
 import { AppThemeProvider } from "@/components/providers/app-theme-provider";
+import { SerwistProviderShell } from "@/components/providers/serwist-provider-shell";
 import { AppShell } from "@/components/shared/app-shell";
 import { RootBootstrapScript } from "@/components/shared/root-bootstrap-script";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -74,11 +75,13 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       >
         <RootBootstrapScript />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <AppThemeProvider initialAppearance={appearance}>
-            <TooltipProvider>
-              <AppShell initialSidebarOpen={sidebarOpen}>{children}</AppShell>
-            </TooltipProvider>
-          </AppThemeProvider>
+          <SerwistProviderShell>
+            <AppThemeProvider initialAppearance={appearance}>
+              <TooltipProvider>
+                <AppShell initialSidebarOpen={sidebarOpen}>{children}</AppShell>
+              </TooltipProvider>
+            </AppThemeProvider>
+          </SerwistProviderShell>
         </div>
       </body>
     </html>

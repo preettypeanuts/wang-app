@@ -40,5 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Serwist (generated at build)
+public/sw.js
+public/sw.js.map
+public/swe-worker*
+
 # prisma
 /generated
