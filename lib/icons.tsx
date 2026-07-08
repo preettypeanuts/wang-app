@@ -36,6 +36,7 @@ import {
   sfInfinity,
   sfLine3Horizontal,
   sfLine3HorizontalDecrease,
+  sfMagnifyingglass,
   sfMoonFill,
   sfPencil,
   sfPersonCircleFill,
@@ -152,6 +153,10 @@ export const GearSixIcon = createSFIcon(sfGearshapeFill, "GearSixIcon");
 export const HeartIcon = createSFIcon(sfHeartFill, "HeartIcon");
 export const ListIcon = createSFIcon(sfLine3Horizontal, "ListIcon");
 export const InfinityIcon = createSFIcon(sfInfinity, "InfinityIcon");
+export const MagnifyingGlassIcon = createSFIcon(
+  sfMagnifyingglass,
+  "MagnifyingGlassIcon",
+);
 export const MoonIcon = createSFIcon(sfMoonFill, "MoonIcon");
 export const NotebookIcon = createSFIcon(sfBookFill, "NotebookIcon");
 export const PencilSimpleIcon = createSFIcon(sfPencil, "PencilSimpleIcon");

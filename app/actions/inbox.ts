@@ -20,6 +20,7 @@ import {
   getInboxMessagesPage,
   type InboxMessagesPage,
   type InboxMessagesPageCursor,
+  searchInboxMessages,
   updateInboxMessage,
 } from "@/lib/db/inbox-messages";
 import {
@@ -330,6 +331,13 @@ export async function loadOlderInboxMessagesAction(
 ): Promise<InboxMessagesPage> {
   const userId = await requireUserId();
   return getInboxMessagesPage(userId, { before });
+}
+
+export async function searchInboxMessagesAction(
+  query: string,
+): Promise<ChatMessage[]> {
+  const userId = await requireUserId();
+  return searchInboxMessages(userId, query);
 }
 
 interface PayPayPlanFromInboxSuccess {

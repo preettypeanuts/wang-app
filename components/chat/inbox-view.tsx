@@ -68,6 +68,8 @@ interface InboxViewProps {
     messages: ChatMessage[],
     hasMoreMessages?: boolean,
   ) => void;
+  focusMessageId?: string | null;
+  onFocusMessageHandled?: () => void;
 }
 
 function createPendingId(prefix: "user" | "assistant"): string {
@@ -88,6 +90,8 @@ export function InboxView({
   onSlashMenuOpenChange,
   onTransactionRecorded,
   onMessagesChange,
+  focusMessageId = null,
+  onFocusMessageHandled,
 }: InboxViewProps) {
   const isActiveTab = usePersistentTabActive();
   const isMobileViewport = useIsMobileViewport();
@@ -737,9 +741,11 @@ export function InboxView({
       <MessageList
         className="min-h-0 flex-1"
         fixedMobileTopBar={fixedMobileTopBar}
+        focusMessageId={focusMessageId}
         hasMoreOlder={hasMoreOlder}
         isLoadingOlder={isLoadingOlder}
         messages={messages}
+        onFocusMessageHandled={onFocusMessageHandled}
         onLoadOlder={() => void handleLoadOlder()}
         onRetry={handleRetry}
         onEditMessage={handleEditMessage}

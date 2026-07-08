@@ -1,7 +1,8 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
+import { InboxSearchDrawer } from "@/components/chat/inbox-search-drawer";
 import { InboxMobileEdgeBlur } from "@/components/inbox/inbox-mobile-edge-blur";
 import { InboxMobileTopBar } from "@/components/inbox/inbox-mobile-top-bar";
 import { InboxTodaySummaryDrawer } from "@/components/inbox/inbox-today-summary-drawer";
@@ -9,26 +10,37 @@ import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
 import { MobileTabRefreshBar } from "@/components/shared/mobile-tab-refresh-bar";
 import { INBOX_MOBILE_PAGE } from "@/config/inbox-mobile";
 import { cn } from "@/lib/utils";
+import type { ChatMessage } from "@/types/chat";
 import type { DailySummarySnapshot, TodaySummary } from "@/types/summary";
 
 interface InboxMobileLayoutProps {
   children: ReactNode;
   summary: TodaySummary;
   dailySummary: DailySummarySnapshot | null;
+  messages?: ChatMessage[];
   onOpenSummary?: () => void;
   onRefresh?: () => void;
   refreshing?: boolean;
+  onFocusMessage?: (messageId: string) => void;
 }
 
 export function InboxMobileLayout({
   children,
   summary,
   dailySummary,
+  messages = [],
   onOpenSummary,
   onRefresh,
   refreshing = false,
+  onFocusMessage,
 }: InboxMobileLayoutProps) {
   const [summaryOpen, setSummaryOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const loadedMessageIds = useMemo(
+    () => new Set(messages.map((message) => message.id)),
+    [messages],
+  );
 
   function handleOpenSummary() {
     onOpenSummary?.();
@@ -47,6 +59,7 @@ export function InboxMobileLayout({
           <MobileTabRefreshBar active={refreshing} />
           <InboxMobileEdgeBlur />
           <InboxMobileTopBar
+            onOpenSearch={() => setSearchOpen(true)}
             onOpenSummary={handleOpenSummary}
             onRefresh={() => onRefresh?.()}
             refreshing={refreshing}
@@ -63,6 +76,13 @@ export function InboxMobileLayout({
         onOpenChange={setSummaryOpen}
         open={summaryOpen}
         summary={summary}
+      />
+
+      <InboxSearchDrawer
+        loadedMessageIds={loadedMessageIds}
+        onOpenChange={setSearchOpen}
+        onScrollToMessage={(messageId) => onFocusMessage?.(messageId)}
+        open={searchOpen}
       />
     </div>
   );

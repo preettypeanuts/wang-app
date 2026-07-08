@@ -777,4 +777,19 @@
     background: color-mix(in oklab, var(--primary) 88%, transparent);
     animation: mobile-tab-refresh-indeterminate 1.15s ease-in-out infinite;
   }
+
+  @keyframes inbox-search-highlight-pulse {
+    0% {
+      box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 40%, transparent);
+      background-color: color-mix(in oklab, var(--primary) 16%, transparent);
+    }
+    100% {
+      box-shadow: 0 0 0 0 transparent;
+      background-color: transparent;
+    }
+  }
+
+  .inbox-search-highlight {
+    animation: inbox-search-highlight-pulse 1.4s ease-out;
+  }
 }

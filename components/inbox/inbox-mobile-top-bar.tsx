@@ -9,16 +9,18 @@ import {
   INBOX_MOBILE_TOP_BAR_ROW,
   INBOX_MOBILE_TOP_BAR_TITLE,
 } from "@/config/inbox-mobile";
-import { ChartBarIcon } from "@/lib/icons";
+import { ChartBarIcon, MagnifyingGlassIcon } from "@/lib/icons";
 
 interface InboxMobileTopBarProps {
   onOpenSummary: () => void;
+  onOpenSearch: () => void;
   onRefresh: () => void;
   refreshing?: boolean;
 }
 
 export function InboxMobileTopBar({
   onOpenSummary,
+  onOpenSearch,
   onRefresh,
   refreshing = false,
 }: InboxMobileTopBarProps) {
@@ -30,6 +32,14 @@ export function InboxMobileTopBar({
         <p className={INBOX_MOBILE_TOP_BAR_TITLE}>Inbox</p>
 
         <div className={INBOX_MOBILE_TOP_BAR_ACTIONS}>
+          <button
+            type="button"
+            aria-label="Cari pesan"
+            className={INBOX_MOBILE_TOP_BAR_ORB}
+            onClick={onOpenSearch}
+          >
+            <MagnifyingGlassIcon aria-hidden="true" />
+          </button>
           <InboxMobileTopBarRefreshButton
             refreshing={refreshing}
             onRefresh={onRefresh}

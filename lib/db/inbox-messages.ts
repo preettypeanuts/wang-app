@@ -158,6 +158,45 @@ export async function getInboxMessages(userId: string): Promise<ChatMessage[]> {
   return page.messages;
 }
 
+/** Fresh search — never cached (query is dynamic per keyword). */
+export async function searchInboxMessages(
+  userId: string,
+  query: string,
+  limit = 30,
+): Promise<ChatMessage[]> {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    return [];
+  }
+
+  const where: Prisma.InboxMessageWhereInput = {
+    userId,
+    kind: "chat",
+    OR: [
+      { content: { contains: trimmed, mode: "insensitive" } },
+      {
+        transactions: {
+          some: {
+            OR: [
+              { description: { contains: trimmed, mode: "insensitive" } },
+              { rawInput: { contains: trimmed, mode: "insensitive" } },
+            ],
+          },
+        },
+      },
+    ],
+  };
+
+  const records = await prisma.inboxMessage.findMany({
+    where,
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    take: limit,
+    include: inboxMessageInclude,
+  });
+
+  return records.map((record) => mapInboxMessage(record));
+}
+
 export interface InboxMessagesPageCursor {
   createdAt: string;
   id: string;

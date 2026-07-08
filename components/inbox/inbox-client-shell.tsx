@@ -1,5 +1,7 @@
 "use client";
 
+import { useCallback, useState } from "react";
+
 import { InboxMobileLayout } from "@/components/inbox/inbox-mobile-layout";
 import { InboxChatSkeleton } from "@/components/inbox/inbox-chat-skeleton";
 import { InboxView } from "@/components/chat/inbox-view";
@@ -21,6 +23,7 @@ export function InboxClientShell({
   initialBootstrap,
 }: InboxClientShellProps) {
   const isActiveTab = usePersistentTabActive();
+  const [focusMessageId, setFocusMessageId] = useState<string | null>(null);
   const {
     messages,
     summary,
@@ -36,11 +39,17 @@ export function InboxClientShell({
     applyMessages,
   } = useInboxBootstrap({ initialBootstrap, enabled: isActiveTab });
 
+  const handleFocusMessageHandled = useCallback(() => {
+    setFocusMessageId(null);
+  }, []);
+
   return (
     <div className={INBOX_PAGE_ROW}>
       <section className={INBOX_CHAT_COLUMN}>
         <InboxMobileLayout
           dailySummary={dailySummary}
+          messages={messages}
+          onFocusMessage={setFocusMessageId}
           onOpenSummary={requestDailySummary}
           onRefresh={() => void refreshInbox()}
           refreshing={isRefreshing}
@@ -53,8 +62,10 @@ export function InboxClientShell({
               activePlanItems={slash.activePlanItems}
               activeSavingsItems={slash.activeSavingsItems}
               fixedMobileTopBar
+              focusMessageId={focusMessageId}
               initialHasMoreMessages={hasMoreMessages}
               initialMessages={messages}
+              onFocusMessageHandled={handleFocusMessageHandled}
               onMessagesChange={applyMessages}
               onSlashMenuOpenChange={(open) => {
                 if (open) {

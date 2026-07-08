@@ -60,6 +60,9 @@ interface MessageListProps {
   hasMoreOlder?: boolean;
   isLoadingOlder?: boolean;
   onLoadOlder?: () => void;
+  /** Scroll/highlight a loaded message (e.g. inbox search). */
+  focusMessageId?: string | null;
+  onFocusMessageHandled?: () => void;
 }
 
 const SCROLLBAR_IDLE_MS = 700;
@@ -84,6 +87,8 @@ export function MessageList({
   hasMoreOlder = false,
   isLoadingOlder = false,
   onLoadOlder,
+  focusMessageId = null,
+  onFocusMessageHandled,
 }: MessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollRootRef = useRef<HTMLDivElement>(null);
@@ -134,6 +139,30 @@ export function MessageList({
 
   const editHintTargetIndex = findInboxEditHintTargetIndex(messages);
   const showEditHint = !editHintSeen && editHintTargetIndex >= 0;
+
+  useEffect(() => {
+    if (!focusMessageId) {
+      return;
+    }
+
+    const target = scrollRootRef.current?.querySelector(
+      `[data-message-id="${CSS.escape(focusMessageId)}"]`,
+    );
+
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    stickToBottomRef.current = false;
+    target.scrollIntoView({ block: "center", behavior: "smooth" });
+    target.classList.add("inbox-search-highlight");
+    const timer = window.setTimeout(() => {
+      target.classList.remove("inbox-search-highlight");
+    }, 1600);
+    onFocusMessageHandled?.();
+
+    return () => window.clearTimeout(timer);
+  }, [focusMessageId, messages, onFocusMessageHandled]);
 
   useLayoutEffect(() => {
     const element = scrollRootRef.current;
@@ -336,8 +365,9 @@ export function MessageList({
             return (
               <div
                 key={message.id}
+                data-message-id={message.id}
                 className={cn(
-                  "flex flex-col gap-1",
+                  "flex flex-col gap-1 rounded-2xl transition-[box-shadow,background-color]",
                   isUser ? "items-end" : "items-start",
                 )}
               >
