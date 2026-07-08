@@ -12,8 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getCategoryLabel } from "@/config/categories";
-import { formatDateTime } from "@/lib/finance/format-datetime";
 import { formatIdr } from "@/lib/finance/format-currency";
+import { formatDateTime } from "@/lib/finance/format-datetime";
 import { MagnifyingGlassIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/types/chat";
@@ -177,13 +177,21 @@ export function InboxSearchDrawer({
           <div className="relative shrink-0">
             <MagnifyingGlassIcon
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground/70"
             />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Cari kopi, netflix, parkir…"
-              className="pl-9"
+              className={[
+                // iOS-like search field: pill, no visible border, subtle frosted background.
+                "pl-9 rounded-full border-0 bg-white/70 shadow-sm backdrop-blur",
+                "dark:bg-black/20 dark:shadow-none",
+                // Keep placeholder softer.
+                "placeholder:text-muted-foreground/80",
+                // iOS doesn't show a heavy focus ring; keep focus purely visual.
+                "focus-visible:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
+              ].join(" ")}
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -198,9 +206,9 @@ export function InboxSearchDrawer({
               </p>
             ) : loading ? (
               <ul className="flex flex-col gap-2">
-                {Array.from({ length: 5 }).map((_, index) => (
+                {["0", "1", "2", "3", "4"].map((key) => (
                   <li
-                    key={index}
+                    key={key}
                     className="rounded-2xl border border-black/6 p-3 dark:border-white/8"
                   >
                     <Skeleton className="mb-2 h-3 w-24" />
