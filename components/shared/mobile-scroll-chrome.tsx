@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { Suspense } from "react";
 
 import { PlannerMobileTopBarTabs } from "@/components/planner/planner-mobile-top-bar-tabs";
+import { PlansMobileTopBarTabs } from "@/components/plans/plans-mobile-top-bar-tabs";
 import { useMobileScrollChromeSnapshot } from "@/components/shared/mobile-scroll-chrome-provider";
 import { MobileTopBarBackButton } from "@/components/shared/mobile-top-bar-back-button";
 import { MobileTopBarDrawerButton } from "@/components/shared/mobile-top-bar-drawer-button";
@@ -15,7 +16,7 @@ import {
   shouldShowMobileDrawerButton,
   shouldShowMobileTopBarBackButton,
 } from "@/config/mobile-chrome";
-import { PAYPLAN_ROUTE } from "@/config/navigation";
+import { PAYPLAN_ROUTE, PLANS_ROUTE } from "@/config/navigation";
 import { PAYPLAN_TOP_BAR_ACTIONS } from "@/config/payplan-mobile";
 import { cn } from "@/lib/utils";
 
@@ -25,12 +26,13 @@ export function MobileScrollChrome() {
   const showBack = shouldShowMobileTopBarBackButton(pathname);
   const showDrawer = shouldShowMobileDrawerButton(pathname);
   const showPayplanTabs = pathname === PAYPLAN_ROUTE || pathname.startsWith(`${PAYPLAN_ROUTE}/`);
+  const showPlansTabs = pathname === PLANS_ROUTE || pathname.startsWith(`${PLANS_ROUTE}/`);
 
   if (shouldHideMobileScrollChrome(pathname)) {
     return null;
   }
 
-  if (!snapshot && !showDrawer && !showPayplanTabs && !showBack) {
+  if (!snapshot && !showDrawer && !showPayplanTabs && !showPlansTabs && !showBack) {
     return null;
   }
 
@@ -57,11 +59,16 @@ export function MobileScrollChrome() {
               {snapshot.title}
             </p>
           ) : null}
-          {showPayplanTabs || showDrawer ? (
+          {showPayplanTabs || showPlansTabs || showDrawer ? (
             <div className={PAYPLAN_TOP_BAR_ACTIONS}>
               {showPayplanTabs ? (
                 <Suspense fallback={null}>
                   <PlannerMobileTopBarTabs />
+                </Suspense>
+              ) : null}
+              {showPlansTabs ? (
+                <Suspense fallback={null}>
+                  <PlansMobileTopBarTabs />
                 </Suspense>
               ) : null}
               {showDrawer ? <MobileTopBarDrawerButton /> : null}

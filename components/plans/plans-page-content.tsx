@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
-
+import {
+  PlansPageTabProvider,
+  usePlansPageTab,
+} from "@/components/plans/plans-page-tab-context";
 import { PlansView } from "@/components/plans/plans-view";
 import {
   PlansPageTabs,
@@ -26,39 +28,22 @@ interface PlansPageContentProps {
   aiInsight: React.ReactNode;
 }
 
-function syncPlansTabUrl(tab: PlansPageTab) {
-  if (typeof window === "undefined") {
-    return;
-  }
+interface PlansPagePanelsProps extends PlansPageContentProps {}
 
-  const nextUrl =
-    tab === "wish"
-      ? window.location.pathname
-      : `${window.location.pathname}?tab=savings`;
-
-  window.history.replaceState(window.history.state, "", nextUrl);
-}
-
-export function PlansPageContent({
-  initialTab,
+function PlansPagePanels({
   plans,
   plansOverview,
   upcomingImpact,
   savingsGoals,
   savingsOverview,
   aiInsight,
-}: PlansPageContentProps) {
-  const [tab, setTab] = useState<PlansPageTab>(initialTab);
+}: PlansPagePanelsProps) {
+  const { tab, setTab } = usePlansPageTab();
   const isSavingsTab = tab === "savings";
   const pageTitle = isSavingsTab ? SAVINGS_PAGE_TITLE : WISH_PAGE_TITLE;
   const pageDescription = isSavingsTab
     ? "Target tabungan dan saldo bebas setelah alokasi."
     : "Wishlist belanja dan sisa saldo setelah wish.";
-
-  function handleTabChange(nextTab: PlansPageTab) {
-    setTab(nextTab);
-    syncPlansTabUrl(nextTab);
-  }
 
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col")}>
@@ -82,14 +67,13 @@ export function PlansPageContent({
                   {pageDescription}
                 </p>
               </div>
-              <PlansPageTabs tab={tab} onTabChange={handleTabChange} />
+              <PlansPageTabs tab={tab} onTabChange={setTab} />
             </div>
           </header>
 
-          <div className="flex items-center justify-between gap-3 md:hidden">
-            <p className="text-[11px] text-muted-foreground">{pageDescription}</p>
-            <PlansPageTabs tab={tab} onTabChange={handleTabChange} />
-          </div>
+          <p className="text-[11px] text-muted-foreground md:hidden">
+            {pageDescription}
+          </p>
 
           <div className={cn(tab !== "wish" && "hidden")}>
             <PlansView
@@ -109,5 +93,13 @@ export function PlansPageContent({
         </MobileScrollSurface>
       </PlansShell>
     </div>
+  );
+}
+
+export function PlansPageContent(props: PlansPageContentProps) {
+  return (
+    <PlansPageTabProvider initialTab={props.initialTab}>
+      <PlansPagePanels {...props} />
+    </PlansPageTabProvider>
   );
 }
