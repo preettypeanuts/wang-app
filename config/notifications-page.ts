@@ -84,6 +84,7 @@ export const NOTIFICATIONS_LOAD_MORE_SENTINEL = "h-8 w-full shrink-0";
 export const NOTIFICATION_KIND_LABELS = {
   bill_reminder: "Tagihan",
   daily_summary: "Ringkasan",
+  weekly_summary: "Rekap minggu",
   ai_brief: "AI Brief",
   alert: "Peringatan",
   savings: "Tabungan",

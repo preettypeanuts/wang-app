@@ -14,6 +14,7 @@ import { userDataTags } from "@/lib/cache/user-data-tags";
 import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
 import { backfillInboxMessagesFromTransactions } from "@/lib/db/backfill-inbox-messages";
 import { ensurePendingDailySummaries } from "@/lib/db/daily-summary";
+import { ensurePendingWeeklySummary } from "@/lib/db/weekly-summary";
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import type { ChatMessage, MessageRole } from "@/types/chat";
@@ -171,7 +172,7 @@ export async function searchInboxMessages(
 
   const where: Prisma.InboxMessageWhereInput = {
     userId,
-    kind: "chat",
+    kind: { in: ["chat", "weekly_summary"] },
     OR: [
       { content: { contains: trimmed, mode: "insensitive" } },
       {
@@ -213,15 +214,19 @@ async function queryInboxMessagesPage(
   before?: InboxMessagesPageCursor,
 ): Promise<InboxMessagesPage> {
   const where: Prisma.InboxMessageWhereInput = scopedByUser(userId, {
-    kind: "chat",
+    kind: { in: ["chat", "weekly_summary"] },
   });
 
   if (before) {
-    where.OR = [
-      { createdAt: { lt: new Date(before.createdAt) } },
+    where.AND = [
       {
-        createdAt: new Date(before.createdAt),
-        id: { lt: before.id },
+        OR: [
+          { createdAt: { lt: new Date(before.createdAt) } },
+          {
+            createdAt: new Date(before.createdAt),
+            id: { lt: before.id },
+          },
+        ],
       },
     ];
   }
@@ -263,10 +268,11 @@ export async function getInboxMessagesPage(
   )();
 }
 
-/** Backfill + daily summaries — run off the inbox hot path (client/cron). */
+/** Backfill + daily/weekly summaries — run off the inbox hot path (client/cron). */
 export async function maintainInboxData(userId: string): Promise<void> {
   await backfillInboxMessagesFromTransactions(userId);
   await ensurePendingDailySummaries(userId);
+  await ensurePendingWeeklySummary(userId);
 }
 
 export interface DeleteInboxMessagePairResult {

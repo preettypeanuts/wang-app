@@ -107,6 +107,7 @@ enum InboxMessageRole {
 enum InboxMessageKind {
   chat
   daily_summary
+  weekly_summary
 
   @@schema("monmon_whethertie")
 }
@@ -269,6 +270,7 @@ model InboxMessage {
 enum AppNotificationKind {
   bill_reminder
   daily_summary
+  weekly_summary
   ai_brief
   alert
   savings

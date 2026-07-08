@@ -8,9 +8,14 @@ import { listPlans } from "@/lib/db/plans";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser } from "@/lib/db/user-scope";
+import {
+  ensurePendingWeeklySummary,
+  isMondayInAppTimezone,
+} from "@/lib/db/weekly-summary";
 import { buildOverviewAlerts } from "@/lib/finance/build-overview-alerts";
 import { buildOverviewBrief } from "@/lib/finance/build-overview-brief";
 import { buildDailySummaryTitle } from "@/lib/finance/build-daily-summary-message";
+import { buildWeeklySummaryTitle } from "@/lib/finance/build-weekly-summary-message";
 import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
 import {
   buildFallbackPlansInsight,
@@ -26,13 +31,19 @@ import {
 } from "@/lib/finance/day-range";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
-import {
-  NOTIFICATION_ROUTES,
-} from "@/config/notifications";
+import { NOTIFICATION_ROUTES } from "@/config/notifications";
 import type { NotificationDraft } from "@/types/notification";
 
 function firstLine(text: string): string {
   return text.split("\n").find((line) => line.trim().length > 0) ?? text;
+}
+
+function secondLine(text: string): string {
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+  return lines[1] ?? lines[0] ?? text;
 }
 
 interface BuildUserNotificationDraftsOptions {
@@ -70,10 +81,20 @@ export async function buildUserNotificationDrafts(
   const dayKey = toDayKey(referenceDate);
   const yesterday = addDays(referenceDate, -1);
   const { start: todayStart, end: todayEnd } = getDayRange(referenceDate);
+  const shouldEnsureWeekly = isCron || isMondayInAppTimezone(referenceDate);
 
   if (!isCron) {
     await ensurePendingDailySummaries(userId);
   }
+
+  const weeklySummaryPromise = shouldEnsureWeekly
+    ? ensurePendingWeeklySummary(userId, referenceDate)
+    : Promise.resolve({
+        created: false,
+        content: null,
+        weekStartDay: null,
+        weekEnd: null,
+      } as const);
 
   const [
     availableBalance,
@@ -82,6 +103,7 @@ export async function buildUserNotificationDrafts(
     upcoming,
     todayTransactions,
     yesterdaySummary,
+    weeklySummary,
   ] = await Promise.all([
     getAvailableBalance(userId, referenceDate),
     listPlans(userId),
@@ -101,6 +123,7 @@ export async function buildUserNotificationDrafts(
     isCron
       ? getYesterdaySummaryContentForCron(userId)
       : getYesterdayDailySummary(userId),
+    weeklySummaryPromise,
   ]);
 
   const activePlans = plans.filter((plan) => plan.status === "active");
@@ -156,6 +179,24 @@ export async function buildUserNotificationDrafts(
       body: firstLine(yesterdaySummary.content),
       href: NOTIFICATION_ROUTES.inbox,
       dedupeKey: `daily-summary:${toDayKey(yesterday)}`,
+    });
+  }
+
+  if (
+    weeklySummary.created &&
+    weeklySummary.content &&
+    weeklySummary.weekStartDay &&
+    weeklySummary.weekEnd
+  ) {
+    drafts.push({
+      kind: "weekly_summary",
+      title: buildWeeklySummaryTitle(
+        weeklySummary.weekStartDay,
+        weeklySummary.weekEnd,
+      ),
+      body: secondLine(weeklySummary.content),
+      href: NOTIFICATION_ROUTES.inbox,
+      dedupeKey: `weekly-summary:${toDayKey(weeklySummary.weekStartDay)}`,
     });
   }
 

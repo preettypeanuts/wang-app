@@ -1,6 +1,7 @@
 export type AppNotificationKind =
   | "bill_reminder"
   | "daily_summary"
+  | "weekly_summary"
   | "ai_brief"
   | "alert"
   | "savings";
