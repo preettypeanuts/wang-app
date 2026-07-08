@@ -3,29 +3,35 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { JournalDateRangeDrawer } from "@/components/journal/journal-date-range-drawer";
 import { JournalFilterFields } from "@/components/journal/journal-filter-fields";
-import { JournalFiltersDialog } from "@/components/journal/journal-filters-dialog";
+import { JournalFiltersDrawer } from "@/components/journal/journal-filters-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GLASS_SURFACE } from "@/config/glass";
 import {
-  JOURNAL_DATE_RANGE_TRIGGER,
   JOURNAL_FILTER_SEARCH_INPUT,
   JOURNAL_FILTER_TRIGGER,
   JOURNAL_FILTER_TRIGGER_ACTIVE,
   JOURNAL_FILTERS_BAR_MOBILE,
   JOURNAL_FILTERS_MOBILE_ROW,
 } from "@/config/journal-mobile";
-import { GLASS_SURFACE } from "@/config/glass";
 import { SEPARATED_CONTROL } from "@/config/shape";
+import { FunnelIcon } from "@/lib/icons";
 import { isJournalDateRangeActive } from "@/lib/journal/journal-date-range";
-import { buildJournalSearchParams } from "@/lib/validations/journal";
-import { CalendarBlankIcon, FunnelIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import { buildJournalSearchParams } from "@/lib/validations/journal";
 import type { JournalFilters } from "@/types/journal";
 
 interface JournalFiltersBarProps {
   filters: JournalFilters;
+}
+
+function hasActiveFilters(filters: JournalFilters): boolean {
+  return (
+    filters.type !== "all" ||
+    filters.category !== "all" ||
+    isJournalDateRangeActive(filters)
+  );
 }
 
 export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
@@ -34,11 +40,9 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
   const [q, setQ] = useState(filters.q);
   const [type, setType] = useState(filters.type);
   const [category, setCategory] = useState(filters.category);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dateRangeOpen, setDateRangeOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const hasRichFilters = type !== "all" || category !== "all";
-  const hasDateRange = isJournalDateRangeActive(filters);
+  const hasFilters = hasActiveFilters(filters);
 
   useEffect(() => {
     setQ(filters.q);
@@ -69,12 +73,21 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
     router.push(pathname);
   }
 
-  function applyDateRange(dateFrom: string | null, dateTo: string | null) {
-    applyFilters({ dateFrom, dateTo, page: 1 });
-  }
-
-  function resetDateRange() {
-    applyFilters({ dateFrom: null, dateTo: null, page: 1 });
+  function applyAllFilters(next: {
+    dateFrom: string | null;
+    dateTo: string | null;
+    type: JournalFilters["type"];
+    category: string;
+  }) {
+    setType(next.type);
+    setCategory(next.category);
+    applyFilters({
+      dateFrom: next.dateFrom,
+      dateTo: next.dateTo,
+      type: next.type,
+      category: next.category,
+      page: 1,
+    });
   }
 
   return (
@@ -97,51 +110,27 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
           type="button"
           variant="outline"
           size="icon"
-          aria-label="Buka filter tanggal"
-          aria-expanded={dateRangeOpen}
-          className={cn(
-            SEPARATED_CONTROL,
-            JOURNAL_DATE_RANGE_TRIGGER,
-            hasDateRange && JOURNAL_FILTER_TRIGGER_ACTIVE,
-          )}
-          onClick={() => setDateRangeOpen(true)}
-        >
-          <CalendarBlankIcon aria-hidden className="size-4" />
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
           aria-label="Buka filter"
-          aria-expanded={dialogOpen}
+          aria-expanded={filtersOpen}
           className={cn(
             SEPARATED_CONTROL,
             JOURNAL_FILTER_TRIGGER,
-            hasRichFilters && JOURNAL_FILTER_TRIGGER_ACTIVE,
+            hasFilters && JOURNAL_FILTER_TRIGGER_ACTIVE,
           )}
-          onClick={() => setDialogOpen(true)}
+          onClick={() => setFiltersOpen(true)}
         >
           <FunnelIcon aria-hidden className="size-4" />
         </Button>
       </div>
 
-      <JournalDateRangeDrawer
-        open={dateRangeOpen}
-        onOpenChange={setDateRangeOpen}
+      <JournalFiltersDrawer
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
         dateFrom={filters.dateFrom}
         dateTo={filters.dateTo}
-        onApply={applyDateRange}
-        onReset={resetDateRange}
-      />
-
-      <JournalFiltersDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
         type={type}
         category={category}
-        onTypeChange={setType}
-        onCategoryChange={setCategory}
-        onApply={() => applyFilters()}
+        onApply={applyAllFilters}
         onReset={resetFilters}
       />
 
@@ -155,7 +144,10 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
         )}
       >
         <div className="grid min-w-0 flex-1 gap-1.5">
-          <label htmlFor="journal-search-desktop" className="text-xs font-medium">
+          <label
+            htmlFor="journal-search-desktop"
+            className="text-xs font-medium"
+          >
             Cari
           </label>
           <Input
@@ -173,7 +165,7 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
         </div>
 
         <div className="grid gap-1.5">
-          <span className="text-xs font-medium">Tanggal</span>
+          <span className="text-xs font-medium">Filter</span>
           <Button
             type="button"
             variant="outline"
@@ -181,12 +173,12 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
             className={cn(
               SEPARATED_CONTROL,
               "h-9 gap-1.5",
-              hasDateRange && JOURNAL_FILTER_TRIGGER_ACTIVE,
+              hasFilters && JOURNAL_FILTER_TRIGGER_ACTIVE,
             )}
-            onClick={() => setDateRangeOpen(true)}
+            onClick={() => setFiltersOpen(true)}
           >
-            <CalendarBlankIcon aria-hidden className="size-4" />
-            Rentang
+            <FunnelIcon aria-hidden className="size-4" />
+            Tanggal & lainnya
           </Button>
         </div>
 
