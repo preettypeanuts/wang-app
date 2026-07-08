@@ -46,7 +46,7 @@ async function buildPlansUpcomingImpact(
   const rangeEnd = addDays(today, horizonDays);
   const plannedItems = await getPlannedItemsForExpansion(userId);
 
-  return listUpcomingUnpaidPayPlanEntries(plannedItems, referenceDate)
+  return listUpcomingUnpaidPayPlanEntries(plannedItems, referenceDate, horizonDays)
     .map(({ item, dueAt, daysUntil }) => ({
       id: `${item.id}:${dueAt.toISOString()}`,
       name: item.name,
