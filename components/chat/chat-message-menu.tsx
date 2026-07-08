@@ -24,6 +24,7 @@ interface ChatMessageMenuProps {
   disabled?: boolean;
   onEdit: () => void;
   onUndo: () => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ChatMessageMenu({
@@ -31,6 +32,7 @@ export function ChatMessageMenu({
   disabled = false,
   onEdit,
   onUndo,
+  onOpenChange,
 }: ChatMessageMenuProps) {
   const [open, setOpen] = useState(false);
   const longPressTimerRef = useRef<number | null>(null);
@@ -45,6 +47,15 @@ export function ChatMessageMenu({
     pointerStartRef.current = null;
   }
 
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  }
+
+  function openMenu() {
+    handleOpenChange(true);
+  }
+
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (disabled || event.pointerType === "mouse") {
       return;
@@ -55,7 +66,7 @@ export function ChatMessageMenu({
     longPressTimerRef.current = window.setTimeout(() => {
       longPressTimerRef.current = null;
       pointerStartRef.current = null;
-      setOpen(true);
+      openMenu();
     }, LONG_PRESS_MS);
   }
 
@@ -80,7 +91,7 @@ export function ChatMessageMenu({
     event.preventDefault();
 
     if (!disabled) {
-      setOpen(true);
+      openMenu();
     }
   }
 
@@ -96,7 +107,7 @@ export function ChatMessageMenu({
     >
       {children}
 
-      <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenu open={open} onOpenChange={handleOpenChange}>
         <DropdownMenuTrigger
           disabled={disabled}
           render={
@@ -122,7 +133,7 @@ export function ChatMessageMenu({
           <DropdownMenuItem
             disabled={disabled}
             onClick={() => {
-              setOpen(false);
+              handleOpenChange(false);
               onEdit();
             }}
           >
@@ -133,7 +144,7 @@ export function ChatMessageMenu({
             variant="destructive"
             disabled={disabled}
             onClick={() => {
-              setOpen(false);
+              handleOpenChange(false);
               onUndo();
             }}
           >

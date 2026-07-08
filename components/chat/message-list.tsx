@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { ChatMessageMenu } from "@/components/chat/chat-message-menu";
+import { ChatMessageMenuHint } from "@/components/chat/chat-message-menu-hint";
 import { ChatMessageRetryButton } from "@/components/chat/chat-message-retry-button";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageTimestamp } from "@/components/chat/message-timestamp";
@@ -28,9 +29,14 @@ import { INBOX_MESSAGE_CONTENT_INSET } from "@/config/inbox-mobile";
 import { MOBILE_CHROME_SCROLL_INSET_TOP } from "@/config/mobile-chrome";
 import { STACK_GAP } from "@/config/spacing";
 import { useMobileLargeTitleScroll } from "@/hooks/use-mobile-large-title-scroll";
+import { findInboxEditHintTargetIndex } from "@/lib/chat/find-inbox-edit-hint-target";
 import { getInboxRetryContext } from "@/lib/chat/inbox-error";
 import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import { canManageSentUserMessage } from "@/lib/chat/inbox-message-actions";
+import {
+  hasSeenInboxEditHint,
+  markInboxEditHintSeen,
+} from "@/lib/inbox/inbox-edit-hint-storage";
 import { cn } from "@/lib/utils";
 import type { TransactionCategoryId } from "@/config/categories";
 import type { ChatMessage } from "@/types/chat";
@@ -90,6 +96,7 @@ export function MessageList({
   const prevLastIdRef = useRef<string | null>(null);
   const prevLengthRef = useRef(0);
   const loadingOlderRef = useRef(false);
+  const [editHintSeen, setEditHintSeen] = useState(true);
 
   const { showBlur: showLargeTitleBlur, showCompactTitle } =
     useMobileLargeTitleScroll(() => scrollRootRef.current, titleRef, {
@@ -108,6 +115,24 @@ export function MessageList({
   useEffect(() => {
     loadingOlderRef.current = isLoadingOlder;
   }, [isLoadingOlder]);
+
+  useEffect(() => {
+    setEditHintSeen(hasSeenInboxEditHint());
+  }, []);
+
+  function dismissEditHint() {
+    markInboxEditHintSeen();
+    setEditHintSeen(true);
+  }
+
+  function handleMessageMenuOpenChange(open: boolean) {
+    if (open) {
+      dismissEditHint();
+    }
+  }
+
+  const editHintTargetIndex = findInboxEditHintTargetIndex(messages);
+  const showEditHint = !editHintSeen && editHintTargetIndex >= 0;
 
   useLayoutEffect(() => {
     const element = scrollRootRef.current;
@@ -269,6 +294,8 @@ export function MessageList({
                     ? isLowConfidenceTransaction(userInput, message.transaction)
                     : false));
 
+              const showEditHintHere = showEditHint && index === editHintTargetIndex;
+
               const bubble = (
                 <MessageBubble
                   role={message.role}
@@ -288,11 +315,15 @@ export function MessageList({
                     isUser ? "items-end" : "items-start",
                   )}
                 >
+                  {showEditHintHere ? (
+                    <ChatMessageMenuHint onDismiss={dismissEditHint} />
+                  ) : null}
                   {canManage ? (
                     <ChatMessageMenu
                       disabled={actionsDisabled}
                       onEdit={() => void onEditMessage?.(message.id)}
                       onUndo={() => void onUndoMessage?.(message.id)}
+                      onOpenChange={handleMessageMenuOpenChange}
                     >
                       {bubble}
                     </ChatMessageMenu>
