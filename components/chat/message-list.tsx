@@ -329,6 +329,11 @@ export function MessageList({
               !nextMessage.transactionDeleted &&
               Boolean(onEditReceipt);
 
+            const hasMessageMenu =
+              canManage ||
+              canEditReceipt ||
+              (canUndo && isReceiptUserMessage(message.content));
+
             const isPending = message.id.startsWith("pending-");
             const previousMessage = index > 0 ? messages[index - 1] : undefined;
             const userInput =
@@ -369,7 +374,8 @@ export function MessageList({
                 role={message.role}
                 content={message.content}
                 className={cn(
-                  canManage ? "max-w-full" : undefined,
+                  hasMessageMenu ? "max-w-full" : undefined,
+                  isUser && !hasMessageMenu ? "ml-auto" : undefined,
                   isPending && "opacity-70",
                 )}
               />
@@ -380,7 +386,7 @@ export function MessageList({
                 key={message.id}
                 data-message-id={message.id}
                 className={cn(
-                  "flex flex-col gap-1 rounded-2xl transition-[box-shadow,background-color]",
+                  "flex w-full flex-col gap-1 rounded-2xl transition-[box-shadow,background-color]",
                   isUser ? "items-end" : "items-start",
                 )}
               >
