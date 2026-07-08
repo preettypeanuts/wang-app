@@ -27,7 +27,7 @@ import { resolveCategoryForType } from "@/config/categories";
 import { CHAT_INPUT_DOCK } from "@/config/chat-layout";
 import { INBOX_CHAT_VIEW_ROOT } from "@/config/inbox-desktop";
 import { INBOX_CHAT_INPUT_DOCK } from "@/config/inbox-mobile";
-import { buildWarmTransactionReply } from "@/lib/ai/build-inbox-transaction-reply";
+import { buildWarmTransactionReply } from "@/lib/ai/build-warm-transaction-reply";
 import { buildReceiptManualFallbackNotice } from "@/lib/ai/format-gemini-api-error";
 import { patchInboxBootstrapMessages } from "@/lib/inbox/inbox-bootstrap-cache";
 import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
