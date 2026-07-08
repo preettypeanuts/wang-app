@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/popover";
 import type { TransactionCategoryId } from "@/config/categories";
 import { FORM_FIELD_SELECT } from "@/config/form-dialog";
+import { MOBILE_BOTTOM_DRAWER_POPUP } from "@/config/mobile-layout";
 import { PLANNER_SELECT_TRIGGER } from "@/config/planner-manage";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import {
@@ -140,7 +141,12 @@ export function JournalCategoryCombobox({
           onClick={() => setOpen(true)}
         />
         <Drawer open={open} onOpenChange={handleOpenChange} showSwipeHandle>
-          <DrawerContent className="max-md:[--drawer-content-max-height:min(70dvh,calc(100dvh-env(safe-area-inset-top)-5rem))]">
+          <DrawerContent
+            className={cn(
+              MOBILE_BOTTOM_DRAWER_POPUP,
+              "mt-0! gap-0 overflow-hidden border-0 bg-popover px-0",
+            )}
+          >
             <DrawerHeader className="border-b border-black/6 pb-3 text-left dark:border-white/8">
               <DrawerTitle>Pilih kategori</DrawerTitle>
               <DrawerDescription>

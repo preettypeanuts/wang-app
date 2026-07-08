@@ -1,6 +1,7 @@
 /** iOS Settings — inset grouped list tokens. */
 
 import { MOBILE_SAFE_HORIZONTAL_INSET } from "@/config/ios-safe-area";
+import { MOBILE_BOTTOM_DRAWER_POPUP } from "@/config/mobile-layout";
 
 export const SETTINGS_IOS_SURFACE = "bg-[#E9E9EC] dark:bg-black";
 
@@ -87,7 +88,7 @@ export const SETTINGS_IOS_DONE_BUTTON =
 export const SETTINGS_IOS_SUB_TITLE =
   "text-center text-[17px] font-semibold leading-snug text-foreground";
 
-export const SETTINGS_IOS_DRAWER_POPUP = "settings-drawer-popup";
+export const SETTINGS_IOS_DRAWER_POPUP = MOBILE_BOTTOM_DRAWER_POPUP;
 
 export const SETTINGS_IOS_DRAWER_SURFACE = [
   SETTINGS_IOS_DRAWER_POPUP,

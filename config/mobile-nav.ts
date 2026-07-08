@@ -1,3 +1,4 @@
+import { MOBILE_BOTTOM_DRAWER_POPUP } from "@/config/mobile-layout";
 import {
   mainNavItems,
   type NavItem,
@@ -99,8 +100,8 @@ export const MOBILE_DRAWER_ROW =
 export const MOBILE_DRAWER_TILE =
   "flex size-8 shrink-0 items-center justify-center rounded-[0.6rem] bg-linear-to-b text-white [&_svg]:size-[18px]";
 
-/** Sync with `.mobile-nav-drawer-popup` in globals.css — layout only, keeps drawer slide animation. */
-export const MOBILE_DRAWER_POPUP = "mobile-nav-drawer-popup";
+/** Sync with `.mobile-bottom-drawer-popup` in globals.css — layout only. */
+export const MOBILE_DRAWER_POPUP = MOBILE_BOTTOM_DRAWER_POPUP;
 
 export const MOBILE_DRAWER_SURFACE = [
   MOBILE_DRAWER_POPUP,

@@ -306,7 +306,7 @@
       calc(var(--mobile-safe-bottom) - 12px)
     );
     --mobile-nav-bar-height: 3.75rem;
-    /* Drawer anchored above screen bottom — sync with MOBILE_DRAWER_POPUP */
+    /* Drawer anchored above screen bottom — sync with MOBILE_BOTTOM_DRAWER_POPUP */
     --mobile-drawer-bottom: 0.5rem;
     --mobile-drawer-top-radius: 2rem;
     --mobile-drawer-bottom-radius: 3.5rem;
@@ -582,107 +582,15 @@
     }
   }
 
-  /* Keep in sync with MOBILE_DRAWER_POPUP in config/mobile-nav.ts */
+  /* Keep in sync with MOBILE_BOTTOM_DRAWER_POPUP in config/mobile-layout.ts */
   @media (max-width: 767px) {
-    .mobile-nav-drawer-popup {
-      inset-inline: 0.5rem !important;
-      bottom: var(--mobile-drawer-bottom) !important;
-      top: auto !important;
-      margin: 0 !important;
-      width: auto !important;
-      overflow: hidden !important;
-      max-height: min(
-        82dvh,
-        calc(100dvh - var(--mobile-drawer-bottom) - 0.75rem)
-      ) !important;
-      border-radius: var(--mobile-drawer-top-radius)
-        var(--mobile-drawer-top-radius) var(--mobile-drawer-bottom-radius)
-        var(--mobile-drawer-bottom-radius) !important;
-    }
-
-    .mobile-nav-drawer-popup [data-slot="drawer-content"] {
-      overflow: visible !important;
-      padding-bottom: var(--mobile-drawer-inner-padding-bottom);
-    }
-
-    .mobile-nav-drawer-popup [data-slot="drawer-swipe-handle"] {
-      flex-shrink: 0;
-      padding-top: 0.625rem;
-      padding-bottom: 0.125rem;
-    }
-
-    @supports (corner-shape: squircle) {
-      .mobile-nav-drawer-popup {
-        corner-shape: squircle;
-      }
-    }
-
-    .mobile-nav-drawer-popup[data-swipe-direction="down"] {
-      --closed-transform: translate3d(
-        0,
-        calc(100% + var(--mobile-drawer-bottom) + 2px),
-        0
-      );
-    }
-  }
-
-  /* Keep in sync with SETTINGS_IOS_DRAWER_POPUP in config/settings-ios.ts */
-  @media (max-width: 767px) {
-    .settings-drawer-popup {
-      inset-inline: 0.5rem !important;
-      bottom: var(--mobile-drawer-bottom) !important;
-      top: auto !important;
-      margin: 0 !important;
-      width: auto !important;
-      overflow: hidden !important;
-      max-height: min(
-        82dvh,
-        calc(100dvh - var(--mobile-drawer-bottom) - 0.75rem)
-      ) !important;
-      border-radius: var(--mobile-drawer-top-radius)
-        var(--mobile-drawer-top-radius) var(--mobile-drawer-bottom-radius)
-        var(--mobile-drawer-bottom-radius) !important;
-    }
-
-    .settings-drawer-popup [data-slot="drawer-content"] {
-      display: flex !important;
-      min-height: 0 !important;
-      flex: 1 1 auto !important;
-      flex-direction: column !important;
-      overflow: hidden !important;
-      padding-bottom: var(--mobile-drawer-inner-padding-bottom);
-    }
-
-    .settings-drawer-popup [data-slot="drawer-swipe-handle"] {
-      flex-shrink: 0;
-      padding-top: 0.625rem;
-      padding-bottom: 0.125rem;
-    }
-
-    @supports (corner-shape: squircle) {
-      .settings-drawer-popup {
-        corner-shape: squircle;
-      }
-    }
-
-    .settings-drawer-popup[data-swipe-direction="down"] {
-      --closed-transform: translate3d(
-        0,
-        calc(100% + var(--mobile-drawer-bottom) + 2px),
-        0
-      );
-    }
-  }
-
-  /* Keep in sync with RESPONSIVE_FORM_DRAWER_POPUP in config/responsive-dialog-mobile.ts */
-  @media (max-width: 767px) {
-    [data-slot="drawer-portal"]:has(.responsive-form-drawer-popup)
+    [data-slot="drawer-portal"]:has(.mobile-bottom-drawer-popup)
       [data-slot="drawer-overlay"] {
       -webkit-backdrop-filter: blur(64px);
       backdrop-filter: blur(64px);
     }
 
-    .responsive-form-drawer-popup {
+    .mobile-bottom-drawer-popup {
       inset-inline: 0.5rem !important;
       bottom: var(--mobile-drawer-bottom) !important;
       top: auto !important;
@@ -690,7 +598,7 @@
       width: auto !important;
       overflow: hidden !important;
       max-height: min(
-        92dvh,
+        82dvh,
         calc(100dvh - var(--mobile-drawer-bottom) - 0.75rem)
       ) !important;
       border-radius: var(--mobile-drawer-top-radius)
@@ -698,27 +606,39 @@
         var(--mobile-drawer-bottom-radius) !important;
     }
 
-    .responsive-form-drawer-popup [data-slot="drawer-content"] {
+    .mobile-bottom-drawer-popup--tall {
+      max-height: min(
+        92dvh,
+        calc(100dvh - var(--mobile-drawer-bottom) - 0.75rem)
+      ) !important;
+    }
+
+    .mobile-bottom-drawer-popup [data-slot="drawer-content"] {
       display: flex !important;
       min-height: 0 !important;
       flex: 1 1 auto !important;
       flex-direction: column !important;
       overflow: hidden !important;
+      padding-bottom: var(--mobile-drawer-inner-padding-bottom);
     }
 
-    .responsive-form-drawer-popup [data-slot="drawer-swipe-handle"] {
+    .mobile-bottom-drawer-popup--tall [data-slot="drawer-content"] {
+      padding-bottom: 0;
+    }
+
+    .mobile-bottom-drawer-popup [data-slot="drawer-swipe-handle"] {
       flex-shrink: 0;
       padding-top: 0.625rem;
       padding-bottom: 0.125rem;
     }
 
     @supports (corner-shape: squircle) {
-      .responsive-form-drawer-popup {
+      .mobile-bottom-drawer-popup {
         corner-shape: squircle;
       }
     }
 
-    .responsive-form-drawer-popup[data-swipe-direction="down"] {
+    .mobile-bottom-drawer-popup[data-swipe-direction="down"] {
       --closed-transform: translate3d(
         0,
         calc(100% + var(--mobile-drawer-bottom) + 2px),

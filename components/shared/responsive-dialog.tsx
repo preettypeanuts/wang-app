@@ -20,15 +20,19 @@ import {
   FORM_DIALOG_HEADER,
   FORM_DIALOG_SURFACE,
 } from "@/config/form-dialog";
-import { RESPONSIVE_FORM_DRAWER_POPUP } from "@/config/responsive-dialog-mobile";
+import {
+  MOBILE_BOTTOM_DRAWER_POPUP,
+  MOBILE_BOTTOM_DRAWER_POPUP_TALL,
+} from "@/config/mobile-layout";
 import { useDrawerScrollLock } from "@/hooks/use-drawer-scroll-lock";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { cn } from "@/lib/utils";
 
-/** Bottom sheet shell — styling in globals.css `.responsive-form-drawer-popup`. */
+/** Bottom sheet shell — layout in globals.css `.mobile-bottom-drawer-popup`. */
 const RESPONSIVE_DIALOG_DRAWER_SHELL = cn(
   FORM_DIALOG_SURFACE,
-  RESPONSIVE_FORM_DRAWER_POPUP,
+  MOBILE_BOTTOM_DRAWER_POPUP,
+  MOBILE_BOTTOM_DRAWER_POPUP_TALL,
   "flex flex-col gap-0 overflow-hidden border-0 p-0",
 );
 

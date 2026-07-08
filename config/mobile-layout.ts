@@ -26,3 +26,13 @@ export function mobileOnly(classes: string): string {
     .map((token) => `${MOBILE_ONLY_PREFIX}:${token}`)
     .join(" ");
 }
+
+/**
+ * Shared mobile bottom sheet layout (settings-style floating squircle).
+ * Sync with `.mobile-bottom-drawer-popup` in globals.css.
+ */
+export const MOBILE_BOTTOM_DRAWER_POPUP = "mobile-bottom-drawer-popup";
+
+/** Taller max-height for multi-field form drawers. */
+export const MOBILE_BOTTOM_DRAWER_POPUP_TALL =
+  "mobile-bottom-drawer-popup--tall";
