@@ -177,20 +177,22 @@ export function InboxSearchDrawer({
           <div className="relative shrink-0">
             <MagnifyingGlassIcon
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground/70"
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground max-md:text-muted-foreground/70"
             />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Cari kopi, netflix, parkir…"
               className={[
+                // Keep desktop spacing (pl-9) unchanged; apply iOS styling only on mobile.
+                "pl-9",
                 // iOS-like search field: pill, no visible border, subtle frosted background.
-                "pl-9 rounded-full border-0 bg-white/70 shadow-sm backdrop-blur",
-                "dark:bg-black/20 dark:shadow-none",
+                "max-md:rounded-full max-md:border-0 max-md:bg-white/70 max-md:shadow-sm max-md:backdrop-blur",
+                "max-md:dark:bg-black/20 max-md:dark:shadow-none",
                 // Keep placeholder softer.
-                "placeholder:text-muted-foreground/80",
+                "max-md:placeholder:text-muted-foreground/80",
                 // iOS doesn't show a heavy focus ring; keep focus purely visual.
-                "focus-visible:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0",
+                "max-md:focus-visible:border-transparent max-md:focus-visible:ring-0 max-md:focus-visible:ring-offset-0",
               ].join(" ")}
               autoComplete="off"
               autoCorrect="off"
