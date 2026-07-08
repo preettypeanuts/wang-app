@@ -14,6 +14,7 @@ import { updateTransactionCategoryAction } from "@/app/actions/journal";
 import {
   parseReceiptFromImageAction,
   submitInboxMessageFromReceipt,
+  updateInboxMessageFromReceipt,
 } from "@/app/actions/receipt";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatReceiptDropOverlay } from "@/components/chat/chat-receipt-drop-overlay";
@@ -35,6 +36,10 @@ import {
   mergeInboxMessageTail,
   prependOlderInboxMessages,
 } from "@/lib/inbox/merge-inbox-messages";
+import {
+  buildReceiptDraftFromTransaction,
+  parseReceiptUserMessageContent,
+} from "@/lib/receipt/receipt-message";
 import { createEmptyReceiptDraft } from "@/lib/receipt/create-empty-receipt-draft";
 import {
   getReceiptImageFromDataTransfer,
@@ -52,6 +57,21 @@ import type {
 } from "@/types/chat";
 import type { ReceiptDraft } from "@/types/receipt";
 import type { ParsedTransaction, TransactionType } from "@/types/transaction";
+
+interface ReceiptEditContext {
+  userMessageId: string;
+  assistantMessageId: string;
+  transactionId: string;
+}
+
+interface ReceiptConfirmInput {
+  type: TransactionType;
+  amount: string;
+  category: TransactionCategoryId;
+  description: string;
+  merchant: string;
+  occurredAt: string;
+}
 
 interface InboxViewProps {
   initialMessages: ChatMessage[];
@@ -110,6 +130,8 @@ export function InboxView({
   const [receiptParseNotice, setReceiptParseNotice] = useState<string | null>(
     null,
   );
+  const [receiptEditContext, setReceiptEditContext] =
+    useState<ReceiptEditContext | null>(null);
   const [isDraggingReceipt, setIsDraggingReceipt] = useState(false);
   const dragDepthRef = useRef(0);
 
@@ -197,52 +219,40 @@ export function InboxView({
     setIsReceiptConfirmOpen(false);
     setReceiptDraft(null);
     setReceiptParseNotice(null);
+    setReceiptEditContext(null);
     clearReceiptPreview();
   }
 
-  async function handleReceiptFile(file: File) {
-    setReceiptError(null);
-    setIsParsingReceipt(true);
+  function openReceiptEdit(userMessageId: string) {
+    const userIndex = messages.findIndex((message) => message.id === userMessageId);
+    const userMessage = messages[userIndex];
+    const assistantMessage = messages[userIndex + 1];
 
-    try {
-      const processed = await processReceiptImageFile(file);
-      setReceiptPreviewUrl(processed.previewUrl);
-
-      const result = await parseReceiptFromImageAction(
-        processed.base64,
-        processed.mimeType,
-      );
-
-      if (!result.ok) {
-        setReceiptDraft(createEmptyReceiptDraft());
-        setReceiptParseNotice(buildReceiptManualFallbackNotice(result.error));
-        setIsReceiptConfirmOpen(true);
-        return;
-      }
-
-      setReceiptParseNotice(null);
-      setReceiptDraft(result.draft);
-      setIsReceiptConfirmOpen(true);
-    } catch (error) {
-      clearReceiptPreview();
-      setReceiptError(
-        error instanceof ReceiptImageError
-          ? error.message
-          : "Gagal memproses struk. Coba lagi.",
-      );
-    } finally {
-      setIsParsingReceipt(false);
+    if (
+      !userMessage ||
+      assistantMessage?.role !== "assistant" ||
+      !assistantMessage.transaction?.id ||
+      assistantMessage.transactionDeleted
+    ) {
+      return;
     }
+
+    const { merchant } = parseReceiptUserMessageContent(userMessage.content);
+
+    setReceiptEditContext({
+      userMessageId,
+      assistantMessageId: assistantMessage.id,
+      transactionId: assistantMessage.transaction.id,
+    });
+    setReceiptDraft(
+      buildReceiptDraftFromTransaction(assistantMessage.transaction, merchant),
+    );
+    setReceiptPreviewUrl(null);
+    setReceiptParseNotice(null);
+    setIsReceiptConfirmOpen(true);
   }
 
-  async function handleReceiptConfirm(input: {
-    type: TransactionType;
-    amount: string;
-    category: TransactionCategoryId;
-    description: string;
-    merchant: string;
-    occurredAt: string;
-  }) {
+  async function recordReceiptToInbox(input: ReceiptConfirmInput) {
     const pendingId = createPendingId("user");
     const optimisticUser: ChatMessage = {
       id: pendingId,
@@ -251,7 +261,6 @@ export function InboxView({
       createdAt: new Date().toISOString(),
     };
 
-    closeReceiptConfirm();
     setMessages((current) => [...current, optimisticUser]);
     beginInFlight();
 
@@ -281,6 +290,95 @@ export function InboxView({
     } finally {
       endInFlight();
     }
+  }
+
+  async function handleReceiptFile(file: File) {
+    setReceiptError(null);
+    setIsParsingReceipt(true);
+
+    try {
+      const processed = await processReceiptImageFile(file);
+      setReceiptPreviewUrl(processed.previewUrl);
+
+      const result = await parseReceiptFromImageAction(
+        processed.base64,
+        processed.mimeType,
+      );
+
+      if (!result.ok) {
+        setReceiptEditContext(null);
+        setReceiptDraft(createEmptyReceiptDraft());
+        setReceiptParseNotice(buildReceiptManualFallbackNotice(result.error));
+        setIsReceiptConfirmOpen(true);
+        return;
+      }
+
+      clearReceiptPreview();
+      await recordReceiptToInbox({
+        type: result.draft.type,
+        amount: String(result.draft.amount),
+        category: result.draft.category,
+        description: result.draft.description,
+        merchant: result.draft.merchant,
+        occurredAt: result.draft.occurredAt,
+      });
+    } catch (error) {
+      clearReceiptPreview();
+      setReceiptError(
+        error instanceof ReceiptImageError
+          ? error.message
+          : "Gagal memproses struk. Coba lagi.",
+      );
+    } finally {
+      setIsParsingReceipt(false);
+    }
+  }
+
+  async function handleReceiptConfirm(input: ReceiptConfirmInput) {
+    if (receiptEditContext) {
+      const editContext = receiptEditContext;
+      closeReceiptConfirm();
+      beginInFlight();
+
+      try {
+        const result = await updateInboxMessageFromReceipt({
+          ...input,
+          ...editContext,
+        });
+
+        if (!result.ok) {
+          setReceiptError(result.error);
+          return;
+        }
+
+        setMessages((current) =>
+          current.map((message) => {
+            if (message.id === result.userMessage.id) {
+              return result.userMessage;
+            }
+
+            if (message.id === result.assistantMessage.id) {
+              return result.assistantMessage;
+            }
+
+            return message;
+          }),
+        );
+
+        onTransactionRecorded?.(result.transaction);
+      } catch (error) {
+        setReceiptError(
+          error instanceof Error ? error.message : "Gagal memperbarui struk.",
+        );
+      } finally {
+        endInFlight();
+      }
+
+      return;
+    }
+
+    closeReceiptConfirm();
+    await recordReceiptToInbox(input);
   }
 
   function handleDragEnter(event: React.DragEvent<HTMLElement>) {
@@ -750,6 +848,7 @@ export function InboxView({
         onRetry={handleRetry}
         onEditMessage={handleEditMessage}
         onUndoMessage={handleUndoMessage}
+        onEditReceipt={openReceiptEdit}
         onQuickCorrect={handleQuickCorrect}
         actionsDisabled={isProcessing}
       />
@@ -766,6 +865,7 @@ export function InboxView({
         draft={receiptDraft}
         previewUrl={receiptPreviewUrl}
         notice={receiptParseNotice}
+        mode={receiptEditContext ? "edit" : "create"}
         onOpenChange={(open) => {
           if (!open) {
             closeReceiptConfirm();

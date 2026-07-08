@@ -5,6 +5,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatMessageMenu } from "@/components/chat/chat-message-menu";
 import { ChatMessageMenuHint } from "@/components/chat/chat-message-menu-hint";
 import { ChatMessageRetryButton } from "@/components/chat/chat-message-retry-button";
+import { ChatReceiptEditButton } from "@/components/chat/chat-receipt-edit-button";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageTimestamp } from "@/components/chat/message-timestamp";
 import { TransactionPreview } from "@/components/chat/transaction-preview";
@@ -33,7 +34,8 @@ import { STACK_GAP } from "@/config/spacing";
 import { useMobileLargeTitleScroll } from "@/hooks/use-mobile-large-title-scroll";
 import { findInboxEditHintTargetIndex } from "@/lib/chat/find-inbox-edit-hint-target";
 import { getInboxRetryContext } from "@/lib/chat/inbox-error";
-import { canManageSentUserMessage } from "@/lib/chat/inbox-message-actions";
+import { canManageSentUserMessage, canUndoSentUserMessage } from "@/lib/chat/inbox-message-actions";
+import { isReceiptUserMessage } from "@/lib/receipt/receipt-message";
 import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import {
   hasSeenInboxEditHint,
@@ -48,6 +50,7 @@ interface MessageListProps {
   onRetry?: (assistantMessageId: string) => Promise<void>;
   onEditMessage?: (userMessageId: string) => Promise<void>;
   onUndoMessage?: (userMessageId: string) => Promise<void>;
+  onEditReceipt?: (userMessageId: string) => void;
   onQuickCorrect?: (input: {
     assistantMessageId: string;
     transactionId: string;
@@ -80,6 +83,7 @@ export function MessageList({
   onRetry,
   onEditMessage,
   onUndoMessage,
+  onEditReceipt,
   onQuickCorrect,
   actionsDisabled = false,
   fixedMobileTopBar = false,
@@ -315,6 +319,15 @@ export function MessageList({
               canManageSentUserMessage(message) &&
               Boolean(onEditMessage) &&
               Boolean(onUndoMessage);
+            const canUndo =
+              canUndoSentUserMessage(message) && Boolean(onUndoMessage);
+            const nextMessage = messages[index + 1];
+            const canEditReceipt =
+              isReceiptUserMessage(message.content) &&
+              nextMessage?.role === "assistant" &&
+              Boolean(nextMessage.transaction?.id) &&
+              !nextMessage.transactionDeleted &&
+              Boolean(onEditReceipt);
 
             const isPending = message.id.startsWith("pending-");
             const previousMessage = index > 0 ? messages[index - 1] : undefined;
@@ -383,6 +396,28 @@ export function MessageList({
                   >
                     {bubble}
                   </ChatMessageMenu>
+                ) : canEditReceipt || (canUndo && isReceiptUserMessage(message.content)) ? (
+                  <div className="inline-flex max-w-[85%] items-center gap-1.5">
+                    {canEditReceipt ? (
+                      <ChatReceiptEditButton
+                        disabled={actionsDisabled}
+                        onEdit={() => onEditReceipt?.(message.id)}
+                      />
+                    ) : null}
+                    {canUndo ? (
+                      <ChatMessageMenu
+                        disabled={actionsDisabled}
+                        hideEdit
+                        onEdit={() => {}}
+                        onUndo={() => void onUndoMessage?.(message.id)}
+                        onOpenChange={handleMessageMenuOpenChange}
+                      >
+                        {bubble}
+                      </ChatMessageMenu>
+                    ) : (
+                      bubble
+                    )}
+                  </div>
                 ) : (
                   bubble
                 )}

@@ -59,6 +59,7 @@ interface ReceiptConfirmDialogProps {
   draft: ReceiptDraft | null;
   previewUrl: string | null;
   notice?: string | null;
+  mode?: "create" | "edit";
   onOpenChange: (open: boolean) => void;
   onConfirm: (input: {
     type: TransactionType;
@@ -99,6 +100,7 @@ export function ReceiptConfirmDialog({
   draft,
   previewUrl,
   notice = null,
+  mode = "create",
   onOpenChange,
   onConfirm,
 }: ReceiptConfirmDialogProps) {
@@ -157,21 +159,31 @@ export function ReceiptConfirmDialog({
     });
   }
 
+  const isEditMode = mode === "edit";
+  const title = notice
+    ? "Isi struk manual"
+    : isEditMode
+      ? "Perbaiki struk"
+      : "Konfirmasi struk";
+  const dialogDescription = notice
+    ? "Lihat preview struk lalu isi nominal dan detail transaksi."
+    : isEditMode
+      ? "Sesuaikan data struk jika ada yang tidak cocok."
+      : "Periksa data dari struk sebelum dicatat ke inbox.";
+
   return (
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={notice ? "Isi struk manual" : "Konfirmasi struk"}
+      title={title}
       wide
     >
       <ResponsiveDialogHeader>
         <DialogTitle className="text-lg font-semibold tracking-tight">
-          {notice ? "Isi struk manual" : "Konfirmasi struk"}
+          {title}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          {notice
-            ? "Lihat preview struk lalu isi nominal dan detail transaksi."
-            : "Periksa data dari struk sebelum dicatat ke inbox."}
+          {dialogDescription}
         </DialogDescription>
       </ResponsiveDialogHeader>
 
@@ -339,7 +351,11 @@ export function ReceiptConfirmDialog({
           onClick={handleConfirm}
           disabled={isPending || !description.trim() || previewAmount <= 0}
         >
-          {isPending ? "Menyimpan..." : "Catat ke inbox"}
+          {isPending
+            ? "Menyimpan..."
+            : isEditMode
+              ? "Simpan"
+              : "Catat ke inbox"}
         </Button>
       </ResponsiveDialogFooter>
     </ResponsiveDialog>
