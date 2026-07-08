@@ -22,9 +22,13 @@ import type { PlannedOccurrence } from "@/types/planner";
 
 interface PlannerCalendarDayItemProps {
   item: PlannedOccurrence;
+  onOpenDetail?: () => void;
 }
 
-export function PlannerCalendarDayItem({ item }: PlannerCalendarDayItemProps) {
+export function PlannerCalendarDayItem({
+  item,
+  onOpenDetail,
+}: PlannerCalendarDayItemProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const isIncome = item.type === "income";
@@ -49,8 +53,8 @@ export function PlannerCalendarDayItem({ item }: PlannerCalendarDayItemProps) {
     });
   }
 
-  return (
-    <article className={PLANNER_CALENDAR_DAY_DIALOG_ITEM}>
+  const summary = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-foreground/90">
@@ -88,6 +92,26 @@ export function PlannerCalendarDayItem({ item }: PlannerCalendarDayItemProps) {
           {paymentStatus.label}
         </p>
       ) : null}
+    </>
+  );
+
+  return (
+    <article className={PLANNER_CALENDAR_DAY_DIALOG_ITEM}>
+      {onOpenDetail ? (
+        <button
+          type="button"
+          onClick={onOpenDetail}
+          className={cn(
+            "w-full text-left transition-colors",
+            "rounded-lg -mx-1 px-1 py-0.5",
+            "hover:bg-black/4 active:bg-black/6 dark:hover:bg-white/6 dark:active:bg-white/8",
+          )}
+        >
+          {summary}
+        </button>
+      ) : (
+        summary
+      )}
 
       {canPay ? (
         <Button

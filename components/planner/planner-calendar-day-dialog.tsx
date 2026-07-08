@@ -1,8 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { savePlannedItemAction } from "@/app/actions/planner";
+import { useMemo, useState } from "react";
+import {
+  deletePlannedItemAction,
+  savePlannedItemAction,
+} from "@/app/actions/planner";
+import { PlannedItemDetailDialog } from "@/components/planner/planned-item-detail-dialog";
 import { PlannedItemFormDialog } from "@/components/planner/planned-item-form-dialog";
 import { PlannerCalendarDayItem } from "@/components/planner/planner-calendar-day-item";
 import {
@@ -19,7 +23,25 @@ import { formatIdr } from "@/lib/finance/format-currency";
 import { formatDayMonth, formatWeekday } from "@/lib/finance/format-datetime";
 import { PlusIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
-import type { PlannedOccurrence } from "@/types/planner";
+import type { PlannedItemRecord, PlannedOccurrence } from "@/types/planner";
+
+type PlannedItemRecordSerialized = Omit<
+  PlannedItemRecord,
+  "startAt" | "endAt"
+> & {
+  startAt: string;
+  endAt: string | null;
+};
+
+function normalizePlannedItems(
+  items: PlannedItemRecordSerialized[],
+): PlannedItemRecord[] {
+  return items.map((item) => ({
+    ...item,
+    startAt: new Date(item.startAt),
+    endAt: item.endAt ? new Date(item.endAt) : null,
+  }));
+}
 
 interface PlannerCalendarDayDialogProps {
   open: boolean;
@@ -27,6 +49,7 @@ interface PlannerCalendarDayDialogProps {
   date: Date;
   items: PlannedOccurrence[];
   totalAmount: number;
+  plannedItems: PlannedItemRecordSerialized[];
 }
 
 export function PlannerCalendarDayDialog({
@@ -35,10 +58,22 @@ export function PlannerCalendarDayDialog({
   date,
   items,
   totalAmount,
+  plannedItems,
 }: PlannerCalendarDayDialogProps) {
   const router = useRouter();
   const [formOpen, setFormOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<PlannedItemRecord | null>(null);
+  const [detailItem, setDetailItem] = useState<PlannedItemRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const normalizedPlannedItems = useMemo(
+    () => normalizePlannedItems(plannedItems),
+    [plannedItems],
+  );
+  const plannedItemById = useMemo(
+    () => new Map(normalizedPlannedItems.map((item) => [item.id, item])),
+    [normalizedPlannedItems],
+  );
   const hasItems = items.length > 0;
   const defaultStartAt = dateInputFromCalendarDate(date);
   const dialogTitle = `${formatWeekday(date)}, ${formatDayMonth(date)}`;
@@ -47,6 +82,45 @@ export function PlannerCalendarDayDialog({
     setError(null);
     onOpenChange(false);
     setFormOpen(true);
+  }
+
+  function openDetail(occurrence: PlannedOccurrence) {
+    const item = plannedItemById.get(occurrence.plannedItemId);
+
+    if (!item) {
+      return;
+    }
+
+    setError(null);
+    onOpenChange(false);
+    setDetailItem(item);
+    setDetailOpen(true);
+  }
+
+  function openEditForm(item: PlannedItemRecord) {
+    setDetailOpen(false);
+    setEditingItem(item);
+    setError(null);
+    setFormOpen(true);
+  }
+
+  async function handleDelete(item: PlannedItemRecord) {
+    const confirmed = window.confirm(`Hapus "${item.name}" dari PayPlan?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    const result = await deletePlannedItemAction(item.id);
+
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    setDetailOpen(false);
+    setDetailItem(null);
+    router.refresh();
   }
 
   async function handleSubmit(formData: FormData): Promise<boolean> {
@@ -58,6 +132,7 @@ export function PlannerCalendarDayDialog({
     }
 
     setError(null);
+    setEditingItem(null);
     router.refresh();
     return true;
   }
@@ -114,7 +189,11 @@ export function PlannerCalendarDayDialog({
           {hasItems ? (
             <div className={cn("flex flex-col", GRID_GAP)}>
               {items.map((item) => (
-                <PlannerCalendarDayItem key={item.id} item={item} />
+                <PlannerCalendarDayItem
+                  key={item.id}
+                  item={item}
+                  onOpenDetail={() => openDetail(item)}
+                />
               ))}
             </div>
           ) : (
@@ -142,10 +221,18 @@ export function PlannerCalendarDayDialog({
         </ResponsiveDialogBody>
       </ResponsiveDialog>
 
+      <PlannedItemDetailDialog
+        open={detailOpen}
+        item={detailItem}
+        onOpenChange={setDetailOpen}
+        onEdit={openEditForm}
+        onDelete={handleDelete}
+      />
+
       <PlannedItemFormDialog
         open={formOpen}
-        item={null}
-        defaultStartAt={defaultStartAt}
+        item={editingItem}
+        defaultStartAt={editingItem ? undefined : defaultStartAt}
         onOpenChange={setFormOpen}
         onSubmit={handleSubmit}
       />

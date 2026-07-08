@@ -143,6 +143,7 @@ function PayplanPagePanels({
                 month={month}
                 initialDayKey={initialDayKey}
                 items={monthOccurrences}
+                plannedItems={plannedItemRecords}
               />
             </div>
 

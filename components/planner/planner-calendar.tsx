@@ -30,13 +30,22 @@ import {
   WEEKDAY_LABELS,
 } from "@/lib/planner/calendar";
 import { cn } from "@/lib/utils";
-import type { PlannedOccurrence } from "@/types/planner";
+import type { PlannedItemRecord, PlannedOccurrence } from "@/types/planner";
+
+type PlannedItemRecordSerialized = Omit<
+  PlannedItemRecord,
+  "startAt" | "endAt"
+> & {
+  startAt: string;
+  endAt: string | null;
+};
 
 interface PlannerCalendarProps {
   monthKey: string;
   year: number;
   month: number;
   items: Array<Omit<PlannedOccurrence, "dueAt"> & { dueAt: string }>;
+  plannedItems: PlannedItemRecordSerialized[];
   initialDayKey: string;
 }
 
@@ -54,6 +63,7 @@ export function PlannerCalendar({
   year,
   month,
   items,
+  plannedItems,
   initialDayKey,
 }: PlannerCalendarProps) {
   const router = useRouter();
@@ -209,6 +219,7 @@ export function PlannerCalendar({
         date={selectedDate}
         items={selectedItems}
         totalAmount={selectedTotal}
+        plannedItems={plannedItems}
       />
 
       <div className="hidden md:block">
