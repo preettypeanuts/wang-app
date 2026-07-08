@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { JournalEntryDetailDialog } from "@/components/journal/journal-entry-detail-dialog";
 import { JournalEntryRow } from "@/components/journal/journal-entry-row";
+import { JournalListSectionHeader } from "@/components/journal/journal-list-section-header";
 import {
   JOURNAL_DESKTOP_LIST_CONTAINER,
   JOURNAL_DESKTOP_LIST_FRAME,
@@ -24,7 +25,6 @@ import {
   JOURNAL_LIST_GROUP,
   JOURNAL_LIST_SCROLL,
   JOURNAL_LIST_SECTION,
-  JOURNAL_LIST_SECTION_LABEL,
 } from "@/config/journal-table";
 import { groupJournalEntriesByDay } from "@/lib/journal/group-journal-entries";
 import { cn } from "@/lib/utils";
@@ -85,7 +85,11 @@ export function JournalTable({ items, onAdd }: JournalTableProps) {
           <div className={cn(JOURNAL_LIST_SCROLL, JOURNAL_DESKTOP_LIST_SCROLL)}>
             {groups.map((group) => (
               <section key={group.dayKey} className={JOURNAL_LIST_SECTION}>
-                <h2 className={JOURNAL_LIST_SECTION_LABEL}>{group.label}</h2>
+                <JournalListSectionHeader
+                  label={group.label}
+                  totalIncome={group.totalIncome}
+                  totalExpense={group.totalExpense}
+                />
                 <div
                   className={cn(JOURNAL_LIST_GROUP, JOURNAL_MOBILE_SOLID_SURFACE)}
                 >

@@ -5,7 +5,25 @@ import type { JournalEntry } from "@/types/journal";
 export interface JournalEntryGroup {
   dayKey: string;
   label: string;
+  totalIncome: number;
+  totalExpense: number;
   items: JournalEntry[];
+}
+
+function summarizeJournalDay(items: JournalEntry[]) {
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  for (const item of items) {
+    if (item.type === "income") {
+      totalIncome += item.amount;
+      continue;
+    }
+
+    totalExpense += item.amount;
+  }
+
+  return { totalIncome, totalExpense };
 }
 
 export function groupJournalEntriesByDay(
@@ -26,9 +44,15 @@ export function groupJournalEntriesByDay(
     groups.set(dayKey, [item]);
   }
 
-  return [...groups.entries()].map(([dayKey, groupItems]) => ({
-    dayKey,
-    label: formatJournalSectionDate(groupItems[0].occurredAt, referenceDate),
-    items: groupItems,
-  }));
+  return [...groups.entries()].map(([dayKey, groupItems]) => {
+    const { totalIncome, totalExpense } = summarizeJournalDay(groupItems);
+
+    return {
+      dayKey,
+      label: formatJournalSectionDate(groupItems[0].occurredAt, referenceDate),
+      totalIncome,
+      totalExpense,
+      items: groupItems,
+    };
+  });
 }
