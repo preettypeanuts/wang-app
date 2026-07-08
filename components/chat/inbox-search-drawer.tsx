@@ -143,20 +143,17 @@ export function InboxSearchDrawer({
 
     if (entry) {
       onOpenChange(false);
-      // Open detail after drawer close animation starts.
       window.setTimeout(() => {
         setDetailEntry(entry);
         setDetailOpen(true);
       }, 150);
-      return;
     }
-
-    // Message not loaded and no linked transaction — keep drawer open.
   }
 
   return (
     <>
       <ResponsiveDialog
+        bare
         open={open}
         onOpenChange={onOpenChange}
         title="Cari di Inbox"
@@ -173,27 +170,28 @@ export function InboxSearchDrawer({
           </div>
         </ResponsiveDialogHeader>
 
-        <ResponsiveDialogBody className="flex min-h-0 flex-col gap-3 overflow-hidden max-md:gap-2 max-md:px-0 max-md:pb-0 max-md:pt-2">
-          <div className="relative shrink-0 max-md:px-3">
+        <ResponsiveDialogBody
+          className={cn(
+            "flex min-h-0 flex-col gap-3 overflow-hidden max-md:pt-3",
+            "max-md:gap-2 max-md:bg-transparent max-md:px-0 max-md:pt-0 max-md:pb-[var(--mobile-safe-bottom)]",
+          )}
+        >
+          <div className="relative shrink-0 max-md:px-0">
             <MagnifyingGlassIcon
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground max-md:left-4 max-md:text-muted-foreground/70"
+              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground max-md:left-6 max-md:text-muted-foreground/70"
             />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Cari kopi, netflix, parkir…"
-              className={[
-                // Keep desktop spacing (pl-9) unchanged; apply iOS styling only on mobile.
+              className={cn(
                 "pl-9",
-                // iOS-like search field: pill, no visible border, subtle frosted background.
-                "max-md:rounded-full max-md:border-0 max-md:bg-white/10 max-md:shadow-none max-md:backdrop-blur",
-                "max-md:dark:bg-black/15",
-                // Keep placeholder softer.
+                "max-md:h-11 max-md:rounded-full max-md:border-0 max-md:bg-white/55 max-md:shadow-none max-md:backdrop-blur-xl",
+                "max-md:dark:bg-black/40",
                 "max-md:placeholder:text-muted-foreground/80",
-                // iOS doesn't show a heavy focus ring; keep focus purely visual.
                 "max-md:focus-visible:border-transparent max-md:focus-visible:ring-0 max-md:focus-visible:ring-offset-0",
-              ].join(" ")}
+              )}
               autoComplete="off"
               autoCorrect="off"
               spellCheck={false}
@@ -201,9 +199,14 @@ export function InboxSearchDrawer({
             />
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]">
+          <div
+            className={cn(
+              "min-h-0 flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]",
+              "max-md:rounded-3xl max-md:bg-transparent",
+            )}
+          >
             {!debouncedQuery ? (
-              <p className="px-1 py-6 text-center text-sm text-muted-foreground">
+              <p className="px-1 py-4 text-center text-sm">
                 Ketik kata kunci untuk mulai cari.
               </p>
             ) : loading ? (
@@ -211,7 +214,7 @@ export function InboxSearchDrawer({
                 {["0", "1", "2", "3", "4"].map((key) => (
                   <li
                     key={key}
-                    className="rounded-2xl border border-black/6 p-3 dark:border-white/8"
+                    className="rounded-2xl border border-black/6 bg-white/40 p-3 backdrop-blur-md dark:border-white/8 dark:bg-black/30"
                   >
                     <Skeleton className="mb-2 h-3 w-24" />
                     <Skeleton className="mb-1.5 h-4 w-full" />
@@ -220,7 +223,7 @@ export function InboxSearchDrawer({
                 ))}
               </ul>
             ) : results.length === 0 ? (
-              <p className="px-1 py-6 text-center text-sm text-muted-foreground">
+              <p className="px-1 py-4 text-center text-sm text-muted-foreground">
                 Gak ketemu transaksi buat &ldquo;{debouncedQuery}&rdquo;
               </p>
             ) : (
@@ -242,6 +245,8 @@ export function InboxSearchDrawer({
                           "flex w-full flex-col gap-1.5 rounded-2xl border border-black/6 bg-black/2 p-3 text-left transition-colors",
                           "hover:bg-black/5 active:scale-[0.99]",
                           "dark:border-white/8 dark:bg-white/3 dark:hover:bg-white/6",
+                          "max-md:border-white/20 max-md:bg-white/50 max-md:backdrop-blur-xl",
+                          "max-md:dark:border-white/10 max-md:dark:bg-black/35",
                         )}
                       >
                         <div className="flex items-center justify-between gap-2">

@@ -44,6 +44,11 @@ interface ResponsiveDialogProps {
   children: ReactNode;
   /** Use wide form modal width on desktop (`FORM_DIALOG_CONTENT_WIDE`). */
   wide?: boolean;
+  /**
+   * Mobile only: strip sheet chrome (glass, border, swipe handle) so children
+   * float over the overlay — used by inbox search.
+   */
+  bare?: boolean;
   className?: string;
 }
 
@@ -53,6 +58,7 @@ export function ResponsiveDialog({
   title,
   children,
   wide = false,
+  bare = false,
   className,
 }: ResponsiveDialogProps) {
   const isMobile = useIsMobileViewport();
@@ -66,8 +72,19 @@ export function ResponsiveDialog({
 
   if (isMobile) {
     return (
-      <Drawer onOpenChange={onOpenChange} open={open} showSwipeHandle>
-        <DrawerContent className={cn(RESPONSIVE_DIALOG_DRAWER_SHELL, className)}>
+      <Drawer
+        onOpenChange={onOpenChange}
+        open={open}
+        showSwipeHandle={!bare}
+      >
+        <DrawerContent
+          className={cn(
+            bare
+              ? "inbox-search-drawer-popup flex flex-col gap-0 overflow-hidden border-0 bg-transparent p-0 shadow-none"
+              : RESPONSIVE_DIALOG_DRAWER_SHELL,
+            className,
+          )}
+        >
           <DrawerTitle className="sr-only">{title}</DrawerTitle>
           {children}
         </DrawerContent>

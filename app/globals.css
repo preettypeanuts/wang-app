@@ -645,6 +645,55 @@
         0
       );
     }
+
+    /* Inbox search — invisible sheet chrome; only the input/results show. */
+    .inbox-search-drawer-popup {
+      inset-inline: 0.75rem !important;
+      bottom: var(--mobile-drawer-bottom) !important;
+      top: auto !important;
+      margin: 0 !important;
+      width: auto !important;
+      height: auto !important;
+      max-height: min(
+        72dvh,
+        calc(100dvh - var(--mobile-drawer-bottom) - 0.75rem)
+      ) !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+      --drawer-bleed-background: transparent !important;
+      --drawer-inset: 0px !important;
+    }
+
+    .inbox-search-drawer-popup::after {
+      display: none !important;
+    }
+
+    .inbox-search-drawer-popup [data-slot="drawer-swipe-handle"] {
+      display: none !important;
+    }
+
+    .inbox-search-drawer-popup [data-slot="drawer-content"] {
+      display: flex !important;
+      min-height: 0 !important;
+      flex: 1 1 auto !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      padding-bottom: 0 !important;
+      background: transparent !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+    }
+
+    .inbox-search-drawer-popup[data-swipe-direction="down"] {
+      --closed-transform: translate3d(
+        0,
+        calc(100% + var(--mobile-drawer-bottom) + 2px),
+        0
+      );
+    }
   }
 
   /* Keep in sync with GLASS_SURFACE + GLASS_FILL in config/glass.ts */
