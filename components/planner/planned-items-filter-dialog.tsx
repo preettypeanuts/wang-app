@@ -7,18 +7,13 @@ import {
   usePlannedItemsFilterDraft,
 } from "@/components/planner/planned-items-filter-fields";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogHeader,
+} from "@/components/shared/responsive-dialog";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { PLANNED_ITEMS_DEFAULT_FILTERS } from "@/config/planner-manage-filters";
-import {
-  FORM_DIALOG_BODY_SCROLL,
-  FORM_DIALOG_CONTENT,
-  FORM_DIALOG_HEADER,
-} from "@/config/form-dialog";
+import { FORM_DIALOG_BODY_SCROLL } from "@/config/form-dialog";
 import { buildPlannedItemsManageParams } from "@/lib/validations/planned-items-manage";
 import type { PlannedItemsFilters, PlannerManageLayout } from "@/types/planner";
 
@@ -63,27 +58,25 @@ export function PlannedItemsFilterDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={FORM_DIALOG_CONTENT}>
-        <DialogHeader className={FORM_DIALOG_HEADER}>
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            Filter
-          </DialogTitle>
-          <DialogDescription className="text-[13px] leading-snug">
-            Saring tagihan, langganan, dan cicilan.
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title="Filter">
+      <ResponsiveDialogHeader>
+        <DialogTitle className="text-lg font-semibold tracking-tight">
+          Filter
+        </DialogTitle>
+        <DialogDescription className="text-[13px] leading-snug">
+          Saring tagihan, langganan, dan cicilan.
+        </DialogDescription>
+      </ResponsiveDialogHeader>
 
-        <div className={FORM_DIALOG_BODY_SCROLL}>
-          <PlannedItemsFilterFields
-            draft={draft}
-            onDraftChange={setDraft}
-            onApply={applyFilters}
-            onReset={resetFilters}
-            layout="stack"
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+      <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
+        <PlannedItemsFilterFields
+          draft={draft}
+          onDraftChange={setDraft}
+          onApply={applyFilters}
+          onReset={resetFilters}
+          layout="stack"
+        />
+      </ResponsiveDialogBody>
+    </ResponsiveDialog>
   );
 }

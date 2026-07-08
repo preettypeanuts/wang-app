@@ -14,19 +14,16 @@ import {
   resolveCategoryForEntry,
 } from "@/components/journal/journal-entry-form-fields";
 import { JournalTypeBadge } from "@/components/journal/journal-type-badge";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+} from "@/components/shared/responsive-dialog";
+import { Button } from "@/components/ui/button";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
   FORM_DIALOG_BODY_SCROLL,
-  FORM_DIALOG_CONTENT_WIDE,
-  FORM_DIALOG_FOOTER,
-  FORM_DIALOG_HEADER,
   FORM_GROUP,
   FORM_PREVIEW_COMPACT,
   FORM_PREVIEW_COMPACT_AMOUNT,
@@ -91,6 +88,14 @@ export function JournalEntryDetailDialog({
   const showRawInput = currentEntry.rawInput.trim().length > 0;
   const dialogTitle = isEdit ? "Edit transaksi" : title;
 
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) {
+      setMode("view");
+    }
+
+    onOpenChange(nextOpen);
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
@@ -129,182 +134,176 @@ export function JournalEntryDetailDialog({
   }
 
   return (
-    <Dialog
+    <ResponsiveDialog
       open={open}
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          setMode("view");
-        }
-
-        onOpenChange(nextOpen);
-      }}
+      onOpenChange={handleOpenChange}
+      title={dialogTitle}
+      wide
     >
-      <DialogContent className={FORM_DIALOG_CONTENT_WIDE}>
-        <DialogHeader className={FORM_DIALOG_HEADER}>
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            {dialogTitle}
-          </DialogTitle>
-          <DialogDescription className="text-[13px] leading-snug">
-            {isEdit
-              ? "Perbarui detail transaksi."
-              : "Detail transaksi dan opsi kelola."}
-          </DialogDescription>
-        </DialogHeader>
+      <ResponsiveDialogHeader>
+        <DialogTitle className="text-lg font-semibold tracking-tight">
+          {dialogTitle}
+        </DialogTitle>
+        <DialogDescription className="text-[13px] leading-snug">
+          {isEdit
+            ? "Perbarui detail transaksi."
+            : "Detail transaksi dan opsi kelola."}
+        </DialogDescription>
+      </ResponsiveDialogHeader>
 
-        {isEdit ? (
-          <form
-            className="flex min-h-0 flex-1 flex-col overflow-hidden"
-            onSubmit={handleSubmit}
-          >
-            <div className={FORM_DIALOG_BODY_SCROLL}>
-              <JournalEntryFormFields
-                amountDefault={String(currentEntry.amount)}
-                category={category}
-                descriptionDefault={currentEntry.description}
-                occurredAtText={occurredAtText}
-                onCategoryChange={setCategory}
-                onOccurredAtTextChange={setOccurredAtText}
-                onTypeChange={setType}
-                rawInputDefault={currentEntry.rawInput}
-                showRawInput
-                type={type}
+      {isEdit ? (
+        <form
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          onSubmit={handleSubmit}
+        >
+          <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
+            <JournalEntryFormFields
+              amountDefault={String(currentEntry.amount)}
+              category={category}
+              descriptionDefault={currentEntry.description}
+              occurredAtText={occurredAtText}
+              onCategoryChange={setCategory}
+              onOccurredAtTextChange={setOccurredAtText}
+              onTypeChange={setType}
+              rawInputDefault={currentEntry.rawInput}
+              showRawInput
+              type={type}
+            />
+          </ResponsiveDialogBody>
+
+          <ResponsiveDialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isPending}
+              className={cn(SEPARATED_CONTROL, "flex-1")}
+              onClick={() => setMode("view")}
+            >
+              Batal
+            </Button>
+            <Button
+              type="submit"
+              disabled={isPending}
+              className={cn(SEPARATED_CONTROL, "flex-1")}
+            >
+              Simpan
+            </Button>
+          </ResponsiveDialogFooter>
+        </form>
+      ) : (
+        <>
+          <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
+            <div className="flex items-center gap-3 px-1 pb-1">
+              <JournalCategoryIcon
+                category={currentEntry.category}
+                type={currentEntry.type}
               />
+              <JournalTypeBadge type={currentEntry.type} />
             </div>
 
-            <div className={FORM_DIALOG_FOOTER}>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isPending}
-                className={cn(SEPARATED_CONTROL, "flex-1")}
-                onClick={() => setMode("view")}
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isPending}
-                className={cn(SEPARATED_CONTROL, "flex-1")}
-              >
-                Simpan
-              </Button>
+            <div className={FORM_PREVIEW_COMPACT}>
+              <div className="min-w-0">
+                <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                  Jumlah
+                </p>
+                <p
+                  className={cn(
+                    "mt-0.5",
+                    FORM_PREVIEW_COMPACT_AMOUNT,
+                    isIncome
+                      ? "text-[#2FAE52] dark:text-[#34C759]"
+                      : "text-[#E85555] dark:text-[#FF6B6B]",
+                  )}
+                >
+                  {isIncome ? "+" : "−"}
+                  {formatIdr(currentEntry.amount)}
+                </p>
+              </div>
+              <div className="shrink-0 text-right text-[11px] leading-snug text-muted-foreground">
+                <p>{categoryLabel}</p>
+                <p className="font-medium text-foreground">
+                  {isIncome ? "Pemasukan" : "Pengeluaran"}
+                </p>
+              </div>
             </div>
-          </form>
-        ) : (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className={FORM_DIALOG_BODY_SCROLL}>
-              <div className="flex items-center gap-3 px-1 pb-1">
-                <JournalCategoryIcon
-                  category={currentEntry.category}
-                  type={currentEntry.type}
-                />
-                <JournalTypeBadge type={currentEntry.type} />
-              </div>
 
-              <div className={FORM_PREVIEW_COMPACT}>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                    Jumlah
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-0.5",
-                      FORM_PREVIEW_COMPACT_AMOUNT,
-                      isIncome
-                        ? "text-[#2FAE52] dark:text-[#34C759]"
-                        : "text-[#E85555] dark:text-[#FF6B6B]",
-                    )}
-                  >
-                    {isIncome ? "+" : "−"}
-                    {formatIdr(currentEntry.amount)}
-                  </p>
-                </div>
-                <div className="shrink-0 text-right text-[11px] leading-snug text-muted-foreground">
-                  <p>{categoryLabel}</p>
-                  <p className="font-medium text-foreground">
-                    {isIncome ? "Pemasukan" : "Pengeluaran"}
-                  </p>
-                </div>
+            <div className={FORM_GROUP}>
+              <div className="px-4 py-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Waktu
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+                  {formatDateTime(currentEntry.occurredAt)}
+                </p>
               </div>
+            </div>
 
+            {showDescription ? (
               <div className={FORM_GROUP}>
                 <div className="px-4 py-3">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Waktu
+                    Deskripsi
                   </p>
                   <p className="mt-1 text-sm leading-relaxed text-foreground/90">
-                    {formatDateTime(currentEntry.occurredAt)}
+                    {currentEntry.description}
                   </p>
                 </div>
               </div>
+            ) : null}
 
-              {showDescription ? (
-                <div className={FORM_GROUP}>
-                  <div className="px-4 py-3">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Deskripsi
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed text-foreground/90">
-                      {currentEntry.description}
-                    </p>
-                  </div>
+            {showRawInput ? (
+              <div className={FORM_GROUP}>
+                <div className="px-4 py-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Pesan inbox
+                  </p>
+                  <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+                    {currentEntry.rawInput}
+                  </p>
                 </div>
-              ) : null}
+              </div>
+            ) : null}
+          </ResponsiveDialogBody>
 
-              {showRawInput ? (
-                <div className={FORM_GROUP}>
-                  <div className="px-4 py-3">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Pesan inbox
-                    </p>
-                    <p className="mt-1 text-sm leading-relaxed text-foreground/90">
-                      {currentEntry.rawInput}
-                    </p>
-                  </div>
-                </div>
-              ) : null}
-            </div>
-
-            <div className={FORM_DIALOG_FOOTER}>
+          <ResponsiveDialogFooter>
+            <Button
+              type="button"
+              size="icon"
+              variant="destructive"
+              disabled={isPending}
+              className={cn(SEPARATED_CONTROL, "shrink-0")}
+              onClick={handleDelete}
+              aria-label="Hapus"
+            >
+              <span className="sr-only">Hapus</span>
+              <TrashIcon className="size-4" />
+            </Button>
+            <div className="flex min-w-0 flex-1 gap-2">
               <Button
                 type="button"
                 size="icon"
-                variant="destructive"
+                variant="outline"
                 disabled={isPending}
                 className={cn(SEPARATED_CONTROL, "shrink-0")}
-                onClick={handleDelete}
-                aria-label="Hapus"
+                onClick={() => setMode("edit")}
+                aria-label="Edit"
               >
-                <span className="sr-only">Hapus</span>
-                <TrashIcon className="size-4" />
+                <span className="sr-only">Edit</span>
+                <PencilSimpleIcon className="size-4" />
               </Button>
-              <div className="flex min-w-0 flex-1 gap-2">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  disabled={isPending}
-                  className={cn(SEPARATED_CONTROL, "shrink-0")}
-                  onClick={() => setMode("edit")}
-                  aria-label="Edit"
-                >
-                  <span className="sr-only">Edit</span>
-                  <PencilSimpleIcon className="size-4" />
-                </Button>
 
-                <Button
-                  type="button"
-                  disabled={isPending}
-                  className={cn(SEPARATED_CONTROL, "flex-1")}
-                  onClick={() => onOpenChange(false)}
-                >
-                  Tutup
-                </Button>
-              </div>
+              <Button
+                type="button"
+                disabled={isPending}
+                className={cn(SEPARATED_CONTROL, "flex-1")}
+                onClick={() => onOpenChange(false)}
+              >
+                Tutup
+              </Button>
             </div>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+          </ResponsiveDialogFooter>
+        </>
+      )}
+    </ResponsiveDialog>
   );
 }
