@@ -21,7 +21,7 @@ import {
 } from "@/config/planner-calendar";
 import { STACK_GAP } from "@/config/spacing";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
-import { toDayKey } from "@/lib/finance/day-range";
+import { parseDayKey, toDayKey } from "@/lib/finance/day-range";
 import {
   getCalendarGridDays,
   getCurrentMonthKey,
@@ -107,17 +107,10 @@ export function PlannerCalendar({
     [selectedItems],
   );
 
-  const selectedDate = useMemo(() => {
-    const item = normalizedItems.find(
-      (entry) => toDayKey(entry.dueAt) === selectedDayKey,
-    );
-    if (item) {
-      return item.dueAt;
-    }
-
-    const [y, m, d] = selectedDayKey.split("-").map(Number);
-    return new Date(y, m - 1, d);
-  }, [normalizedItems, selectedDayKey]);
+  const selectedDate = useMemo(
+    () => parseDayKey(selectedDayKey),
+    [selectedDayKey],
+  );
 
   function pushQuery(updates: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());

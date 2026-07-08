@@ -1,19 +1,29 @@
-/** Start of calendar day in local time. */
-export function startOfDay(value: Date = new Date()): Date {
-  return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+import {
+  APP_TIMEZONE,
+  APP_TIMEZONE_OFFSET,
+} from "@/config/timezone";
+
+const DAY_KEY_FORMAT = new Intl.DateTimeFormat("en-CA", {
+  timeZone: APP_TIMEZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+function isValidDayKey(value: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(value);
 }
 
-/** End of calendar day in local time. */
+/** Start of calendar day in app timezone (WIB). */
+export function startOfDay(value: Date = new Date()): Date {
+  const dayKey = toDayKey(value);
+  return new Date(`${dayKey}T00:00:00${APP_TIMEZONE_OFFSET}`);
+}
+
+/** End of calendar day in app timezone (WIB). */
 export function endOfDay(value: Date = new Date()): Date {
-  return new Date(
-    value.getFullYear(),
-    value.getMonth(),
-    value.getDate(),
-    23,
-    59,
-    59,
-    999,
-  );
+  const dayKey = toDayKey(value);
+  return new Date(`${dayKey}T23:59:59.999${APP_TIMEZONE_OFFSET}`);
 }
 
 export function getDayRange(value: Date = new Date()) {
@@ -29,22 +39,18 @@ export function addDays(value: Date, days: number): Date {
   return next;
 }
 
-/** YYYY-MM-DD from a calendar Date using local calendar day. */
+/** YYYY-MM-DD for a calendar Date in app timezone (WIB). */
 export function dateInputFromCalendarDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return toDayKey(date);
 }
 
-/** Parse YYYY-MM-DD to UTC noon — stable across server/client timezones. */
+/** Parse YYYY-MM-DD to noon WIB — stable for storage and display. */
 export function parseDateOnlyInput(value: string): Date | null {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  if (!isValidDayKey(value)) {
     return null;
   }
 
-  const [year, month, day] = value.split("-").map(Number);
-  const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0, 0));
+  const date = parseDayKey(value);
 
   if (Number.isNaN(date.getTime())) {
     return null;
@@ -53,41 +59,45 @@ export function parseDateOnlyInput(value: string): Date | null {
   return date;
 }
 
+/** YYYY-MM-DD in app timezone (WIB). */
 export function toDayKey(value: Date | string): string {
   const date = typeof value === "string" ? new Date(value) : value;
-
-  return [
-    date.getUTCFullYear(),
-    String(date.getUTCMonth() + 1).padStart(2, "0"),
-    String(date.getUTCDate()).padStart(2, "0"),
-  ].join("-");
+  return DAY_KEY_FORMAT.format(date);
 }
 
+/** Parse YYYY-MM-DD to noon WIB. */
 export function parseDayKey(dayKey: string): Date {
-  const [year, month, day] = dayKey.split("-").map(Number);
-  return new Date(year, month - 1, day);
+  if (!isValidDayKey(dayKey)) {
+    return new Date(Number.NaN);
+  }
+
+  return new Date(`${dayKey}T12:00:00${APP_TIMEZONE_OFFSET}`);
 }
 
-/** Today's calendar day as YYYY-MM-DD in local time. */
+/** Today's calendar day as YYYY-MM-DD in app timezone (WIB). */
 export function todayDateInputValue(): string {
-  return dateInputFromCalendarDate(new Date());
+  return toDayKey(new Date());
 }
 
 export function getDateOnlyParts(value: Date) {
+  const dayKey = toDayKey(value);
+  const [year, month, day] = dayKey.split("-").map(Number);
+
   return {
-    year: value.getUTCFullYear(),
-    month: value.getUTCMonth(),
-    day: value.getUTCDate(),
+    year,
+    month: month - 1,
+    day,
   };
 }
 
-/** UTC noon for a calendar day — stable for date-only storage and comparisons. */
+/** Noon WIB for a calendar day — stable for date-only storage and comparisons. */
 export function dateOnlyFromParts(
   year: number,
   month: number,
   day: number,
 ): Date {
-  return new Date(Date.UTC(year, month, day, 12, 0, 0, 0));
+  const dayKey = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+  return parseDayKey(dayKey);
 }
 
 export function clampDateOnlyDay(

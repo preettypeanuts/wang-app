@@ -1,6 +1,7 @@
 import {
   addDays,
   endOfDay,
+  parseDayKey,
   startOfDay,
   toDayKey,
 } from "@/lib/finance/day-range";
@@ -51,7 +52,7 @@ export function parseMonthKey(
 }
 
 export function getCurrentMonthKey(date: Date = new Date()): string {
-  return toMonthKey(date.getFullYear(), date.getMonth());
+  return toDayKey(date).slice(0, 7);
 }
 
 export function getMonthRange(year: number, month: number) {
@@ -144,7 +145,7 @@ export function pickDefaultDayKey(
   }
 
   if (parsed) {
-    return toDayKey(new Date(parsed.year, parsed.month, 1));
+    return toDayKey(parseDayKey(`${monthKey}-01`));
   }
 
   return todayKey;

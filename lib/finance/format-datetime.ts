@@ -1,23 +1,28 @@
 import { addDays, parseDayKey, toDayKey } from "@/lib/finance/day-range";
+import { APP_TIMEZONE } from "@/config/timezone";
 
 const WEEKDAY_FORMAT = new Intl.DateTimeFormat("id-ID", {
   weekday: "long",
+  timeZone: APP_TIMEZONE,
 });
 
 const DAY_MONTH_FORMAT = new Intl.DateTimeFormat("id-ID", {
   day: "numeric",
   month: "long",
+  timeZone: APP_TIMEZONE,
 });
 
 const DATE_FORMAT = new Intl.DateTimeFormat("id-ID", {
   day: "numeric",
   month: "short",
   year: "numeric",
+  timeZone: APP_TIMEZONE,
 });
 
 const TIME_FORMAT = new Intl.DateTimeFormat("id-ID", {
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: APP_TIMEZONE,
 });
 
 const DATE_TIME_FORMAT = new Intl.DateTimeFormat("id-ID", {
@@ -26,6 +31,7 @@ const DATE_TIME_FORMAT = new Intl.DateTimeFormat("id-ID", {
   year: "numeric",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: APP_TIMEZONE,
 });
 
 function toDate(value: Date | string): Date {
@@ -57,6 +63,7 @@ const FULL_PAYOFF_DATE_FORMAT = new Intl.DateTimeFormat("id-ID", {
   day: "numeric",
   month: "long",
   year: "numeric",
+  timeZone: APP_TIMEZONE,
 });
 
 /** Full payoff date e.g. "Sabtu, 5 Juli 2026" — returns null if invalid. */
@@ -81,6 +88,7 @@ export function formatFullPayoffDate(
 const COMPACT_DAY_MONTH_FORMAT = new Intl.DateTimeFormat("id-ID", {
   day: "numeric",
   month: "short",
+  timeZone: APP_TIMEZONE,
 });
 
 export function formatCompactDayMonth(
@@ -115,8 +123,7 @@ export function formatJournalSectionDate(
 
 export function formatChatTimestamp(value: Date | string): string {
   const date = toDate(value);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
+  const isToday = toDayKey(date) === toDayKey(new Date());
 
   if (isToday) {
     return formatJournalTime(date);
