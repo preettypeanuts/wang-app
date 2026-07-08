@@ -4,10 +4,7 @@ import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
 import { userDataTags } from "@/lib/cache/user-data-tags";
 import { addDays, parseDayKey, startOfDay, toDayKey } from "@/lib/finance/day-range";
 import { formatCompactDayMonth } from "@/lib/finance/format-datetime";
-import {
-  getDueDateForInstallmentIndex,
-  getPlannedItemPaymentStatus,
-} from "@/lib/planner/installment-progress";
+import { listUpcomingUnpaidPayPlanEntries } from "@/lib/planner/list-upcoming-unpaid-payplan";
 import type { PlansUpcomingImpactItem } from "@/types/plan";
 
 const DEFAULT_HORIZON_DAYS = 60;
@@ -49,38 +46,20 @@ async function buildPlansUpcomingImpact(
   const rangeEnd = addDays(today, horizonDays);
   const plannedItems = await getPlannedItemsForExpansion(userId);
 
-  return plannedItems
-    .filter((item) => item.flowType === "expense")
-    .map((item) => {
-      const paymentStatus = getPlannedItemPaymentStatus(item, referenceDate);
-
-      if (!paymentStatus || paymentStatus.status !== "pending") {
-        return null;
-      }
-
-      const dueAt = getDueDateForInstallmentIndex(
-        item,
-        item.paidInstallmentCount,
-      );
-      const daysUntil = paymentStatus.daysUntil ?? 0;
-
-      return {
-        id: `${item.id}:${dueAt.toISOString()}`,
-        name: item.name,
-        amount: item.amount,
-        dueAt: dueAt.toISOString(),
-        dueLabel: formatCompactDayMonth(dueAt),
-        daysUntil,
-        daysUntilLabel: formatDaysUntilLabel(daysUntil),
-      };
-    })
-    .filter((item): item is PlansUpcomingImpactItem => {
-      if (!item) {
-        return false;
-      }
-
-      return startOfDay(new Date(item.dueAt)).getTime() <= rangeEnd.getTime();
-    })
+  return listUpcomingUnpaidPayPlanEntries(plannedItems, referenceDate)
+    .map(({ item, dueAt, daysUntil }) => ({
+      id: `${item.id}:${dueAt.toISOString()}`,
+      name: item.name,
+      amount: item.amount,
+      dueAt: dueAt.toISOString(),
+      dueLabel: formatCompactDayMonth(dueAt),
+      daysUntil,
+      daysUntilLabel: formatDaysUntilLabel(daysUntil),
+    }))
+    .filter(
+      (item) =>
+        startOfDay(new Date(item.dueAt)).getTime() <= rangeEnd.getTime(),
+    )
     .sort((left, right) => left.dueAt.localeCompare(right.dueAt))
     .slice(0, MAX_ITEMS);
 }
