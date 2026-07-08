@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { parseDayKey, toDayKey } from "@/lib/finance/day-range";
 import { runNotificationCron } from "@/lib/notifications/run-notification-cron";
 
 /** Vercel Pro — cron should finish in seconds; Hobby caps at 10s regardless. */
@@ -21,15 +22,32 @@ function isAuthorized(request: Request): boolean {
   return bearer === secret || headerSecret === secret;
 }
 
+/** Optional `?date=YYYY-MM-DD` for manual Monday weekly-summary tests. */
+function resolveReferenceDate(request: Request): Date {
+  const raw = new URL(request.url).searchParams.get("date")?.trim();
+  if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    return new Date();
+  }
+
+  const parsed = parseDayKey(raw);
+  if (Number.isNaN(parsed.getTime())) {
+    return new Date();
+  }
+
+  return parsed;
+}
+
 export async function GET(request: Request) {
   if (!isAuthorized(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await runNotificationCron();
+  const referenceDate = resolveReferenceDate(request);
+  const result = await runNotificationCron(referenceDate);
 
   return NextResponse.json({
     ok: true,
+    referenceDate: toDayKey(referenceDate),
     ...result,
   });
 }
