@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 
 function JournalStatTileSkeleton() {
   return (
-    <div className="flex min-h-[5.5rem] flex-col justify-between rounded-2xl p-3.5">
-      <Skeleton className="size-7 rounded-[0.55rem] bg-muted/80" />
+    <div className="flex min-h-22 flex-col justify-between rounded-2xl p-3.5">
+      <Skeleton className="size-7 rounded-3xl bg-muted/80" />
       <div className="space-y-1.5">
         <Skeleton className="h-3 w-14 bg-muted/70" />
         <Skeleton className="h-6 w-24 bg-muted/80" />
@@ -25,7 +25,7 @@ function JournalStatTileSkeleton() {
 function JournalRowSkeleton() {
   return (
     <div className={JOURNAL_LIST_ROW}>
-      <Skeleton className="size-8 shrink-0 rounded-[0.55rem]" />
+      <Skeleton className="size-8 shrink-0 rounded-3xl" />
       <div className="min-w-0 flex-1 space-y-1.5">
         <Skeleton className="h-3.5 w-[72%]" />
         <Skeleton className="h-2.5 w-16" />
@@ -70,7 +70,7 @@ export function JournalPageSkeleton() {
               key={index}
               className={cn(
                 SEPARATED_SURFACE,
-                "min-w-[9.5rem] flex-1 overflow-hidden rounded-2xl",
+                "min-w-38 flex-1 overflow-hidden rounded-2xl",
               )}
             >
               <JournalStatTileSkeleton />

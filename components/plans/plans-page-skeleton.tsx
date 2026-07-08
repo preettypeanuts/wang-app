@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 
 function PlanCardSkeleton() {
   return (
-    <div aria-hidden className={cn(PLANS_CARD, "flex min-h-[9.5rem] flex-col p-4")}>
+    <div aria-hidden className={cn(PLANS_CARD, "flex min-h-38 flex-col p-4")}>
       <div className="flex items-start gap-3">
         <Skeleton className="size-10 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1 space-y-2">
@@ -57,7 +57,7 @@ export function PlansPageSkeleton() {
             key={index}
             className={cn(SEPARATED_SURFACE, PLANS_WIDGET_TILE_LAYOUT)}
           >
-            <Skeleton className="size-8 rounded-[0.65rem]" />
+            <Skeleton className="size-8 rounded-4xl" />
             <div className="space-y-2">
               <Skeleton className="h-3 w-20" />
               <Skeleton className="h-6 w-24" />
