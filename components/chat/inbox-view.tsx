@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { updateTransactionCategoryAction } from "@/app/actions/journal";
 import {
   checkSavingsGoalFromInboxAction,
   loadOlderInboxMessagesAction,
@@ -22,9 +23,11 @@ import { MessageList } from "@/components/chat/message-list";
 import { ReceiptConfirmDialog } from "@/components/chat/receipt-confirm-dialog";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
 import type { TransactionCategoryId } from "@/config/categories";
+import { resolveCategoryForType } from "@/config/categories";
 import { CHAT_INPUT_DOCK } from "@/config/chat-layout";
 import { INBOX_CHAT_VIEW_ROOT } from "@/config/inbox-desktop";
 import { INBOX_CHAT_INPUT_DOCK } from "@/config/inbox-mobile";
+import { buildWarmTransactionReply } from "@/lib/ai/build-inbox-transaction-reply";
 import { buildReceiptManualFallbackNotice } from "@/lib/ai/format-gemini-api-error";
 import { patchInboxBootstrapMessages } from "@/lib/inbox/inbox-bootstrap-cache";
 import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
@@ -461,6 +464,66 @@ export function InboxView({
     }
   }
 
+  async function handleQuickCorrect(input: {
+    assistantMessageId: string;
+    transactionId: string;
+    category: TransactionCategoryId;
+    type: TransactionType;
+  }) {
+    beginInFlight();
+
+    setMessages((current) =>
+      current.map((message) => {
+        if (message.id !== input.assistantMessageId || !message.transaction) {
+          return message;
+        }
+
+        const nextCategory = resolveCategoryForType(input.category, input.type);
+        const nextTransaction: ParsedTransaction = {
+          ...message.transaction,
+          id: input.transactionId,
+          type: input.type,
+          category: nextCategory,
+        };
+
+        return {
+          ...message,
+          lowConfidenceCategory: false,
+          content: buildWarmTransactionReply(nextTransaction, null),
+          transaction: nextTransaction,
+        };
+      }),
+    );
+
+    try {
+      const result = await updateTransactionCategoryAction({
+        transactionId: input.transactionId,
+        category: input.category,
+        type: input.type,
+        assistantMessageId: input.assistantMessageId,
+      });
+
+      if (!result.ok) {
+        return;
+      }
+
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === input.assistantMessageId
+            ? {
+                ...message,
+                content: result.assistantContent,
+                transaction: result.transaction,
+                lowConfidenceCategory: false,
+              }
+            : message,
+        ),
+      );
+    } finally {
+      endInFlight();
+    }
+  }
+
   async function handlePayPlan(item: UnpaidPayPlanChatItem) {
     const pendingUserId = createPendingId("user");
     const pendingAssistantId = createPendingId("assistant");
@@ -638,6 +701,7 @@ export function InboxView({
         onRetry={handleRetry}
         onEditMessage={handleEditMessage}
         onUndoMessage={handleUndoMessage}
+        onQuickCorrect={handleQuickCorrect}
         actionsDisabled={isProcessing}
       />
       <ChatReceiptDropOverlay visible={isDraggingReceipt} />

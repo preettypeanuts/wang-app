@@ -10,6 +10,8 @@ export interface ChatMessage {
   transaction?: ParsedTransaction;
   /** True when the linked transaction was removed from Journal. */
   transactionDeleted?: boolean;
+  /** Show quick-correct chips when category/type detection had low confidence. */
+  lowConfidenceCategory?: boolean;
 }
 
 export interface UnpaidPayPlanChatItem {

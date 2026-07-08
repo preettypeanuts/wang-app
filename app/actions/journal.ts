@@ -2,18 +2,26 @@
 
 import { revalidatePath } from "next/cache";
 
+import { type TransactionCategoryId } from "@/config/categories";
+import { buildWarmTransactionReply } from "@/lib/ai/build-inbox-transaction-reply";
 import { requireUserId } from "@/lib/auth/session";
-import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
+import {
+  revalidateAfterTransactionMutation,
+  revalidateUserInbox,
+} from "@/lib/cache/revalidate-user-data";
+import { updateInboxMessage } from "@/lib/db/inbox-messages";
 import {
   createJournalTransaction,
   deleteJournalTransaction,
   updateJournalTransaction,
+  updateTransactionCategoryQuick,
 } from "@/lib/db/journal";
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
+import { getBudgetStatusForExpense } from "@/lib/finance/build-budget-reply";
 import { parseJournalEntryFormData } from "@/lib/validations/journal-entry";
 import type { JournalEntry } from "@/types/journal";
-import type { ParsedTransaction } from "@/types/transaction";
+import type { ParsedTransaction, TransactionType } from "@/types/transaction";
 
 interface JournalActionSuccess {
   ok: true;
@@ -80,6 +88,78 @@ export async function createJournalEntryAction(
   revalidateJournal(userId);
 
   return { ok: true, entry };
+}
+
+interface UpdateTransactionCategorySuccess {
+  ok: true;
+  transaction: ParsedTransaction;
+  assistantContent: string;
+}
+
+interface UpdateTransactionCategoryFailure {
+  ok: false;
+  error: string;
+}
+
+export type UpdateTransactionCategoryResult =
+  | UpdateTransactionCategorySuccess
+  | UpdateTransactionCategoryFailure;
+
+export async function updateTransactionCategoryAction(input: {
+  transactionId: string;
+  category: TransactionCategoryId;
+  type?: TransactionType;
+  assistantMessageId?: string;
+}): Promise<UpdateTransactionCategoryResult> {
+  const userId = await requireUserId();
+  const transactionId = input.transactionId.trim();
+
+  if (!transactionId) {
+    return { ok: false, error: "Transaksi tidak ditemukan." };
+  }
+
+  try {
+    const transaction = await updateTransactionCategoryQuick(
+      userId,
+      transactionId,
+      input.category,
+      input.type,
+    );
+
+    let budgetStatus = null;
+    if (transaction.type === "expense") {
+      try {
+        budgetStatus = await getBudgetStatusForExpense(
+          userId,
+          transaction.category,
+          transaction.occurredAt,
+          transaction.amount,
+        );
+      } catch {
+        // Reply should still succeed without budget context.
+      }
+    }
+
+    const assistantContent = buildWarmTransactionReply(transaction, budgetStatus);
+
+    const assistantMessageId = input.assistantMessageId?.trim();
+    if (assistantMessageId) {
+      await updateInboxMessage(userId, assistantMessageId, {
+        content: assistantContent,
+      });
+    }
+
+    revalidateJournal(userId);
+    revalidateUserInbox(userId);
+
+    return {
+      ok: true,
+      transaction,
+      assistantContent,
+    };
+  } catch {
+    return { ok: false, error: "Gagal memperbarui kategori." };
+  }
 }
 
 export async function deleteJournalEntryAction(

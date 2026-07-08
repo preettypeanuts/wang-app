@@ -1,4 +1,4 @@
-import { TRANSACTION_CATEGORIES, normalizeCategory } from "@/config/categories";
+import { TRANSACTION_CATEGORIES, normalizeCategory, resolveCategoryForType } from "@/config/categories";
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
 import {
   hydrateJournalListResult,
@@ -20,6 +20,7 @@ import type {
   JournalListResult,
 } from "@/types/journal";
 import type { ParsedTransaction } from "@/types/transaction";
+import type { TransactionType } from "@/types/transaction";
 import type { Prisma } from "@/generated/prisma/client";
 
 const JOURNAL_ENTRY_SELECT = {
@@ -212,6 +213,63 @@ export async function updateJournalTransaction(
   revalidateAfterTransactionMutation(userId);
 
   return entry;
+}
+
+export async function updateTransactionCategoryQuick(
+  userId: string,
+  id: string,
+  category: string,
+  type?: TransactionType,
+): Promise<ParsedTransaction> {
+  const existing = await prisma.transaction.findFirst({
+    where: scopedId(userId, id),
+    select: {
+      id: true,
+      type: true,
+      amount: true,
+      description: true,
+      occurredAt: true,
+    },
+  });
+
+  if (!existing) {
+    throw new Error("Transaksi tidak ditemukan.");
+  }
+
+  const nextType = type ?? existing.type;
+  const nextCategory = resolveCategoryForType(
+    normalizeCategory(category),
+    nextType,
+  );
+
+  const updated = await prisma.transaction.updateMany({
+    where: scopedId(userId, id),
+    data: {
+      category: nextCategory,
+      type: nextType,
+    },
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Transaksi tidak ditemukan.");
+  }
+
+  const entry = await prisma.transaction.findFirstOrThrow({
+    where: scopedId(userId, id),
+    select: JOURNAL_ENTRY_SELECT,
+  });
+
+  await invalidateAiInsightCacheOnTransactionMutation(userId, entry.occurredAt);
+  revalidateAfterTransactionMutation(userId);
+
+  return {
+    id: entry.id,
+    type: entry.type,
+    amount: entry.amount,
+    category: normalizeCategory(entry.category),
+    description: entry.description,
+    occurredAt: entry.occurredAt.toISOString(),
+  };
 }
 
 export interface DeleteJournalTransactionResult {

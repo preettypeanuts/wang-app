@@ -25,6 +25,22 @@ function normalizeNumber(value: string): number {
   return Number.parseFloat(value);
 }
 
+const EXPLICIT_AMOUNT_UNIT_PATTERN =
+  /setengah\s*(jt|juta|m)\b|(\d+(?:[.,]\d+)?)\s*(miliar|mil|jt|juta|m\b|b\b|rb|ribu|k)\b/i;
+
+/** True when amount was parsed from a bare number without rb/jt/k-style units. */
+export function isPlainAmountInput(text: string): boolean {
+  if (EXPLICIT_AMOUNT_UNIT_PATTERN.test(text)) {
+    return false;
+  }
+
+  if (/\d{1,3}(?:\.\d{3})+(?!\d)/.test(text)) {
+    return false;
+  }
+
+  return /\d+(?:[.,]\d+)?/.test(text);
+}
+
 export function parseAmount(text: string): number | null {
   for (const { pattern, multiplier } of AMOUNT_PATTERNS) {
     const match = text.match(pattern);

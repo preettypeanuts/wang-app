@@ -32,6 +32,7 @@ type InboxMessageWithTransaction = Prisma.InboxMessageGetPayload<{
 
 function mapTransaction(record: Transaction): ParsedTransaction {
   return {
+    id: record.id,
     type: record.type,
     amount: record.amount,
     category: normalizeCategory(record.category),

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { buildInboxTransactionReplyForParsed } from "@/lib/ai/build-inbox-transaction-reply";
 import { parseTransaction } from "@/lib/ai/parse-transaction";
+import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import { formatInboxProcessingError } from "@/lib/chat/inbox-error";
 import {
   revalidateAfterTransactionMutation,
@@ -62,6 +63,21 @@ export type SubmitInboxMessageResult =
   | SubmitInboxMessageSuccess
   | SubmitInboxMessageFailure;
 
+function withLowConfidenceFlag(
+  rawInput: string,
+  transaction: ParsedTransaction | undefined,
+  message: ChatMessage,
+): ChatMessage {
+  if (!transaction) {
+    return message;
+  }
+
+  return {
+    ...message,
+    lowConfidenceCategory: isLowConfidenceTransaction(rawInput, transaction),
+  };
+}
+
 export async function submitInboxMessage(
   text: string,
 ): Promise<SubmitInboxMessageResult> {
@@ -108,7 +124,11 @@ export async function submitInboxMessage(
       content,
       transaction,
       userMessage,
-      assistantMessage,
+      assistantMessage: withLowConfidenceFlag(
+        trimmed,
+        transaction,
+        assistantMessage,
+      ),
     };
   } catch (error) {
     const content = formatInboxProcessingError(error);
@@ -196,7 +216,11 @@ export async function retryInboxMessageAction(
       content,
       transaction,
       userMessage,
-      assistantMessage,
+      assistantMessage: withLowConfidenceFlag(
+        trimmed,
+        transaction,
+        assistantMessage,
+      ),
     };
   } catch (error) {
     const content = formatInboxProcessingError(error);

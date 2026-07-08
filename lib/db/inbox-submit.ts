@@ -8,6 +8,7 @@ import type { Transaction } from "@/generated/prisma/client";
 
 function mapTransaction(record: Transaction): ParsedTransaction {
   return {
+    id: record.id,
     type: record.type,
     amount: record.amount,
     category: normalizeCategory(record.category),

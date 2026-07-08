@@ -7,6 +7,7 @@ import { ChatMessageRetryButton } from "@/components/chat/chat-message-retry-but
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageTimestamp } from "@/components/chat/message-timestamp";
 import { TransactionPreview } from "@/components/chat/transaction-preview";
+import { TransactionQuickCorrect } from "@/components/chat/transaction-quick-correct";
 import { MobilePageTitle } from "@/components/shared/mobile-page-title";
 import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
 import { useSyncMobileScrollChrome } from "@/components/shared/mobile-scroll-chrome-provider";
@@ -28,15 +29,24 @@ import { MOBILE_CHROME_SCROLL_INSET_TOP } from "@/config/mobile-chrome";
 import { STACK_GAP } from "@/config/spacing";
 import { useMobileLargeTitleScroll } from "@/hooks/use-mobile-large-title-scroll";
 import { getInboxRetryContext } from "@/lib/chat/inbox-error";
+import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import { canManageSentUserMessage } from "@/lib/chat/inbox-message-actions";
 import { cn } from "@/lib/utils";
+import type { TransactionCategoryId } from "@/config/categories";
 import type { ChatMessage } from "@/types/chat";
+import type { TransactionType } from "@/types/transaction";
 
 interface MessageListProps {
   messages: ChatMessage[];
   onRetry?: (assistantMessageId: string) => Promise<void>;
   onEditMessage?: (userMessageId: string) => Promise<void>;
   onUndoMessage?: (userMessageId: string) => Promise<void>;
+  onQuickCorrect?: (input: {
+    assistantMessageId: string;
+    transactionId: string;
+    category: TransactionCategoryId;
+    type: TransactionType;
+  }) => Promise<void>;
   actionsDisabled?: boolean;
   fixedMobileTopBar?: boolean;
   className?: string;
@@ -60,6 +70,7 @@ export function MessageList({
   onRetry,
   onEditMessage,
   onUndoMessage,
+  onQuickCorrect,
   actionsDisabled = false,
   fixedMobileTopBar = false,
   className,
@@ -245,6 +256,18 @@ export function MessageList({
                 Boolean(onUndoMessage);
 
               const isPending = message.id.startsWith("pending-");
+              const previousMessage = index > 0 ? messages[index - 1] : undefined;
+              const userInput =
+                previousMessage?.role === "user" ? previousMessage.content : "";
+              const showQuickCorrect =
+                !isUser &&
+                message.transaction?.id &&
+                !message.transactionDeleted &&
+                Boolean(onQuickCorrect) &&
+                (message.lowConfidenceCategory ||
+                  (userInput
+                    ? isLowConfidenceTransaction(userInput, message.transaction)
+                    : false));
 
               const bubble = (
                 <MessageBubble
@@ -276,6 +299,21 @@ export function MessageList({
                   ) : (
                     bubble
                   )}
+                  {showQuickCorrect && message.transaction?.id ? (
+                    <TransactionQuickCorrect
+                      disabled={actionsDisabled}
+                      transaction={message.transaction}
+                      userInput={userInput}
+                      onCorrect={({ category, type }) =>
+                        void onQuickCorrect?.({
+                          assistantMessageId: message.id,
+                          transactionId: message.transaction?.id ?? "",
+                          category,
+                          type,
+                        })
+                      }
+                    />
+                  ) : null}
                   <MessageTimestamp
                     createdAt={message.createdAt}
                     role={message.role}
