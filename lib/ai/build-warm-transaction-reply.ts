@@ -28,7 +28,8 @@ function pickOpener(transaction: ParsedTransaction): string {
   return pool[seed % pool.length] ?? pool[0];
 }
 
-function buildBudgetFallbackLine(status: BudgetStatus): string {
+/** Warm budget warning line — only when over or near limit; null if still healthy. */
+export function buildBudgetWarningLine(status: BudgetStatus): string | null {
   const categoryLabel = getCategoryLabel(status.budget.category);
   const remainingLabel = formatIdr(Math.max(0, status.remaining));
 
@@ -40,7 +41,14 @@ function buildBudgetFallbackLine(status: BudgetStatus): string {
     return `Budget ${categoryLabel} tinggal ${remainingLabel} (${status.remainingPercent}% sisa). Hati-hati ya~`;
   }
 
-  return `Budget ${categoryLabel} masih aman, sisa ${remainingLabel}.`;
+  return null;
+}
+
+function buildBudgetFallbackLine(status: BudgetStatus): string {
+  return (
+    buildBudgetWarningLine(status) ??
+    `Budget ${getCategoryLabel(status.budget.category)} masih aman, sisa ${formatIdr(Math.max(0, status.remaining))}.`
+  );
 }
 
 /** Warm template fallback when Gemini is unavailable — safe for client imports. */
@@ -82,4 +90,49 @@ export function buildTransactionReply(transaction: ParsedTransaction): string {
   const categoryLabel = getCategoryLabel(transaction.category);
 
   return `${typeLabel} ${formatIdr(transaction.amount)} tercatat · ${categoryLabel}`;
+}
+
+function formatMultiTransactionBullet(transaction: ParsedTransaction): string {
+  const categoryLabel = getCategoryLabel(transaction.category);
+  const subject =
+    transaction.description.length <= 36
+      ? transaction.description
+      : categoryLabel;
+
+  return `• ${subject} ${formatIdr(transaction.amount)} (${categoryLabel})`;
+}
+
+/** Reply for batch inbox entries — bullets + total + optional budget warnings. */
+export function buildWarmMultipleTransactionReply(
+  transactions: ParsedTransaction[],
+  budgetStatuses: BudgetStatus[],
+): string {
+  if (transactions.length === 0) {
+    return "Belum ada transaksi yang tercatat.";
+  }
+
+  if (transactions.length === 1) {
+    return buildWarmTransactionReply(
+      transactions[0],
+      budgetStatuses[0] ?? null,
+    );
+  }
+
+  const total = transactions.reduce((sum, item) => sum + item.amount, 0);
+  const lines = [
+    `Siap, ${transactions.length} transaksi tercatat:`,
+    ...transactions.map(formatMultiTransactionBullet),
+    `Total: ${formatIdr(total)}`,
+  ];
+
+  const warnings = budgetStatuses
+    .map(buildBudgetWarningLine)
+    .filter((line): line is string => Boolean(line));
+
+  const uniqueWarnings = [...new Set(warnings)];
+  if (uniqueWarnings.length > 0) {
+    lines.push(...uniqueWarnings);
+  }
+
+  return lines.join("\n");
 }

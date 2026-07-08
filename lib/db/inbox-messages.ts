@@ -1,23 +1,23 @@
+import { unstable_cache } from "next/cache";
 import { normalizeCategory } from "@/config/categories";
 import { INBOX_MESSAGE_PAGE_SIZE } from "@/config/inbox-messages";
-import { userDataTags } from "@/lib/cache/user-data-tags";
-import {
-  revalidateAfterTransactionMutation,
-  revalidateUserInbox,
-} from "@/lib/cache/revalidate-user-data";
-import { backfillInboxMessagesFromTransactions } from "@/lib/db/backfill-inbox-messages";
-import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
-import { ensurePendingDailySummaries } from "@/lib/db/daily-summary";
-import { prisma } from "@/lib/db/prisma";
-import { scopedByUser, scopedId } from "@/lib/db/user-scope";
-import { unstable_cache } from "next/cache";
-import type { ChatMessage, MessageRole } from "@/types/chat";
-import type { ParsedTransaction } from "@/types/transaction";
 import type {
   InboxMessageRole,
   Prisma,
   Transaction,
 } from "@/generated/prisma/client";
+import {
+  revalidateAfterTransactionMutation,
+  revalidateUserInbox,
+} from "@/lib/cache/revalidate-user-data";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
+import { backfillInboxMessagesFromTransactions } from "@/lib/db/backfill-inbox-messages";
+import { ensurePendingDailySummaries } from "@/lib/db/daily-summary";
+import { prisma } from "@/lib/db/prisma";
+import { scopedByUser, scopedId } from "@/lib/db/user-scope";
+import type { ChatMessage, MessageRole } from "@/types/chat";
+import type { ParsedTransaction } from "@/types/transaction";
 
 interface CreateInboxMessageInput {
   userId: string;
@@ -197,12 +197,89 @@ async function queryInboxMessagesPage(
   });
 
   const hasMore = records.length > limit;
-  const messages = records
-    .slice(0, limit)
-    .reverse()
-    .map((record) => mapInboxMessage(record));
+  const messages = await hydrateBatchTransactions(
+    userId,
+    records
+      .slice(0, limit)
+      .reverse()
+      .map((record) => mapInboxMessage(record)),
+  );
 
   return { messages, hasMore };
+}
+
+async function hydrateBatchTransactions(
+  userId: string,
+  messages: ChatMessage[],
+): Promise<ChatMessage[]> {
+  const primaries = messages
+    .map((message) => message.transaction)
+    .filter((transaction): transaction is ParsedTransaction =>
+      Boolean(transaction?.id),
+    );
+
+  if (primaries.length === 0) {
+    return messages;
+  }
+
+  const primaryIds = primaries
+    .map((transaction) => transaction.id)
+    .filter((id): id is string => Boolean(id));
+
+  const primaryRows = await prisma.transaction.findMany({
+    where: scopedByUser(userId, { id: { in: primaryIds } }),
+    select: {
+      id: true,
+      rawInput: true,
+      createdAt: true,
+    },
+  });
+
+  if (primaryRows.length === 0) {
+    return messages;
+  }
+
+  const siblingGroups = await Promise.all(
+    primaryRows.map(async (row) => {
+      const siblings = await prisma.transaction.findMany({
+        where: scopedByUser(userId, {
+          rawInput: row.rawInput,
+          createdAt: {
+            gte: new Date(row.createdAt.getTime() - 5_000),
+            lte: new Date(row.createdAt.getTime() + 5_000),
+          },
+        }),
+        orderBy: { createdAt: "asc" },
+      });
+
+      return {
+        primaryId: row.id,
+        transactions: siblings.map(mapTransaction),
+      };
+    }),
+  );
+
+  const byPrimaryId = new Map(
+    siblingGroups.map((group) => [group.primaryId, group.transactions]),
+  );
+
+  return messages.map((message) => {
+    const primaryId = message.transaction?.id;
+    if (!primaryId) {
+      return message;
+    }
+
+    const transactions = byPrimaryId.get(primaryId);
+    if (!transactions || transactions.length <= 1) {
+      return message;
+    }
+
+    return {
+      ...message,
+      transactions,
+      transaction: transactions[0],
+    };
+  });
 }
 
 export async function getInboxMessagesPage(
@@ -253,11 +330,7 @@ export async function deleteInboxMessagePair(
     },
   });
 
-  if (
-    !userRecord ||
-    userRecord.role !== "user" ||
-    userRecord.kind !== "chat"
-  ) {
+  if (!userRecord || userRecord.role !== "user" || userRecord.kind !== "chat") {
     throw new Error("Pesan tidak ditemukan.");
   }
 
@@ -282,8 +355,7 @@ export async function deleteInboxMessagePair(
     },
   });
 
-  const assistantRecord =
-    nextRecord?.role === "assistant" ? nextRecord : null;
+  const assistantRecord = nextRecord?.role === "assistant" ? nextRecord : null;
 
   const removedIds = [userRecord.id];
   const transactionId = assistantRecord?.transactionId ?? null;
@@ -295,7 +367,7 @@ export async function deleteInboxMessagePair(
   const linkedTransaction = transactionId
     ? await prisma.transaction.findFirst({
         where: scopedId(userId, transactionId),
-        select: { occurredAt: true },
+        select: { id: true, rawInput: true, createdAt: true, occurredAt: true },
       })
     : null;
 
@@ -310,9 +382,15 @@ export async function deleteInboxMessagePair(
       where: scopedId(userId, userRecord.id),
     });
 
-    if (transactionId) {
+    if (linkedTransaction) {
       await tx.transaction.deleteMany({
-        where: scopedId(userId, transactionId),
+        where: scopedByUser(userId, {
+          rawInput: linkedTransaction.rawInput,
+          createdAt: {
+            gte: new Date(linkedTransaction.createdAt.getTime() - 5_000),
+            lte: new Date(linkedTransaction.createdAt.getTime() + 5_000),
+          },
+        }),
       });
     }
   });

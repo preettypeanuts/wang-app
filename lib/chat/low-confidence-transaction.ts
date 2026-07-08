@@ -6,7 +6,22 @@ export function isLowConfidenceTransaction(
   rawInput: string,
   transaction: ParsedTransaction,
 ): boolean {
-  return transaction.category === "other" || isPlainAmountInput(rawInput);
+  const segment = transaction.description?.trim() || rawInput;
+  return transaction.category === "other" || isPlainAmountInput(segment);
+}
+
+/** First low-confidence transaction in a batch, if any. */
+export function findLowConfidenceTransaction(
+  rawInput: string,
+  transactions: ParsedTransaction[],
+): ParsedTransaction | null {
+  for (const transaction of transactions) {
+    if (isLowConfidenceTransaction(rawInput, transaction)) {
+      return transaction;
+    }
+  }
+
+  return null;
 }
 
 /** No income keyword — type likely defaulted to expense. */
@@ -16,7 +31,9 @@ export function isUncertainTransactionType(rawInput: string): boolean {
     return false;
   }
 
-  return detectTransactionType(trimmed) === "expense" && !hasIncomeKeyword(trimmed);
+  return (
+    detectTransactionType(trimmed) === "expense" && !hasIncomeKeyword(trimmed)
+  );
 }
 
 function hasIncomeKeyword(text: string): boolean {

@@ -10,9 +10,10 @@ import { MessageTimestamp } from "@/components/chat/message-timestamp";
 import { TransactionPreview } from "@/components/chat/transaction-preview";
 import { TransactionQuickCorrect } from "@/components/chat/transaction-quick-correct";
 import { MobilePageTitle } from "@/components/shared/mobile-page-title";
-import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
 import { useSyncMobileScrollChrome } from "@/components/shared/mobile-scroll-chrome-provider";
 import { useSyncMobileTopBlur } from "@/components/shared/mobile-top-blur-provider";
+import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
+import type { TransactionCategoryId } from "@/config/categories";
 import {
   CHAT_MESSAGE_INSET_BOTTOM,
   CHAT_MESSAGE_INSET_TOP,
@@ -31,14 +32,13 @@ import { STACK_GAP } from "@/config/spacing";
 import { useMobileLargeTitleScroll } from "@/hooks/use-mobile-large-title-scroll";
 import { findInboxEditHintTargetIndex } from "@/lib/chat/find-inbox-edit-hint-target";
 import { getInboxRetryContext } from "@/lib/chat/inbox-error";
-import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import { canManageSentUserMessage } from "@/lib/chat/inbox-message-actions";
+import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import {
   hasSeenInboxEditHint,
   markInboxEditHintSeen,
 } from "@/lib/inbox/inbox-edit-hint-storage";
 import { cn } from "@/lib/utils";
-import type { TransactionCategoryId } from "@/config/categories";
 import type { ChatMessage } from "@/types/chat";
 import type { TransactionType } from "@/types/transaction";
 
@@ -165,9 +165,13 @@ export function MessageList({
     if (prepended) {
       const previousHeight = element.scrollHeight;
       requestAnimationFrame(() => {
-        element.scrollTop = element.scrollHeight - previousHeight + element.scrollTop;
+        element.scrollTop =
+          element.scrollHeight - previousHeight + element.scrollTop;
       });
-    } else if (shrank || (appended && (stickToBottomRef.current || pendingTail))) {
+    } else if (
+      shrank ||
+      (appended && (stickToBottomRef.current || pendingTail))
+    ) {
       element.scrollTop = element.scrollHeight;
     }
 
@@ -242,133 +246,162 @@ export function MessageList({
       )}
     >
       {messages.length === 0 ? (
-          <div
-            className={cn(
-              "flex min-h-full flex-col text-center",
-              contentClassName,
-            )}
-          >
-            {!fixedMobileTopBar ? (
-              <MobilePageTitle ref={titleRef}>Inbox</MobilePageTitle>
-            ) : null}
-            <div className="flex flex-1 flex-col items-center justify-center">
-              <p className="max-w-sm text-muted-foreground">
-                Catat keuangan lewat chat. Contoh:{" "}
-                <span className="font-medium text-foreground">
-                  makan warteg 15K
-                </span>
+        <div
+          className={cn(
+            "flex min-h-full flex-col text-center",
+            contentClassName,
+          )}
+        >
+          {!fixedMobileTopBar ? (
+            <MobilePageTitle ref={titleRef}>Inbox</MobilePageTitle>
+          ) : null}
+          <div className="flex flex-1 flex-col items-center justify-center">
+            <p className="max-w-sm text-muted-foreground">
+              Catat keuangan lewat chat. Contoh:{" "}
+              <span className="font-medium text-foreground">
+                makan warteg 15K
+              </span>
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className={cn("flex flex-col", STACK_GAP, contentClassName)}>
+          {!fixedMobileTopBar ? (
+            <MobilePageTitle ref={titleRef}>Inbox</MobilePageTitle>
+          ) : null}
+          {hasMoreOlder ? (
+            <div className="flex justify-center py-1">
+              <p className="text-[11px] text-muted-foreground">
+                {isLoadingOlder
+                  ? "Memuat pesan lama..."
+                  : "Gulir ke atas untuk muat lebih"}
               </p>
             </div>
-          </div>
-        ) : (
-          <div className={cn("flex flex-col", STACK_GAP, contentClassName)}>
-            {!fixedMobileTopBar ? (
-              <MobilePageTitle ref={titleRef}>Inbox</MobilePageTitle>
-            ) : null}
-            {hasMoreOlder ? (
-              <div className="flex justify-center py-1">
-                <p className="text-[11px] text-muted-foreground">
-                  {isLoadingOlder ? "Memuat pesan lama..." : "Gulir ke atas untuk muat lebih"}
-                </p>
-              </div>
-            ) : null}
-            {messages.map((message, index) => {
-              const isUser = message.role === "user";
-              const retryContext = getInboxRetryContext(messages, index);
-              const canManage =
-                canManageSentUserMessage(message) &&
-                Boolean(onEditMessage) &&
-                Boolean(onUndoMessage);
+          ) : null}
+          {messages.map((message, index) => {
+            const isUser = message.role === "user";
+            const retryContext = getInboxRetryContext(messages, index);
+            const canManage =
+              canManageSentUserMessage(message) &&
+              Boolean(onEditMessage) &&
+              Boolean(onUndoMessage);
 
-              const isPending = message.id.startsWith("pending-");
-              const previousMessage = index > 0 ? messages[index - 1] : undefined;
-              const userInput =
-                previousMessage?.role === "user" ? previousMessage.content : "";
-              const showQuickCorrect =
-                !isUser &&
-                message.transaction?.id &&
-                !message.transactionDeleted &&
-                Boolean(onQuickCorrect) &&
-                (message.lowConfidenceCategory ||
-                  (userInput
-                    ? isLowConfidenceTransaction(userInput, message.transaction)
-                    : false));
+            const isPending = message.id.startsWith("pending-");
+            const previousMessage = index > 0 ? messages[index - 1] : undefined;
+            const userInput =
+              previousMessage?.role === "user" ? previousMessage.content : "";
+            const batchTransactions = message.transactions?.length
+              ? message.transactions
+              : message.transaction
+                ? [message.transaction]
+                : [];
+            const quickCorrectTransaction =
+              (message.lowConfidenceTransactionId
+                ? batchTransactions.find(
+                    (item) => item.id === message.lowConfidenceTransactionId,
+                  )
+                : undefined) ??
+              (message.transaction &&
+              (message.lowConfidenceCategory ||
+                (userInput
+                  ? isLowConfidenceTransaction(userInput, message.transaction)
+                  : false))
+                ? message.transaction
+                : batchTransactions.find((item) =>
+                    userInput
+                      ? isLowConfidenceTransaction(userInput, item)
+                      : item.category === "other",
+                  ));
+            const showQuickCorrect =
+              !isUser &&
+              Boolean(quickCorrectTransaction?.id) &&
+              !message.transactionDeleted &&
+              Boolean(onQuickCorrect);
 
-              const showEditHintHere = showEditHint && index === editHintTargetIndex;
+            const showEditHintHere =
+              showEditHint && index === editHintTargetIndex;
 
-              const bubble = (
-                <MessageBubble
-                  role={message.role}
-                  content={message.content}
-                  className={cn(
-                    canManage ? "max-w-full" : undefined,
-                    isPending && "opacity-70",
-                  )}
-                />
-              );
+            const bubble = (
+              <MessageBubble
+                role={message.role}
+                content={message.content}
+                className={cn(
+                  canManage ? "max-w-full" : undefined,
+                  isPending && "opacity-70",
+                )}
+              />
+            );
 
-              return (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex flex-col gap-1",
-                    isUser ? "items-end" : "items-start",
-                  )}
-                >
-                  {showEditHintHere ? (
-                    <ChatMessageMenuHint onDismiss={dismissEditHint} />
-                  ) : null}
-                  {canManage ? (
-                    <ChatMessageMenu
-                      disabled={actionsDisabled}
-                      onEdit={() => void onEditMessage?.(message.id)}
-                      onUndo={() => void onUndoMessage?.(message.id)}
-                      onOpenChange={handleMessageMenuOpenChange}
-                    >
-                      {bubble}
-                    </ChatMessageMenu>
-                  ) : (
-                    bubble
-                  )}
-                  {showQuickCorrect && message.transaction?.id ? (
-                    <TransactionQuickCorrect
-                      disabled={actionsDisabled}
-                      transaction={message.transaction}
-                      userInput={userInput}
-                      onCorrect={({ category, type }) =>
-                        void onQuickCorrect?.({
-                          assistantMessageId: message.id,
-                          transactionId: message.transaction?.id ?? "",
-                          category,
-                          type,
-                        })
-                      }
-                    />
-                  ) : null}
-                  <MessageTimestamp
-                    createdAt={message.createdAt}
-                    role={message.role}
+            return (
+              <div
+                key={message.id}
+                className={cn(
+                  "flex flex-col gap-1",
+                  isUser ? "items-end" : "items-start",
+                )}
+              >
+                {showEditHintHere ? (
+                  <ChatMessageMenuHint onDismiss={dismissEditHint} />
+                ) : null}
+                {canManage ? (
+                  <ChatMessageMenu
+                    disabled={actionsDisabled}
+                    onEdit={() => void onEditMessage?.(message.id)}
+                    onUndo={() => void onUndoMessage?.(message.id)}
+                    onOpenChange={handleMessageMenuOpenChange}
+                  >
+                    {bubble}
+                  </ChatMessageMenu>
+                ) : (
+                  bubble
+                )}
+                {showQuickCorrect && quickCorrectTransaction?.id ? (
+                  <TransactionQuickCorrect
+                    disabled={actionsDisabled}
+                    transaction={quickCorrectTransaction}
+                    userInput={quickCorrectTransaction.description || userInput}
+                    onCorrect={({ category, type }) =>
+                      void onQuickCorrect?.({
+                        assistantMessageId: message.id,
+                        transactionId: quickCorrectTransaction.id ?? "",
+                        category,
+                        type,
+                      })
+                    }
                   />
-                  {retryContext && onRetry ? (
-                    <ChatMessageRetryButton
-                      disabled={actionsDisabled}
-                      onRetry={() => void onRetry(retryContext.assistantMessageId)}
-                    />
-                  ) : null}
-                  {message.transaction ? (
-                    <div className="mt-1 max-w-[85%]">
+                ) : null}
+                <MessageTimestamp
+                  createdAt={message.createdAt}
+                  role={message.role}
+                />
+                {retryContext && onRetry ? (
+                  <ChatMessageRetryButton
+                    disabled={actionsDisabled}
+                    onRetry={() =>
+                      void onRetry(retryContext.assistantMessageId)
+                    }
+                  />
+                ) : null}
+                {batchTransactions.length > 0 ? (
+                  <div className="mt-1 flex max-w-[85%] flex-col gap-1.5">
+                    {batchTransactions.map((transaction) => (
                       <TransactionPreview
+                        key={
+                          transaction.id ??
+                          `${transaction.description}-${transaction.amount}`
+                        }
                         deleted={message.transactionDeleted}
-                        transaction={message.transaction}
+                        transaction={transaction}
                       />
-                    </div>
-                  ) : null}
-                </div>
-              );
-            })}
-            <div ref={bottomRef} />
-          </div>
-        )}
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
+          <div ref={bottomRef} />
+        </div>
+      )}
     </div>
   );
 }

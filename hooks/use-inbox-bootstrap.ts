@@ -1,24 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-
-import {
-  EMPTY_TODAY_SUMMARY,
-  mergeInboxBootstrapPayload,
-  patchInboxBootstrapSummary,
-  readInboxBootstrapCache,
-  writeInboxBootstrapCache,
-  type InboxBootstrapPayload,
-} from "@/lib/inbox/inbox-bootstrap-cache";
-import { applyTransactionToSummary } from "@/lib/inbox/apply-transaction-to-summary";
-import {
-  INBOX_BOOTSTRAP_PATCHED_EVENT,
-} from "@/lib/inbox/patch-inbox-on-transaction-deleted";
-import { removeTransactionFromSummary } from "@/lib/inbox/remove-transaction-from-summary";
+import { applyTransactionsToSummary } from "@/lib/inbox/apply-transaction-to-summary";
 import {
   fetchInboxBootstrap,
   triggerInboxMaintenance,
 } from "@/lib/inbox/fetch-inbox-bootstrap";
+import {
+  EMPTY_TODAY_SUMMARY,
+  type InboxBootstrapPayload,
+  mergeInboxBootstrapPayload,
+  patchInboxBootstrapSummary,
+  readInboxBootstrapCache,
+  writeInboxBootstrapCache,
+} from "@/lib/inbox/inbox-bootstrap-cache";
+import { INBOX_BOOTSTRAP_PATCHED_EVENT } from "@/lib/inbox/patch-inbox-on-transaction-deleted";
+import { removeTransactionFromSummary } from "@/lib/inbox/remove-transaction-from-summary";
 import type {
   ActivePlanChatItem,
   ActiveSavingsChatItem,
@@ -112,8 +109,9 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
     const seeded = seedBootstrapCache(options.initialBootstrap ?? null);
     return toBootstrapState(seeded, Boolean(seeded));
   });
-  const [dailySummary, setDailySummary] =
-    useState<DailySummarySnapshot | null>(null);
+  const [dailySummary, setDailySummary] = useState<DailySummarySnapshot | null>(
+    null,
+  );
   const [slash, setSlash] = useState(EMPTY_SLASH);
   const [slashRequested, setSlashRequested] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -220,7 +218,10 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
       setState(toBootstrapState(detail, true));
     }
 
-    window.addEventListener(INBOX_BOOTSTRAP_PATCHED_EVENT, handleBootstrapPatched);
+    window.addEventListener(
+      INBOX_BOOTSTRAP_PATCHED_EVENT,
+      handleBootstrapPatched,
+    );
 
     return () => {
       window.removeEventListener(
@@ -277,9 +278,16 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
       .catch(() => {});
   }
 
-  function applyTransactionSummary(transaction: ParsedTransaction) {
+  function applyTransactionSummary(
+    input: ParsedTransaction | ParsedTransaction[],
+  ) {
+    const transactions = Array.isArray(input) ? input : [input];
+    if (transactions.length === 0) {
+      return;
+    }
+
     setState((current) => {
-      const summary = applyTransactionToSummary(current.summary, transaction);
+      const summary = applyTransactionsToSummary(current.summary, transactions);
       patchInboxBootstrapSummary(summary);
       return { ...current, summary };
     });
@@ -287,16 +295,16 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
 
   function applyTransactionRemoved(transaction: ParsedTransaction) {
     setState((current) => {
-      const summary = removeTransactionFromSummary(current.summary, transaction);
+      const summary = removeTransactionFromSummary(
+        current.summary,
+        transaction,
+      );
       patchInboxBootstrapSummary(summary);
       return { ...current, summary };
     });
   }
 
-  function applyMessages(
-    messages: ChatMessage[],
-    hasMoreMessages?: boolean,
-  ) {
+  function applyMessages(messages: ChatMessage[], hasMoreMessages?: boolean) {
     setState((current) => {
       if (
         current.messages.length === messages.length &&

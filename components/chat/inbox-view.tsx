@@ -1,8 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-
-import { updateTransactionCategoryAction } from "@/app/actions/journal";
 import {
   checkSavingsGoalFromInboxAction,
   loadOlderInboxMessagesAction,
@@ -12,6 +10,7 @@ import {
   submitInboxMessage,
   undoInboxMessageAction,
 } from "@/app/actions/inbox";
+import { updateTransactionCategoryAction } from "@/app/actions/journal";
 import {
   parseReceiptFromImageAction,
   submitInboxMessageFromReceipt,
@@ -22,25 +21,25 @@ import { ChatReceiptProcessingOverlay } from "@/components/chat/chat-receipt-pro
 import { MessageList } from "@/components/chat/message-list";
 import { ReceiptConfirmDialog } from "@/components/chat/receipt-confirm-dialog";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
+import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
 import type { TransactionCategoryId } from "@/config/categories";
 import { resolveCategoryForType } from "@/config/categories";
 import { CHAT_INPUT_DOCK } from "@/config/chat-layout";
 import { INBOX_CHAT_VIEW_ROOT } from "@/config/inbox-desktop";
 import { INBOX_CHAT_INPUT_DOCK } from "@/config/inbox-mobile";
+import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { buildWarmTransactionReply } from "@/lib/ai/build-warm-transaction-reply";
 import { buildReceiptManualFallbackNotice } from "@/lib/ai/format-gemini-api-error";
 import { patchInboxBootstrapMessages } from "@/lib/inbox/inbox-bootstrap-cache";
-import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
 import {
   mergeInboxMessageTail,
   prependOlderInboxMessages,
 } from "@/lib/inbox/merge-inbox-messages";
-import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import { createEmptyReceiptDraft } from "@/lib/receipt/create-empty-receipt-draft";
 import {
   getReceiptImageFromDataTransfer,
   hasReceiptImageInDataTransfer,
 } from "@/lib/receipt/image-file";
-import { createEmptyReceiptDraft } from "@/lib/receipt/create-empty-receipt-draft";
 import {
   processReceiptImageFile,
   ReceiptImageError,
@@ -62,7 +61,9 @@ interface InboxViewProps {
   activeSavingsItems: ActiveSavingsChatItem[];
   fixedMobileTopBar?: boolean;
   onSlashMenuOpenChange?: (open: boolean) => void;
-  onTransactionRecorded?: (transaction: ParsedTransaction) => void;
+  onTransactionRecorded?: (
+    transaction: ParsedTransaction | ParsedTransaction[],
+  ) => void;
   onMessagesChange?: (
     messages: ChatMessage[],
     hasMoreMessages?: boolean,
@@ -260,7 +261,11 @@ export function InboxView({
       ]);
 
       if (result.ok && result.transaction) {
-        onTransactionRecorded?.(result.transaction);
+        onTransactionRecorded?.(
+          "transactions" in result && result.transactions?.length
+            ? result.transactions
+            : result.transaction,
+        );
       }
     } catch (error) {
       setMessages((current) =>
@@ -344,11 +349,7 @@ export function InboxView({
       createdAt: new Date().toISOString(),
     };
 
-    setMessages((current) => [
-      ...current,
-      optimisticUser,
-      optimisticAssistant,
-    ]);
+    setMessages((current) => [...current, optimisticUser, optimisticAssistant]);
     beginInFlight();
 
     try {
@@ -364,7 +365,11 @@ export function InboxView({
       ]);
 
       if (result.ok && result.transaction) {
-        onTransactionRecorded?.(result.transaction);
+        onTransactionRecorded?.(
+          result.transactions?.length
+            ? result.transactions
+            : result.transaction,
+        );
       }
     } catch {
       setMessages((current) =>
@@ -410,7 +415,11 @@ export function InboxView({
       );
 
       if (result.ok && result.transaction) {
-        onTransactionRecorded?.(result.transaction);
+        onTransactionRecorded?.(
+          result.transactions?.length
+            ? result.transactions
+            : result.transaction,
+        );
       }
     } catch {
       setMessages((current) =>
@@ -474,23 +483,41 @@ export function InboxView({
 
     setMessages((current) =>
       current.map((message) => {
-        if (message.id !== input.assistantMessageId || !message.transaction) {
+        if (message.id !== input.assistantMessageId) {
+          return message;
+        }
+
+        const batch = message.transactions?.length
+          ? message.transactions
+          : message.transaction
+            ? [message.transaction]
+            : [];
+        if (batch.length === 0) {
           return message;
         }
 
         const nextCategory = resolveCategoryForType(input.category, input.type);
-        const nextTransaction: ParsedTransaction = {
-          ...message.transaction,
-          id: input.transactionId,
-          type: input.type,
-          category: nextCategory,
-        };
+        const nextBatch = batch.map((item) =>
+          item.id === input.transactionId
+            ? {
+                ...item,
+                id: input.transactionId,
+                type: input.type,
+                category: nextCategory,
+              }
+            : item,
+        );
+        const nextPrimary =
+          nextBatch.find((item) => item.id === message.transaction?.id) ??
+          nextBatch[0];
 
         return {
           ...message,
           lowConfidenceCategory: false,
-          content: buildWarmTransactionReply(nextTransaction, null),
-          transaction: nextTransaction,
+          lowConfidenceTransactionId: undefined,
+          content: buildWarmTransactionReply(nextPrimary, null),
+          transaction: nextPrimary,
+          transactions: nextBatch,
         };
       }),
     );
@@ -508,16 +535,32 @@ export function InboxView({
       }
 
       setMessages((current) =>
-        current.map((message) =>
-          message.id === input.assistantMessageId
-            ? {
-                ...message,
-                content: result.assistantContent,
-                transaction: result.transaction,
-                lowConfidenceCategory: false,
-              }
-            : message,
-        ),
+        current.map((message) => {
+          if (message.id !== input.assistantMessageId) {
+            return message;
+          }
+
+          const batch = message.transactions?.length
+            ? message.transactions
+            : message.transaction
+              ? [message.transaction]
+              : [];
+          const nextBatch = batch.map((item) =>
+            item.id === result.transaction.id ? result.transaction : item,
+          );
+
+          return {
+            ...message,
+            content: result.assistantContent,
+            transaction:
+              nextBatch.find((item) => item.id === message.transaction?.id) ??
+              result.transaction,
+            transactions:
+              nextBatch.length > 0 ? nextBatch : [result.transaction],
+            lowConfidenceCategory: false,
+            lowConfidenceTransactionId: undefined,
+          };
+        }),
       );
     } finally {
       endInFlight();

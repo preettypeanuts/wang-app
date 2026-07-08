@@ -1,10 +1,13 @@
 import { normalizeCategory } from "@/config/categories";
+import type { Transaction } from "@/generated/prisma/client";
+import {
+  revalidateAfterTransactionMutation,
+  revalidateUserInbox,
+} from "@/lib/cache/revalidate-user-data";
 import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
-import { revalidateAfterTransactionMutation, revalidateUserInbox } from "@/lib/cache/revalidate-user-data";
 import { prisma } from "@/lib/db/prisma";
 import type { ChatMessage } from "@/types/chat";
 import type { ParsedTransaction } from "@/types/transaction";
-import type { Transaction } from "@/generated/prisma/client";
 
 function mapTransaction(record: Transaction): ParsedTransaction {
   return {
@@ -57,11 +60,37 @@ export async function submitInboxChatTransaction(input: {
 }): Promise<{
   userMessage: ChatMessage;
   assistantMessage: ChatMessage;
+  transactions: ParsedTransaction[];
+}> {
+  const result = await submitInboxChatTransactions({
+    userId: input.userId,
+    rawInput: input.rawInput,
+    transactions: [input.transaction],
+    assistantContent: input.assistantContent,
+  });
+
+  return result;
+}
+
+export async function submitInboxChatTransactions(input: {
+  userId: string;
+  rawInput: string;
+  transactions: ParsedTransaction[];
+  assistantContent: string;
+}): Promise<{
+  userMessage: ChatMessage;
+  assistantMessage: ChatMessage;
+  transactions: ParsedTransaction[];
 }> {
   const trimmed = input.rawInput.trim();
   const now = new Date();
   const userAt = new Date(now.getTime() - 1_000);
   const assistantAt = now;
+  const transactions = input.transactions;
+
+  if (transactions.length === 0) {
+    throw new Error("Tidak ada transaksi untuk disimpan.");
+  }
 
   const result = await prisma.$transaction(async (tx) => {
     const userRecord = await tx.inboxMessage.create({
@@ -80,19 +109,24 @@ export async function submitInboxChatTransaction(input: {
       },
     });
 
-    const savedTransaction = await tx.transaction.create({
-      data: {
-        userId: input.userId,
-        type: input.transaction.type,
-        amount: input.transaction.amount,
-        category: input.transaction.category,
-        description: input.transaction.description,
-        occurredAt: new Date(input.transaction.occurredAt),
-        rawInput: trimmed,
-        createdAt: assistantAt,
-      },
-    });
+    const savedTransactions: Transaction[] = [];
+    for (const [index, transaction] of transactions.entries()) {
+      const saved = await tx.transaction.create({
+        data: {
+          userId: input.userId,
+          type: transaction.type,
+          amount: transaction.amount,
+          category: transaction.category,
+          description: transaction.description,
+          occurredAt: new Date(transaction.occurredAt),
+          rawInput: trimmed,
+          createdAt: new Date(assistantAt.getTime() + index),
+        },
+      });
+      savedTransactions.push(saved);
+    }
 
+    const primary = savedTransactions[0];
     const assistantRecord = await tx.inboxMessage.create({
       data: {
         userId: input.userId,
@@ -100,7 +134,7 @@ export async function submitInboxChatTransaction(input: {
         kind: "chat",
         content: input.assistantContent,
         createdAt: assistantAt,
-        transactionId: savedTransaction.id,
+        transactionId: primary.id,
       },
       select: {
         id: true,
@@ -110,25 +144,31 @@ export async function submitInboxChatTransaction(input: {
       },
     });
 
+    const parsed = savedTransactions.map(mapTransaction);
+
     return {
       userMessage: mapUserMessage(userRecord),
-      assistantMessage: mapAssistantMessage(
-        assistantRecord,
-        savedTransaction,
-      ),
-      occurredAt: savedTransaction.occurredAt,
+      assistantMessage: {
+        ...mapAssistantMessage(assistantRecord, primary),
+        transactions: parsed,
+      },
+      transactions: parsed,
+      occurredAts: savedTransactions.map((row) => row.occurredAt),
     };
   });
 
-  await invalidateAiInsightCacheOnTransactionMutation(
-    input.userId,
-    result.occurredAt,
-  );
+  for (const occurredAt of result.occurredAts) {
+    await invalidateAiInsightCacheOnTransactionMutation(
+      input.userId,
+      occurredAt,
+    );
+  }
   revalidateAfterTransactionMutation(input.userId);
 
   return {
     userMessage: result.userMessage,
     assistantMessage: result.assistantMessage,
+    transactions: result.transactions,
   };
 }
 

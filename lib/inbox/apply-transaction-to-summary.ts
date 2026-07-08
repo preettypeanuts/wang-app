@@ -45,3 +45,14 @@ export function applyTransactionToSummary(
     categories,
   };
 }
+
+/** Apply multiple recorded transactions to today's summary. */
+export function applyTransactionsToSummary(
+  summary: TodaySummary,
+  transactions: ParsedTransaction[],
+): TodaySummary {
+  return transactions.reduce(
+    (current, transaction) => applyTransactionToSummary(current, transaction),
+    summary,
+  );
+}

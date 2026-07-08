@@ -1,14 +1,13 @@
 import { unstable_cache } from "next/cache";
-
-import { userDataTags } from "@/lib/cache/user-data-tags";
 import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
+import { prisma } from "@/lib/db/prisma";
+import { scopedByUser } from "@/lib/db/user-scope";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
 import { getDayRange, parseDayKey, toDayKey } from "@/lib/finance/day-range";
-import { prisma } from "@/lib/db/prisma";
-import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
-import { scopedByUser } from "@/lib/db/user-scope";
-import type { ParsedTransaction } from "@/types/transaction";
 import type { TodaySummary } from "@/types/summary";
+import type { ParsedTransaction } from "@/types/transaction";
 
 interface CreateTransactionInput {
   userId: string;
@@ -37,16 +36,66 @@ export async function createTransaction({
     },
   });
 
-  await invalidateAiInsightCacheOnTransactionMutation(
-    userId,
-    saved.occurredAt,
-  );
+  await invalidateAiInsightCacheOnTransactionMutation(userId, saved.occurredAt);
   revalidateAfterTransactionMutation(userId);
 
   return saved;
 }
 
-async function queryTodaySummary(userId: string, dayKey: string): Promise<TodaySummary> {
+interface CreateMultipleTransactionsInput {
+  userId: string;
+  rawInput: string;
+  transactions: ParsedTransaction[];
+}
+
+/** Atomic batch insert for multi-transaction inbox messages. */
+export async function createMultipleTransactions({
+  userId,
+  rawInput,
+  transactions,
+}: CreateMultipleTransactionsInput) {
+  if (transactions.length === 0) {
+    return [];
+  }
+
+  if (transactions.length === 1) {
+    return [
+      await createTransaction({
+        userId,
+        rawInput,
+        transaction: transactions[0],
+      }),
+    ];
+  }
+
+  const saved = await prisma.$transaction(
+    transactions.map((transaction) =>
+      prisma.transaction.create({
+        data: {
+          userId,
+          type: transaction.type,
+          amount: transaction.amount,
+          category: transaction.category,
+          description: transaction.description,
+          occurredAt: new Date(transaction.occurredAt),
+          rawInput,
+        },
+      }),
+    ),
+  );
+
+  for (const row of saved) {
+    await invalidateAiInsightCacheOnTransactionMutation(userId, row.occurredAt);
+  }
+  revalidateAfterTransactionMutation(userId);
+
+  return saved;
+}
+
+async function queryTodaySummary(
+  userId: string,
+  dayKey: string,
+): Promise<TodaySummary> {
   const { start, end } = getDayRange(parseDayKey(dayKey));
 
   const transactions = await prisma.transaction.findMany({

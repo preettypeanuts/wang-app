@@ -1,17 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-
-import { buildInboxTransactionReplyForParsed } from "@/lib/ai/build-inbox-transaction-reply";
-import { parseTransaction } from "@/lib/ai/parse-transaction";
-import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
-import { formatInboxProcessingError } from "@/lib/chat/inbox-error";
+import { normalizeCategory } from "@/config/categories";
+import { buildInboxMultipleTransactionReplyForParsed } from "@/lib/ai/build-inbox-transaction-reply";
+import { parseMultipleTransactions } from "@/lib/ai/parse-multiple-transactions";
+import { requireUserId } from "@/lib/auth/session";
 import {
   revalidateAfterTransactionMutation,
   revalidateUserInbox,
   revalidateUserPlannedItems,
   revalidateUserPlans,
 } from "@/lib/cache/revalidate-user-data";
+import { formatInboxProcessingError } from "@/lib/chat/inbox-error";
+import { findLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import {
   createInboxMessage,
   type DeleteInboxMessagePairResult,
@@ -23,24 +24,23 @@ import {
 } from "@/lib/db/inbox-messages";
 import {
   submitInboxChatFailure,
-  submitInboxChatTransaction,
+  submitInboxChatTransactions,
 } from "@/lib/db/inbox-submit";
 import { listPlannedItems, markInstallmentPaid } from "@/lib/db/planned-items";
 import { listPlans, markPlanDone } from "@/lib/db/plans";
 import { prisma } from "@/lib/db/prisma";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
-import { createTransaction } from "@/lib/db/transactions";
+import { createMultipleTransactions } from "@/lib/db/transactions";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
-import { requireUserId } from "@/lib/auth/session";
 import { formatIdr } from "@/lib/finance/format-currency";
-import { executeSavingsInboxCommand } from "@/lib/savings/execute-savings-inbox-command";
-import { findSavingsGoalByQuery } from "@/lib/savings/find-savings-goal";
-import { formatSavingsGoalDetail } from "@/lib/savings/format-savings-reply";
-import { parseSavingsInboxCommand } from "@/lib/savings/parse-savings-inbox-command";
 import {
   canMarkPlannedItemPaid,
   getPlannedItemPaymentIndex,
 } from "@/lib/planner/item-payment";
+import { executeSavingsInboxCommand } from "@/lib/savings/execute-savings-inbox-command";
+import { findSavingsGoalByQuery } from "@/lib/savings/find-savings-goal";
+import { formatSavingsGoalDetail } from "@/lib/savings/format-savings-reply";
+import { parseSavingsInboxCommand } from "@/lib/savings/parse-savings-inbox-command";
 import type { ChatMessage } from "@/types/chat";
 import type { ParsedTransaction } from "@/types/transaction";
 
@@ -48,6 +48,7 @@ interface SubmitInboxMessageSuccess {
   ok: true;
   content: string;
   transaction?: ParsedTransaction;
+  transactions?: ParsedTransaction[];
   userMessage: ChatMessage;
   assistantMessage: ChatMessage;
 }
@@ -65,16 +66,22 @@ export type SubmitInboxMessageResult =
 
 function withLowConfidenceFlag(
   rawInput: string,
-  transaction: ParsedTransaction | undefined,
+  transactions: ParsedTransaction[],
   message: ChatMessage,
 ): ChatMessage {
-  if (!transaction) {
+  if (transactions.length === 0) {
     return message;
   }
 
+  const primary = transactions[0];
+  const flagged = findLowConfidenceTransaction(rawInput, transactions);
+
   return {
     ...message,
-    lowConfidenceCategory: isLowConfidenceTransaction(rawInput, transaction),
+    transaction: primary,
+    transactions,
+    lowConfidenceCategory: Boolean(flagged),
+    lowConfidenceTransactionId: flagged?.id,
   };
 }
 
@@ -105,28 +112,32 @@ export async function submitInboxMessage(
   }
 
   try {
-    const transaction = await parseTransaction(trimmed);
-    const content = await buildInboxTransactionReplyForParsed(
+    const transactions = await parseMultipleTransactions(trimmed);
+    const content = await buildInboxMultipleTransactionReplyForParsed(
       userId,
-      trimmed,
-      transaction,
+      transactions,
     );
 
-    const { userMessage, assistantMessage } = await submitInboxChatTransaction({
+    const {
+      userMessage,
+      assistantMessage,
+      transactions: savedTransactions,
+    } = await submitInboxChatTransactions({
       userId,
       rawInput: trimmed,
-      transaction,
+      transactions,
       assistantContent: content,
     });
 
     return {
       ok: true,
       content,
-      transaction,
+      transaction: savedTransactions[0],
+      transactions: savedTransactions,
       userMessage,
       assistantMessage: withLowConfidenceFlag(
         trimmed,
-        transaction,
+        savedTransactions,
         assistantMessage,
       ),
     };
@@ -192,43 +203,61 @@ export async function retryInboxMessageAction(
   };
 
   try {
-    const transaction = await parseTransaction(trimmed);
+    const transactions = await parseMultipleTransactions(trimmed);
 
-    const savedTransaction = await createTransaction({
+    const savedRows = await createMultipleTransactions({
       userId,
       rawInput: trimmed,
-      transaction,
+      transactions,
     });
 
-    const content = await buildInboxTransactionReplyForParsed(
-      userId,
-      trimmed,
-      transaction,
+    const savedTransactions: ParsedTransaction[] = savedRows.map(
+      (row, index) => ({
+        id: row.id,
+        type: row.type,
+        amount: row.amount,
+        category: normalizeCategory(row.category),
+        description: row.description,
+        occurredAt: row.occurredAt.toISOString(),
+      }),
     );
 
-    const assistantMessage = await updateInboxMessage(userId, assistantMessageId, {
-      content,
-      transactionId: savedTransaction.id,
-    });
+    const content = await buildInboxMultipleTransactionReplyForParsed(
+      userId,
+      savedTransactions,
+    );
+
+    const assistantMessage = await updateInboxMessage(
+      userId,
+      assistantMessageId,
+      {
+        content,
+        transactionId: savedTransactions[0]?.id ?? null,
+      },
+    );
 
     return {
       ok: true,
       content,
-      transaction,
+      transaction: savedTransactions[0],
+      transactions: savedTransactions,
       userMessage,
-      assistantMessage: withLowConfidenceFlag(
-        trimmed,
-        transaction,
-        assistantMessage,
-      ),
+      assistantMessage: withLowConfidenceFlag(trimmed, savedTransactions, {
+        ...assistantMessage,
+        transactions: savedTransactions,
+      }),
     };
   } catch (error) {
     const content = formatInboxProcessingError(error);
 
-    const assistantMessage = await updateInboxMessage(userId, assistantMessageId, {
-      content,
-      transactionId: null,
-    });
+    const assistantMessage = await updateInboxMessage(
+      userId,
+      assistantMessageId,
+      {
+        content,
+        transactionId: null,
+      },
+    );
 
     return {
       ok: false,
@@ -415,9 +444,7 @@ export async function checkSavingsGoalFromInboxAction(
     };
   } catch (error) {
     const content =
-      error instanceof Error
-        ? error.message
-        : "Gagal menampilkan tabungan.";
+      error instanceof Error ? error.message : "Gagal menampilkan tabungan.";
 
     const assistantMessage = await createInboxMessage({
       userId,
