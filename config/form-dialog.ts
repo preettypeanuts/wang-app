@@ -8,7 +8,7 @@ const FORM_DIALOG_MOBILE_VIEWPORT = [
 ].join(" ");
 
 /** Shared glass surface for all app modals — keep Pay Plan, Budget, Calendar, Wish aligned. */
-export const FORM_DIALOG_SURFACE = `overflow-hidden border-black/10 shadow-2xl glass-backdrop dark:border-white/12 ${GLASS_FILL}`;
+export const FORM_DIALOG_SURFACE = `overflow-hidden border-black/10 shadow-2xl backdrop-blur-2xl backdrop-saturate-150 dark:border-white/12 ${GLASS_FILL}`;
 
 export const FORM_DIALOG_CONTENT = `flex max-h-[min(calc(100dvh-var(--mobile-safe-top)-var(--mobile-safe-bottom)-2rem),56rem)] flex-col gap-0 p-0 ${FORM_DIALOG_SURFACE} sm:max-w-md ${FORM_DIALOG_MOBILE_VIEWPORT}`;
 
