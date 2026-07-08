@@ -1,16 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { cookies } from "next/headers";
+import { Suspense } from "react";
 import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
 import { PWA_APPLE_TOUCH_ICON, PWA_ICON_192, PWA_ICON_512 } from "@/config/pwa";
 import "./globals.css";
-import { AppThemeProvider } from "@/components/providers/app-theme-provider";
-import { SerwistProviderShell } from "@/components/providers/serwist-provider-shell";
-import { AppShell } from "@/components/shared/app-shell";
 import { RootBootstrapScript } from "@/components/shared/root-bootstrap-script";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { readServerAppearance } from "@/lib/appearance/cookies";
-import { readServerSidebarOpen } from "@/lib/sidebar/cookies";
+import { RootLayoutBody } from "@/components/shared/root-layout-body";
+import { RootLayoutFallback } from "@/components/shared/root-layout-fallback";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({
@@ -52,20 +48,11 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-export default async function RootLayout({ children }: RootLayoutProps) {
-  const cookieStore = await cookies();
-  const appearance = readServerAppearance(cookieStore);
-  const sidebarOpen = readServerSidebarOpen(cookieStore);
-
+export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="id"
-      className={cn(
-        "h-full antialiased",
-        inter.variable,
-        appearance.resolvedDark && "dark",
-      )}
-      data-accent={appearance.accentId}
+      className={cn("h-full antialiased", inter.variable)}
       data-wallpaper="default"
       suppressHydrationWarning
     >
@@ -75,13 +62,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       >
         <RootBootstrapScript />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <SerwistProviderShell>
-            <AppThemeProvider initialAppearance={appearance}>
-              <TooltipProvider>
-                <AppShell initialSidebarOpen={sidebarOpen}>{children}</AppShell>
-              </TooltipProvider>
-            </AppThemeProvider>
-          </SerwistProviderShell>
+          <Suspense fallback={<RootLayoutFallback>{children}</RootLayoutFallback>}>
+            <RootLayoutBody>{children}</RootLayoutBody>
+          </Suspense>
         </div>
       </body>
     </html>

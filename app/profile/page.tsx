@@ -1,18 +1,13 @@
-import { ChangePasswordForm } from "@/components/profile/change-password-form";
+import { Suspense } from "react";
+
+import { ProfilePageData } from "@/components/profile/profile-page-data";
+import { ProfilePageSkeleton } from "@/components/profile/profile-page-skeleton";
 import { ProfileMobileLayout } from "@/components/profile/profile-mobile-layout";
 import { ProfileShell } from "@/components/profile/profile-shell";
-import { ProfileSummary } from "@/components/profile/profile-summary";
 import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
-import { getSession, requireUserId } from "@/lib/auth/session";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
-
-export default async function ProfilePage() {
-  await requireUserId();
-  const session = await getSession();
-  const user = session?.user;
-
+function ProfilePageFallback() {
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col")}>
       <ProfileMobileLayout>
@@ -26,34 +21,18 @@ export default async function ProfilePage() {
             fixedMobileTopBar
             title="Profil"
           >
-            <header className="shrink-0 max-md:hidden">
-              <h1 className="mt-0.5 text-base font-semibold tracking-tight sm:text-lg">
-                Profil
-              </h1>
-              <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-xs">
-                Kelola akun dan ganti password.
-              </p>
-            </header>
-
-            <p className="shrink-0 text-[11px] text-muted-foreground max-md:-mt-1 md:hidden">
-              Kelola akun dan ganti password.
-            </p>
-
-            <div className="flex flex-col gap-5 md:mt-3">
-              {user ? (
-                <section className="space-y-3">
-                  <h2 className="text-[13px] font-medium text-muted-foreground">
-                    Akun
-                  </h2>
-                  <ProfileSummary email={user.email} name={user.name} />
-                </section>
-              ) : null}
-
-              <ChangePasswordForm />
-            </div>
+            <ProfilePageSkeleton />
           </MobileScrollSurface>
         </ProfileShell>
       </ProfileMobileLayout>
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfilePageFallback />}>
+      <ProfilePageData />
+    </Suspense>
   );
 }

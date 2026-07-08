@@ -1,73 +1,41 @@
 import { Suspense } from "react";
 
-import { PlansAiInsight } from "@/components/plans/plans-ai-insight";
-import { PlansAiInsightSkeleton } from "@/components/plans/plans-ai-insight-skeleton";
-import { PlansPageContent } from "@/components/plans/plans-page-content";
-import type { PlansPageTab } from "@/components/plans/plans-page-tabs";
-import { requireUserId } from "@/lib/auth/session";
-import { getAvailableBalance } from "@/lib/db/balance";
-import { listPlans } from "@/lib/db/plans";
-import { listSavingsGoals } from "@/lib/db/savings-goals";
-import {
-  buildFallbackPlansInsight,
-  buildPlansOverview,
-} from "@/lib/finance/build-plans-overview";
-import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
-import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
-
-export const dynamic = "force-dynamic";
+import { PlansPageData } from "@/components/plans/plans-page-data";
+import { PlansPageSkeleton } from "@/components/plans/plans-page-skeleton";
+import { PlansShell } from "@/components/plans/plans-shell";
+import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
+import { WISH_PAGE_TITLE } from "@/config/navigation";
+import { STACK_GAP } from "@/config/spacing";
+import { cn } from "@/lib/utils";
 
 interface PlansPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-function parsePlansPageTab(
-  params: Record<string, string | string[] | undefined>,
-): PlansPageTab {
-  const tab = params.tab;
-  const value = Array.isArray(tab) ? tab[0] : tab;
-  return value === "savings" ? "savings" : "wish";
+function PlansPageFallback() {
+  return (
+    <div className={cn("flex min-h-0 flex-1 flex-col")}>
+      <PlansShell className="min-h-0 flex-1">
+        <MobileScrollSurface
+          className={cn(
+            "flex min-h-0 flex-1 flex-col md:p-3",
+            STACK_GAP,
+            "overflow-y-auto overscroll-y-contain",
+            "md:pb-20",
+          )}
+          title={WISH_PAGE_TITLE}
+        >
+          <PlansPageSkeleton />
+        </MobileScrollSurface>
+      </PlansShell>
+    </div>
+  );
 }
 
-export default async function PlansPage({ searchParams }: PlansPageProps) {
-  const userId = await requireUserId();
-  const params = await searchParams;
-  const initialTab = parsePlansPageTab(params);
-
-  const [plans, savingsGoals, availableBalance, upcomingImpact] =
-    await Promise.all([
-      listPlans(userId),
-      listSavingsGoals(userId),
-      getAvailableBalance(userId),
-      getPlansUpcomingImpact(userId),
-    ]);
-
-  const activePlans = plans.filter((plan) => plan.status === "active");
-  const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
-  const plansOverview = buildPlansOverview(
-    plans,
-    availableBalance,
-    buildFallbackPlansInsight(estimatedCost, availableBalance),
-  );
-  const savingsOverview = buildSavingsOverview(savingsGoals, availableBalance);
-
+export default function PlansPage({ searchParams }: PlansPageProps) {
   return (
-    <PlansPageContent
-      initialTab={initialTab}
-      plans={plans}
-      plansOverview={plansOverview}
-      upcomingImpact={upcomingImpact}
-      savingsGoals={savingsGoals}
-      savingsOverview={savingsOverview}
-      aiInsight={
-        <Suspense fallback={<PlansAiInsightSkeleton />}>
-          <PlansAiInsight
-            userId={userId}
-            plans={plans}
-            availableBalance={availableBalance}
-          />
-        </Suspense>
-      }
-    />
+    <Suspense fallback={<PlansPageFallback />}>
+      <PlansPageData searchParams={searchParams} />
+    </Suspense>
   );
 }

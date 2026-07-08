@@ -1,27 +1,21 @@
-import { InboxClientShell } from "@/components/inbox/inbox-client-shell";
+import { Suspense } from "react";
+
+import { InboxPageData } from "@/components/inbox/inbox-page-data";
+import { InboxPageSkeleton } from "@/components/inbox/inbox-page-skeleton";
 import { InboxPageShell } from "@/components/inbox/inbox-page-shell";
-import { requireUserId } from "@/lib/auth/session";
-import { getInboxMessagesPage } from "@/lib/db/inbox-messages";
-import { getTodaySummary } from "@/lib/db/transactions";
 
-export const dynamic = "force-dynamic";
-
-export default async function InboxPage() {
-  const userId = await requireUserId();
-  const [messagesPage, summary] = await Promise.all([
-    getInboxMessagesPage(userId),
-    getTodaySummary(userId),
-  ]);
-
+function InboxPageFallback() {
   return (
     <InboxPageShell>
-      <InboxClientShell
-        initialBootstrap={{
-          messages: messagesPage.messages,
-          hasMoreMessages: messagesPage.hasMore,
-          summary,
-        }}
-      />
+      <InboxPageSkeleton />
     </InboxPageShell>
+  );
+}
+
+export default function InboxPage() {
+  return (
+    <Suspense fallback={<InboxPageFallback />}>
+      <InboxPageData />
+    </Suspense>
   );
 }

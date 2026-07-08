@@ -1,34 +1,41 @@
-import { JournalPageContent } from "@/components/journal/journal-page-content";
-import { requireUserId } from "@/lib/auth/session";
-import { getJournalDaySummary } from "@/lib/db/journal-summary";
-import {
-  getJournalCategoryExpenseBreakdown,
-  listJournalTransactions,
-} from "@/lib/db/journal";
-import { parseJournalSearchParams } from "@/lib/validations/journal";
+import { Suspense } from "react";
 
-export const dynamic = "force-dynamic";
+import { JournalPageData } from "@/components/journal/journal-page-data";
+import { JournalPageSkeleton } from "@/components/journal/journal-page-skeleton";
+import { JournalShell } from "@/components/journal/journal-shell";
+import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
+import { JOURNAL_DESKTOP_SCROLL_SURFACE } from "@/config/journal-desktop";
+import { STACK_GAP } from "@/config/spacing";
+import { cn } from "@/lib/utils";
 
 interface JournalPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function JournalPage({ searchParams }: JournalPageProps) {
-  const userId = await requireUserId();
-  const params = await searchParams;
-  const filters = parseJournalSearchParams(params);
-  const [result, daySummary, categoryBreakdown] = await Promise.all([
-    listJournalTransactions(userId, filters),
-    getJournalDaySummary(userId),
-    getJournalCategoryExpenseBreakdown(userId, filters),
-  ]);
-
+function JournalPageFallback() {
   return (
-    <JournalPageContent
-      categoryBreakdown={categoryBreakdown}
-      daySummary={daySummary}
-      filters={filters}
-      result={result}
-    />
+    <div className={cn("flex min-h-0 flex-1 flex-col")}>
+      <JournalShell className="min-h-0 flex-1">
+        <MobileScrollSurface
+          className={cn(
+            "flex min-h-0 flex-1 flex-col",
+            STACK_GAP,
+            "max-md:overflow-y-auto max-md:overscroll-y-contain",
+            JOURNAL_DESKTOP_SCROLL_SURFACE,
+          )}
+          title="Journal"
+        >
+          <JournalPageSkeleton />
+        </MobileScrollSurface>
+      </JournalShell>
+    </div>
+  );
+}
+
+export default function JournalPage({ searchParams }: JournalPageProps) {
+  return (
+    <Suspense fallback={<JournalPageFallback />}>
+      <JournalPageData searchParams={searchParams} />
+    </Suspense>
   );
 }

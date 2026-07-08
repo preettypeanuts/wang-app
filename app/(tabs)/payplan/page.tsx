@@ -1,54 +1,42 @@
-import { PayplanPageContent } from "@/components/planner/payplan-page-content";
-import { requireUserId } from "@/lib/auth/session";
-import { listBudgetsForMonth } from "@/lib/db/budgets";
-import { listPlannedItems } from "@/lib/db/planned-items";
-import { getPlannerMonthData } from "@/lib/db/planner";
-import { pickDefaultDayKey } from "@/lib/planner/calendar";
-import { parsePlannerSearchParams } from "@/lib/validations/planner";
+import { Suspense } from "react";
 
-export const dynamic = "force-dynamic";
+import { PayplanPageData } from "@/components/planner/payplan-page-data";
+import { PayplanPageSkeleton } from "@/components/planner/payplan-page-skeleton";
+import { PlannerShell } from "@/components/planner/planner-shell";
+import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
+import { PAYPLAN_MOBILE_PAGE_INSET_X } from "@/config/payplan-mobile";
+import { STACK_GAP } from "@/config/spacing";
+import { cn } from "@/lib/utils";
 
 interface PayPlanPageProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function PayPlanPage({ searchParams }: PayPlanPageProps) {
-  const userId = await requireUserId();
-  const params = await searchParams;
-  const { monthKey, tab, calendarLayout, filters } =
-    parsePlannerSearchParams(params);
-
-  const plannedItems = await listPlannedItems(userId);
-
-  const [data, budgets] = await Promise.all([
-    getPlannerMonthData(userId, monthKey, plannedItems),
-    listBudgetsForMonth(userId, monthKey),
-  ]);
-
-  const initialDayKey = pickDefaultDayKey(data.monthKey, data.marks);
-  const monthOccurrences = data.items.map((item) => ({
-    ...item,
-    dueAt: item.dueAt.toISOString(),
-  }));
-  const plannedItemRecords = plannedItems.map((item) => ({
-    ...item,
-    startAt: item.startAt.toISOString(),
-    endAt: item.endAt?.toISOString() ?? null,
-  }));
-
+function PayplanPageFallback() {
   return (
-    <PayplanPageContent
-      initialTab={tab}
-      monthKey={monthKey}
-      calendarLayout={calendarLayout}
-      filters={filters}
-      initialDayKey={initialDayKey}
-      monthKeyData={data.monthKey}
-      year={data.year}
-      month={data.month}
-      monthOccurrences={monthOccurrences}
-      plannedItemRecords={plannedItemRecords}
-      budgets={budgets}
-    />
+    <div className={cn("flex min-h-0 flex-1 flex-col")}>
+      <PlannerShell className="min-h-0 flex-1">
+        <MobileScrollSurface
+          className={cn(
+            "flex min-h-0 flex-1 flex-col md:p-3",
+            STACK_GAP,
+            "overflow-y-auto overscroll-y-contain",
+            "md:pb-20",
+            PAYPLAN_MOBILE_PAGE_INSET_X,
+          )}
+          title="PayPlan"
+        >
+          <PayplanPageSkeleton />
+        </MobileScrollSurface>
+      </PlannerShell>
+    </div>
+  );
+}
+
+export default function PayPlanPage({ searchParams }: PayPlanPageProps) {
+  return (
+    <Suspense fallback={<PayplanPageFallback />}>
+      <PayplanPageData searchParams={searchParams} />
+    </Suspense>
   );
 }
