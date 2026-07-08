@@ -3,10 +3,18 @@
 import { useState } from "react";
 
 import { getQuickCorrectCategories } from "@/config/transaction-quick-correct";
+import { CHAT_BUBBLE_STYLES } from "@/config/chat-bubbles";
+import { SEPARATED_SURFACE } from "@/config/shape";
 import { isUncertainTransactionType } from "@/lib/chat/low-confidence-transaction";
 import { cn } from "@/lib/utils";
 import type { TransactionCategoryId } from "@/config/categories";
 import type { ParsedTransaction, TransactionType } from "@/types/transaction";
+
+const QUICK_CORRECT_SHELL = cn(
+  SEPARATED_SURFACE,
+  CHAT_BUBBLE_STYLES.assistant.surface,
+  "flex flex-col gap-2 p-3",
+);
 
 const QUICK_CORRECT_CHIP = [
   "rounded-full border border-black/8 bg-black/4 px-3 py-1.5",
@@ -51,7 +59,7 @@ export function TransactionQuickCorrect({
   }
 
   return (
-    <div className="mt-1.5 flex max-w-[85%] flex-col gap-2">
+    <div className={cn("mt-1.5 max-w-[85%]", QUICK_CORRECT_SHELL)}>
       {showTypeToggle ? (
         <div className="flex flex-wrap gap-1.5">
           <button
