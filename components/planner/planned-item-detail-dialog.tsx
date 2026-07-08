@@ -8,20 +8,17 @@ import { PlannedItemEndBadge } from "@/components/planner/planned-item-end-badge
 import { PlannedItemInstallmentProgressBar } from "@/components/planner/planned-item-installment-progress";
 import { PlannedItemInstallmentStatus } from "@/components/planner/planned-item-installment-status";
 import { PlannedItemKindIcon } from "@/components/planner/planned-item-kind-icon";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+} from "@/components/shared/responsive-dialog";
+import { Button } from "@/components/ui/button";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { getCategoryLabel } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
-  FORM_DIALOG_CONTENT_WIDE,
-  FORM_DIALOG_FOOTER,
-  FORM_DIALOG_HEADER,
   FORM_GROUP,
   FORM_PREVIEW_COMPACT,
   FORM_PREVIEW_COMPACT_AMOUNT,
@@ -114,19 +111,22 @@ export function PlannedItemDetailDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={FORM_DIALOG_CONTENT_WIDE}>
-        <DialogHeader className={FORM_DIALOG_HEADER}>
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            {currentItem.name}
-          </DialogTitle>
-          <DialogDescription className="text-[13px] leading-snug">
-            Detail jadwal PayPlan dan status pembayaran.
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={currentItem.name}
+      wide
+    >
+      <ResponsiveDialogHeader>
+        <DialogTitle className="text-lg font-semibold tracking-tight">
+          {currentItem.name}
+        </DialogTitle>
+        <DialogDescription className="text-[13px] leading-snug">
+          Detail jadwal PayPlan dan status pembayaran.
+        </DialogDescription>
+      </ResponsiveDialogHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className={FORM_DIALOG_BODY_SCROLL}>
+      <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
             <div className="flex items-center gap-3 px-1 pb-1">
               <PlannedItemKindIcon kind={currentItem.kind} />
               <span
@@ -251,58 +251,56 @@ export function PlannedItemDetailDialog({
                 </div>
               </div>
             ) : null}
-          </div>
+      </ResponsiveDialogBody>
 
-          <div className={FORM_DIALOG_FOOTER}>
+      <ResponsiveDialogFooter>
+        <Button
+          type="button"
+          size="icon"
+          variant="destructive"
+          disabled={isPending}
+          className={cn(SEPARATED_CONTROL, "shrink-0")}
+          onClick={handleDelete}
+          aria-label="Hapus"
+        >
+          <span className="sr-only">Hapus</span>
+          <TrashIcon className="size-4" />
+        </Button>
+        <div className="flex min-w-0 flex-1 gap-2">
+          {canPay ? (
             <Button
               type="button"
-              size="icon"
-              variant="destructive"
+              variant="outline"
               disabled={isPending}
               className={cn(SEPARATED_CONTROL, "shrink-0")}
-              onClick={handleDelete}
-              aria-label="Hapus"
+              onClick={handleMarkPaid}
             >
-              <span className="sr-only">Hapus</span>
-              <TrashIcon className="size-4" />
+              <CheckCircleIcon className="size-4" />
+              {isPending ? "Menyimpan..." : payLabel}
             </Button>
-            <div className="flex min-w-0 flex-1 gap-2">
-              {canPay ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isPending}
-                  className={cn(SEPARATED_CONTROL, "shrink-0")}
-                  onClick={handleMarkPaid}
-                >
-                  <CheckCircleIcon className="size-4" />
-                  {isPending ? "Menyimpan..." : payLabel}
-                </Button>
-              ) : null}
-              <Button
-                type="button"
-                size="icon"
-                variant="outline"
-                disabled={isPending}
-                className={cn(SEPARATED_CONTROL, "shrink-0")}
-                onClick={handleEdit}
-                aria-label="Edit"
-              >
-                <span className="sr-only">Edit</span>
-                <PencilSimpleIcon className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                disabled={isPending}
-                className={cn(SEPARATED_CONTROL, "flex-1")}
-                onClick={() => onOpenChange(false)}
-              >
-                Tutup
-              </Button>
-            </div>
-          </div>
+          ) : null}
+          <Button
+            type="button"
+            size="icon"
+            variant="outline"
+            disabled={isPending}
+            className={cn(SEPARATED_CONTROL, "shrink-0")}
+            onClick={handleEdit}
+            aria-label="Edit"
+          >
+            <span className="sr-only">Edit</span>
+            <PencilSimpleIcon className="size-4" />
+          </Button>
+          <Button
+            type="button"
+            disabled={isPending}
+            className={cn(SEPARATED_CONTROL, "flex-1")}
+            onClick={() => onOpenChange(false)}
+          >
+            Tutup
+          </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogFooter>
+    </ResponsiveDialog>
   );
 }
