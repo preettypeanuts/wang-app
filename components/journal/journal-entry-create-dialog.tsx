@@ -8,20 +8,20 @@ import {
   getDefaultCategoryForType,
   JournalEntryFormFields,
 } from "@/components/journal/journal-entry-form-fields";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+} from "@/components/shared/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { TransactionCategoryId } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
-  FORM_DIALOG_CONTENT_WIDE,
-  FORM_DIALOG_FOOTER,
-  FORM_DIALOG_HEADER,
 } from "@/config/form-dialog";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { cn } from "@/lib/utils";
@@ -80,58 +80,61 @@ export function JournalEntryCreateDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={FORM_DIALOG_CONTENT_WIDE}>
-        <DialogHeader className={FORM_DIALOG_HEADER}>
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            Tambah transaksi
-          </DialogTitle>
-          <DialogDescription className="text-[13px] leading-snug">
-            Catat transaksi manual — termasuk tanggal lampau.
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title="Tambah transaksi"
+      wide
+    >
+      <ResponsiveDialogHeader>
+        <DialogTitle className="text-lg font-semibold tracking-tight">
+          Tambah transaksi
+        </DialogTitle>
+        <DialogDescription className="text-[13px] leading-snug">
+          Catat transaksi manual — termasuk tanggal lampau.
+        </DialogDescription>
+      </ResponsiveDialogHeader>
 
-        <form
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
-          onSubmit={handleSubmit}
-        >
-          <div className={FORM_DIALOG_BODY_SCROLL}>
-            <JournalEntryFormFields
-              key={formKey}
-              amountDefault=""
-              category={category}
-              descriptionDefault=""
-              occurredAtText={occurredAtText}
-              onCategoryChange={setCategory}
-              onOccurredAtTextChange={setOccurredAtText}
-              onTypeChange={setType}
-              type={type}
-            />
-            {error ? (
-              <p className="px-4 pt-1 text-[13px] text-destructive">{error}</p>
-            ) : null}
-          </div>
+      <form
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        onSubmit={handleSubmit}
+      >
+        <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
+          <JournalEntryFormFields
+            key={formKey}
+            amountDefault=""
+            category={category}
+            descriptionDefault=""
+            occurredAtText={occurredAtText}
+            onCategoryChange={setCategory}
+            onOccurredAtTextChange={setOccurredAtText}
+            onTypeChange={setType}
+            type={type}
+          />
+          {error ? (
+            <p className="px-4 pt-1 text-[13px] text-destructive">{error}</p>
+          ) : null}
+        </ResponsiveDialogBody>
 
-          <div className={FORM_DIALOG_FOOTER}>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isPending}
-              className={cn(SEPARATED_CONTROL, "flex-1")}
-              onClick={() => onOpenChange(false)}
-            >
-              Batal
-            </Button>
-            <Button
-              type="submit"
-              disabled={isPending}
-              className={cn(SEPARATED_CONTROL, "flex-1")}
-            >
-              Simpan
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <ResponsiveDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            className={cn(SEPARATED_CONTROL, "flex-1")}
+            onClick={() => onOpenChange(false)}
+          >
+            Batal
+          </Button>
+          <Button
+            type="submit"
+            disabled={isPending}
+            className={cn(SEPARATED_CONTROL, "flex-1")}
+          >
+            Simpan
+          </Button>
+        </ResponsiveDialogFooter>
+      </form>
+    </ResponsiveDialog>
   );
 }

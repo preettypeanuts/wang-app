@@ -4,13 +4,16 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
 import { FormDatePicker } from "@/components/shared/form-date-picker";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+} from "@/components/shared/responsive-dialog";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -28,9 +31,6 @@ import {
 } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
-  FORM_DIALOG_CONTENT_WIDE,
-  FORM_DIALOG_FOOTER,
-  FORM_DIALOG_HEADER,
   FORM_FIELD_DATE,
   FORM_FIELD_GRID_ROW,
   FORM_FIELD_INPUT,
@@ -158,33 +158,37 @@ export function ReceiptConfirmDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={FORM_DIALOG_CONTENT_WIDE}>
-        <DialogHeader className={FORM_DIALOG_HEADER}>
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            {notice ? "Isi struk manual" : "Konfirmasi struk"}
-          </DialogTitle>
-          <DialogDescription className="text-[13px] leading-snug">
-            {notice
-              ? "Lihat preview struk lalu isi nominal dan detail transaksi."
-              : "Periksa data dari struk sebelum dicatat ke inbox."}
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={notice ? "Isi struk manual" : "Konfirmasi struk"}
+      wide
+    >
+      <ResponsiveDialogHeader>
+        <DialogTitle className="text-lg font-semibold tracking-tight">
+          {notice ? "Isi struk manual" : "Konfirmasi struk"}
+        </DialogTitle>
+        <DialogDescription className="text-[13px] leading-snug">
+          {notice
+            ? "Lihat preview struk lalu isi nominal dan detail transaksi."
+            : "Periksa data dari struk sebelum dicatat ke inbox."}
+        </DialogDescription>
+      </ResponsiveDialogHeader>
 
-        {previewUrl ? (
-          <div className="shrink-0 border-b border-black/8 px-4 py-3 dark:border-white/10">
-            <div className="overflow-hidden rounded-xl border border-black/10 bg-white/20 shadow-sm dark:border-black/15">
-              <img
-                src={previewUrl}
-                alt="Preview struk"
-                className="mx-auto block max-h-72 w-full object-contain"
-                draggable={false}
-              />
-            </div>
+      {previewUrl ? (
+        <div className="shrink-0 border-b border-black/8 px-4 py-3 dark:border-white/10">
+          <div className="overflow-hidden rounded-xl border border-black/10 bg-white/20 shadow-sm dark:border-black/15">
+            <img
+              src={previewUrl}
+              alt="Preview struk"
+              className="mx-auto block max-h-72 w-full object-contain"
+              draggable={false}
+            />
           </div>
-        ) : null}
+        </div>
+      ) : null}
 
-        <div className={FORM_DIALOG_BODY_SCROLL}>
+      <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
           {notice ? (
             <p className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[13px] leading-snug text-amber-950 dark:text-amber-100">
               {notice}
@@ -319,26 +323,25 @@ export function ReceiptConfirmDialog({
               </Select>
             </FormDialogField>
           </div>
-        </div>
+      </ResponsiveDialogBody>
 
-        <div className={FORM_DIALOG_FOOTER}>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-          >
-            Batal
-          </Button>
-          <Button
-            type="button"
-            onClick={handleConfirm}
-            disabled={isPending || !description.trim() || previewAmount <= 0}
-          >
-            {isPending ? "Menyimpan..." : "Catat ke inbox"}
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
+      <ResponsiveDialogFooter>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => onOpenChange(false)}
+          disabled={isPending}
+        >
+          Batal
+        </Button>
+        <Button
+          type="button"
+          onClick={handleConfirm}
+          disabled={isPending || !description.trim() || previewAmount <= 0}
+        >
+          {isPending ? "Menyimpan..." : "Catat ke inbox"}
+        </Button>
+      </ResponsiveDialogFooter>
+    </ResponsiveDialog>
   );
 }

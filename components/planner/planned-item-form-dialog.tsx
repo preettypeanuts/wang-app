@@ -3,14 +3,17 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { PlannedItemPriorPaymentFields } from "@/components/planner/planned-item-prior-payment-fields";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+} from "@/components/shared/responsive-dialog";
 import { FormDatePicker } from "@/components/shared/form-date-picker";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -24,9 +27,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import {
   FORM_DIALOG_BODY_SCROLL,
-  FORM_DIALOG_CONTENT_WIDE,
-  FORM_DIALOG_FOOTER,
-  FORM_DIALOG_HEADER,
   FORM_FIELD_GRID_ROW,
   FORM_FIELD_INPUT,
   FORM_FIELD_SELECT,
@@ -298,23 +298,29 @@ export function PlannedItemFormDialog({
   const nameDefaultValue = item?.name ?? "";
   const noteDefaultValue = item?.note ?? "";
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={FORM_DIALOG_CONTENT_WIDE}>
-        <DialogHeader className={FORM_DIALOG_HEADER}>
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            {item ? "Edit Pay Plan" : "Pay Plan baru"}
-          </DialogTitle>
-          <DialogDescription className="text-[13px] leading-snug">
-            Tagihan, langganan, atau cicilan di kalender PayPlan.
-          </DialogDescription>
-        </DialogHeader>
+  const dialogTitle = item ? "Edit Pay Plan" : "Pay Plan baru";
 
-        <form
-          className="flex min-h-0 flex-1 flex-col overflow-hidden"
-          onSubmit={handleSubmit}
-        >
-          <div className={FORM_DIALOG_BODY_SCROLL}>
+  return (
+    <ResponsiveDialog
+      open={open}
+      onOpenChange={onOpenChange}
+      title={dialogTitle}
+      wide
+    >
+      <ResponsiveDialogHeader>
+        <DialogTitle className="text-lg font-semibold tracking-tight">
+          {dialogTitle}
+        </DialogTitle>
+        <DialogDescription className="text-[13px] leading-snug">
+          Tagihan, langganan, atau cicilan di kalender PayPlan.
+        </DialogDescription>
+      </ResponsiveDialogHeader>
+
+      <form
+        className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        onSubmit={handleSubmit}
+      >
+        <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
             {item ? <input type="hidden" name="id" value={item.id} /> : null}
 
             <div className={FORM_PREVIEW_COMPACT}>
@@ -797,34 +803,33 @@ export function PlannedItemFormDialog({
                 />
               </FormDialogField>
             </div>
-          </div>
+        </ResponsiveDialogBody>
 
-          <div className={FORM_DIALOG_FOOTER}>
-            <Button
-              type="button"
-              variant="outline"
-              disabled={isPending}
-              className={cn(SEPARATED_CONTROL, "flex-1")}
-              onClick={() => onOpenChange(false)}
-            >
-              Batal
-            </Button>
-            <Button
-              type="submit"
-              disabled={
-                isPending ||
-                (isInstallmentKind &&
-                  (!installmentSchedule ||
-                    !isValidDateInput(endAtText) ||
-                    !paidPriorValid))
-              }
-              className={cn(SEPARATED_CONTROL, "flex-1")}
-            >
-              {isPending ? "Menyimpan..." : item ? "Simpan" : "Tambah Pay Plan"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <ResponsiveDialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            className={cn(SEPARATED_CONTROL, "flex-1")}
+            onClick={() => onOpenChange(false)}
+          >
+            Batal
+          </Button>
+          <Button
+            type="submit"
+            disabled={
+              isPending ||
+              (isInstallmentKind &&
+                (!installmentSchedule ||
+                  !isValidDateInput(endAtText) ||
+                  !paidPriorValid))
+            }
+            className={cn(SEPARATED_CONTROL, "flex-1")}
+          >
+            {isPending ? "Menyimpan..." : item ? "Simpan" : "Tambah Pay Plan"}
+          </Button>
+        </ResponsiveDialogFooter>
+      </form>
+    </ResponsiveDialog>
   );
 }

@@ -5,13 +5,16 @@ import { useEffect, useState, useTransition } from "react";
 import { PlanMarkPurchasedSection } from "@/components/plans/plan-mark-purchased-section";
 import { PlanPurchasedNotice } from "@/components/plans/plan-purchased-notice";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+} from "@/components/shared/responsive-dialog";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
   DialogDescription,
-  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -26,9 +29,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { TRANSACTION_CATEGORIES, getCategoryLabel } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
-  FORM_DIALOG_CONTENT_WIDE,
-  FORM_DIALOG_FOOTER,
-  FORM_DIALOG_HEADER,
   FORM_FIELD_INPUT,
   FORM_FIELD_SELECT,
   FORM_GROUP,
@@ -137,25 +137,24 @@ export function PlanDetailDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={FORM_DIALOG_CONTENT_WIDE}>
-        <DialogHeader className={FORM_DIALOG_HEADER}>
-          <DialogTitle className="text-lg font-semibold tracking-tight">
-            {title}
-          </DialogTitle>
-          <DialogDescription className="text-[13px] leading-snug">
-            {isForm
-              ? "Wishlist belanja untuk menghitung estimasi sisa saldo."
-              : "Detail wish dan opsi kelola."}
-          </DialogDescription>
-        </DialogHeader>
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={title} wide>
+      <ResponsiveDialogHeader>
+        <DialogTitle className="text-lg font-semibold tracking-tight">
+          {title}
+        </DialogTitle>
+        <DialogDescription className="text-[13px] leading-snug">
+          {isForm
+            ? "Wishlist belanja untuk menghitung estimasi sisa saldo."
+            : "Detail wish dan opsi kelola."}
+        </DialogDescription>
+      </ResponsiveDialogHeader>
 
-        {isForm ? (
-          <form
-            className="flex min-h-0 flex-1 flex-col overflow-hidden"
-            onSubmit={handleSubmit}
-          >
-            <div className={FORM_DIALOG_BODY_SCROLL}>
+      {isForm ? (
+        <form
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+          onSubmit={handleSubmit}
+        >
+          <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
               {plan && mode === "edit" ? (
                 <input type="hidden" name="id" value={plan.id} />
               ) : null}
@@ -236,37 +235,37 @@ export function PlanDetailDialog({
                   />
                 </FormDialogField>
               </div>
-            </div>
+          </ResponsiveDialogBody>
 
-            <div className={FORM_DIALOG_FOOTER}>
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isPending}
-                className={cn(SEPARATED_CONTROL, "flex-1")}
-                onClick={() => {
-                  if (mode === "edit" && plan) {
-                    onModeChange("view");
-                    return;
-                  }
+          <ResponsiveDialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isPending}
+              className={cn(SEPARATED_CONTROL, "flex-1")}
+              onClick={() => {
+                if (mode === "edit" && plan) {
+                  onModeChange("view");
+                  return;
+                }
 
-                  onOpenChange(false);
-                }}
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={isPending}
-                className={cn(SEPARATED_CONTROL, "flex-1")}
-              >
-                {mode === "create" ? "Tambah" : "Simpan"}
-              </Button>
-            </div>
-          </form>
-        ) : plan ? (
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className={FORM_DIALOG_BODY_SCROLL}>
+                onOpenChange(false);
+              }}
+            >
+              Batal
+            </Button>
+            <Button
+              type="submit"
+              disabled={isPending}
+              className={cn(SEPARATED_CONTROL, "flex-1")}
+            >
+              {mode === "create" ? "Tambah" : "Simpan"}
+            </Button>
+          </ResponsiveDialogFooter>
+        </form>
+      ) : plan ? (
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
               <div className={FORM_PREVIEW_COMPACT}>
                 <div className="min-w-0">
                   <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
@@ -310,48 +309,47 @@ export function PlanDetailDialog({
                   </div>
                 </div>
               ) : null}
-            </div>
+          </ResponsiveDialogBody>
 
-            <div className={FORM_DIALOG_FOOTER}>
+          <ResponsiveDialogFooter>
+            <Button
+              type="button"
+              size="icon"
+              variant="destructive"
+              disabled={isPending}
+              className={cn(SEPARATED_CONTROL, "shrink-0")}
+              onClick={handleDelete}
+              aria-label="Hapus"
+            >
+              <span className="sr-only">Hapus</span>
+              <TrashIcon className="size-4" />
+            </Button>
+            <div className="flex min-w-0 flex-1 gap-2">
               <Button
                 type="button"
                 size="icon"
-                variant="destructive"
+                variant="outline"
                 disabled={isPending}
                 className={cn(SEPARATED_CONTROL, "shrink-0")}
-                onClick={handleDelete}
-                aria-label="Hapus"
+                onClick={() => onModeChange("edit")}
+                aria-label="Edit"
               >
-                <span className="sr-only">Hapus</span>
-                <TrashIcon className="size-4" />
+                <span className="sr-only">Edit</span>
+                <PencilSimpleIcon className="size-4" />
               </Button>
-              <div className="flex min-w-0 flex-1 gap-2">
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="outline"
-                  disabled={isPending}
-                  className={cn(SEPARATED_CONTROL, "shrink-0")}
-                  onClick={() => onModeChange("edit")}
-                  aria-label="Edit"
-                >
-                  <span className="sr-only">Edit</span>
-                  <PencilSimpleIcon className="size-4" />
-                </Button>
-           
-                <Button
-                  type="button"
-                  disabled={isPending}
-                  className={cn(SEPARATED_CONTROL, "flex-1")}
-                  onClick={() => onOpenChange(false)}
-                >
-                  Tutup
-                </Button>
-              </div>
+
+              <Button
+                type="button"
+                disabled={isPending}
+                className={cn(SEPARATED_CONTROL, "flex-1")}
+                onClick={() => onOpenChange(false)}
+              >
+                Tutup
+              </Button>
             </div>
-          </div>
-        ) : null}
-      </DialogContent>
-    </Dialog>
+          </ResponsiveDialogFooter>
+        </div>
+      ) : null}
+    </ResponsiveDialog>
   );
 }
