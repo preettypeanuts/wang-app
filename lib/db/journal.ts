@@ -1,18 +1,23 @@
-import { TRANSACTION_CATEGORIES, normalizeCategory, resolveCategoryForType } from "@/config/categories";
+import { unstable_cache } from "next/cache";
+import {
+  normalizeCategory,
+  resolveCategoryForType,
+  TRANSACTION_CATEGORIES,
+} from "@/config/categories";
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
+import type { Prisma } from "@/generated/prisma/client";
+import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
 import {
   hydrateJournalListResult,
-  serializeJournalListResult,
   type SerializedJournalListResult,
+  serializeJournalListResult,
 } from "@/lib/cache/serialize-journal";
 import { userDataTags } from "@/lib/cache/user-data-tags";
-import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
+import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
+import { prisma } from "@/lib/db/prisma";
+import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
 import { resolveJournalDateRangeBounds } from "@/lib/journal/journal-date-range";
-import { prisma } from "@/lib/db/prisma";
-import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
-import { scopedByUser, scopedId } from "@/lib/db/user-scope";
-import { unstable_cache } from "next/cache";
 import type {
   JournalCategoryExpenseBreakdown,
   JournalEntry,
@@ -20,9 +25,7 @@ import type {
   JournalFilters,
   JournalListResult,
 } from "@/types/journal";
-import type { ParsedTransaction } from "@/types/transaction";
-import type { TransactionType } from "@/types/transaction";
-import type { Prisma } from "@/generated/prisma/client";
+import type { ParsedTransaction, TransactionType } from "@/types/transaction";
 
 const JOURNAL_ENTRY_SELECT = {
   id: true,
@@ -314,15 +317,21 @@ export async function deleteJournalTransaction(
     occurredAt: record.occurredAt.toISOString(),
   };
 
-  const inboxMessage = await prisma.inboxMessage.findFirst({
-    where: scopedByUser(userId, { transactionId: id }),
-    select: { id: true },
-  });
+  const inboxMessageId = record.inboxMessageId;
+
+  const remainingLinkedCount = inboxMessageId
+    ? await prisma.transaction.count({
+        where: scopedByUser(userId, {
+          inboxMessageId,
+          id: { not: id },
+        }),
+      })
+    : 0;
 
   await prisma.$transaction(async (tx) => {
-    if (inboxMessage) {
+    if (inboxMessageId && remainingLinkedCount === 0) {
       await tx.inboxMessage.updateMany({
-        where: scopedId(userId, inboxMessage.id),
+        where: scopedId(userId, inboxMessageId),
         data: {
           orphanedTransaction: snapshot as unknown as Prisma.InputJsonValue,
         },
@@ -342,6 +351,6 @@ export async function deleteJournalTransaction(
 
   return {
     transaction: snapshot,
-    inboxMessageId: inboxMessage?.id ?? null,
+    inboxMessageId,
   };
 }

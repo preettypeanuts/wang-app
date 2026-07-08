@@ -8,8 +8,10 @@ import { parseReceiptWithGemini } from "@/lib/ai/parse-receipt-gemini";
 import { requireUserId } from "@/lib/auth/session";
 import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
 import { formatInboxProcessingError } from "@/lib/chat/inbox-error";
-import { createInboxMessage } from "@/lib/db/inbox-messages";
-import { createTransaction } from "@/lib/db/transactions";
+import {
+  submitInboxChatFailure,
+  submitInboxChatTransaction,
+} from "@/lib/db/inbox-submit";
 import { isReceiptMimeType } from "@/lib/receipt/image-file";
 import {
   buildReceiptUserMessageContent,
@@ -69,12 +71,6 @@ export async function submitInboxMessageFromReceipt(input: {
     data.description,
   );
 
-  const userMessage = await createInboxMessage({
-    userId,
-    role: "user",
-    content: userContent,
-  });
-
   try {
     const transaction = {
       type: data.type,
@@ -84,24 +80,20 @@ export async function submitInboxMessageFromReceipt(input: {
       occurredAt: data.occurredAt,
     };
 
-    const savedTransaction = await createTransaction({
-      userId,
-      rawInput: data.rawInput,
-      transaction,
-    });
-
     const content = await buildInboxTransactionReplyForParsed(
       userId,
       data.rawInput,
       transaction,
     );
 
-    const assistantMessage = await createInboxMessage({
-      userId,
-      role: "assistant",
-      content,
-      transactionId: savedTransaction.id,
-    });
+    const { userMessage, assistantMessage, transactions } =
+      await submitInboxChatTransaction({
+        userId,
+        rawInput: data.rawInput,
+        userContent,
+        transaction,
+        assistantContent: content,
+      });
 
     revalidateAfterTransactionMutation(userId);
     revalidatePath("/");
@@ -111,23 +103,27 @@ export async function submitInboxMessageFromReceipt(input: {
     return {
       ok: true,
       content,
-      transaction,
+      transaction: transactions[0],
+      transactions,
       userMessage,
       assistantMessage,
     };
   } catch (error) {
     const content = formatInboxProcessingError(error);
 
-    const assistantMessage = await createInboxMessage({
+    const { userMessage, assistantMessage } = await submitInboxChatFailure({
       userId,
-      role: "assistant",
-      content,
+      rawInput: data.rawInput,
+      assistantContent: content,
     });
 
     return {
       ok: false,
       content,
-      userMessage,
+      userMessage: {
+        ...userMessage,
+        content: userContent,
+      },
       assistantMessage,
     };
   }

@@ -209,6 +209,7 @@ export async function retryInboxMessageAction(
       userId,
       rawInput: trimmed,
       transactions,
+      inboxMessageId: assistantMessageId,
     });
 
     const savedTransactions: ParsedTransaction[] = savedRows.map(
@@ -232,7 +233,6 @@ export async function retryInboxMessageAction(
       assistantMessageId,
       {
         content,
-        transactionId: savedTransactions[0]?.id ?? null,
       },
     );
 
@@ -255,7 +255,6 @@ export async function retryInboxMessageAction(
       assistantMessageId,
       {
         content,
-        transactionId: null,
       },
     );
 

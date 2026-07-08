@@ -24,7 +24,7 @@ export function MobileTabRefreshBar({
       aria-hidden
       className={cn(
         MOBILE_TAB_REFRESH_BAR,
-        "pt-[var(--mobile-safe-top)]",
+        "pt-(--mobile-safe-top)",
         className,
       )}
     >

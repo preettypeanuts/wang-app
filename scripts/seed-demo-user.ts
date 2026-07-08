@@ -108,7 +108,7 @@ function buildTransactions(now: Date): SeedTransaction[] {
       rawInput: "Gaji bulanan 12.5jt",
       occurredAt: atTime(monthStart, 9, 0),
       reply:
-        "Mantap! Pemasukan Rp12.500.000 (Gaji) dari \"Gaji bulanan\" sudah masuk.",
+        'Mantap! Pemasukan Rp12.500.000 (Gaji) dari "Gaji bulanan" sudah masuk.',
     },
     {
       type: "expense",
@@ -147,7 +147,8 @@ function buildTransactions(now: Date): SeedTransaction[] {
       description: "Grab ke kantor",
       rawInput: "Grab 25rb",
       occurredAt: atTime(twoDaysAgo, 18, 45),
-      reply: "Siap, sudah aku catat! Rp25.000 untuk Grab masuk kategori Transport.",
+      reply:
+        "Siap, sudah aku catat! Rp25.000 untuk Grab masuk kategori Transport.",
     },
     {
       type: "expense",
@@ -176,7 +177,8 @@ function buildTransactions(now: Date): SeedTransaction[] {
       description: "GoCar",
       rawInput: "Gocar 35rb",
       occurredAt: atTime(yesterday, 21, 10),
-      reply: "Siap, sudah aku catat! Rp35.000 untuk GoCar masuk kategori Transport.",
+      reply:
+        "Siap, sudah aku catat! Rp35.000 untuk GoCar masuk kategori Transport.",
     },
     {
       type: "expense",
@@ -205,8 +207,7 @@ function buildTransactions(now: Date): SeedTransaction[] {
       description: "Netflix",
       rawInput: "Netflix 69rb",
       occurredAt: atTime(today, 15, 0),
-      reply:
-        "Catat! Rp69.000 untuk Netflix masuk kategori Langganan.",
+      reply: "Catat! Rp69.000 untuk Netflix masuk kategori Langganan.",
     },
   ];
 }
@@ -277,19 +278,6 @@ async function seedDemoData(prisma: PrismaClient, userId: string) {
   const transactions = buildTransactions(now);
 
   for (const row of transactions) {
-    const transaction = await prisma.transaction.create({
-      data: {
-        userId,
-        type: row.type,
-        amount: row.amount,
-        category: row.category,
-        description: row.description,
-        rawInput: row.rawInput,
-        occurredAt: row.occurredAt,
-        createdAt: row.occurredAt,
-      },
-    });
-
     const userAt = new Date(row.occurredAt.getTime() - 1_000);
     const assistantAt = row.occurredAt;
 
@@ -303,14 +291,27 @@ async function seedDemoData(prisma: PrismaClient, userId: string) {
       },
     });
 
-    await prisma.inboxMessage.create({
+    const assistant = await prisma.inboxMessage.create({
       data: {
         userId,
         role: "assistant",
         kind: "chat",
         content: row.reply,
         createdAt: assistantAt,
-        transactionId: transaction.id,
+      },
+    });
+
+    await prisma.transaction.create({
+      data: {
+        userId,
+        type: row.type,
+        amount: row.amount,
+        category: row.category,
+        description: row.description,
+        rawInput: row.rawInput,
+        occurredAt: row.occurredAt,
+        createdAt: row.occurredAt,
+        inboxMessageId: assistant.id,
       },
     });
   }

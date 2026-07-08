@@ -23,12 +23,17 @@ interface CreateInboxMessageInput {
   userId: string;
   role: MessageRole;
   content: string;
-  transactionId?: string;
 }
 
-type InboxMessageWithTransaction = Prisma.InboxMessageGetPayload<{
-  include: { transaction: true };
+type InboxMessageWithTransactions = Prisma.InboxMessageGetPayload<{
+  include: { transactions: true };
 }>;
+
+const inboxMessageInclude = {
+  transactions: {
+    orderBy: { createdAt: "asc" as const },
+  },
+} satisfies Prisma.InboxMessageInclude;
 
 function mapTransaction(record: Transaction): ParsedTransaction {
   return {
@@ -69,7 +74,7 @@ function parseOrphanedTransaction(
   };
 }
 
-function mapInboxMessage(record: InboxMessageWithTransaction): ChatMessage {
+function mapInboxMessage(record: InboxMessageWithTransactions): ChatMessage {
   const base = {
     id: record.id,
     role: record.role as MessageRole,
@@ -77,10 +82,13 @@ function mapInboxMessage(record: InboxMessageWithTransaction): ChatMessage {
     createdAt: record.createdAt.toISOString(),
   };
 
-  if (record.transaction) {
+  const transactions = record.transactions.map(mapTransaction);
+
+  if (transactions.length > 0) {
     return {
       ...base,
-      transaction: mapTransaction(record.transaction),
+      transaction: transactions[0],
+      transactions,
     };
   }
 
@@ -103,7 +111,6 @@ export async function createInboxMessage({
   userId,
   role,
   content,
-  transactionId,
 }: CreateInboxMessageInput): Promise<ChatMessage> {
   const record = await prisma.inboxMessage.create({
     data: {
@@ -111,11 +118,8 @@ export async function createInboxMessage({
       role: role as InboxMessageRole,
       kind: "chat",
       content,
-      transactionId,
     },
-    include: {
-      transaction: true,
-    },
+    include: inboxMessageInclude,
   });
 
   revalidateUserInbox(userId);
@@ -124,20 +128,16 @@ export async function createInboxMessage({
 
 interface UpdateInboxMessageInput {
   content: string;
-  transactionId?: string | null;
 }
 
 export async function updateInboxMessage(
   userId: string,
   id: string,
-  { content, transactionId }: UpdateInboxMessageInput,
+  { content }: UpdateInboxMessageInput,
 ): Promise<ChatMessage> {
   const updated = await prisma.inboxMessage.updateMany({
     where: scopedId(userId, id),
-    data: {
-      content,
-      transactionId: transactionId ?? null,
-    },
+    data: { content },
   });
 
   if (updated.count === 0) {
@@ -146,9 +146,7 @@ export async function updateInboxMessage(
 
   const record = await prisma.inboxMessage.findFirstOrThrow({
     where: scopedId(userId, id),
-    include: {
-      transaction: true,
-    },
+    include: inboxMessageInclude,
   });
 
   revalidateUserInbox(userId);
@@ -193,93 +191,16 @@ async function queryInboxMessagesPage(
     where,
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
     take: limit + 1,
-    include: { transaction: true },
+    include: inboxMessageInclude,
   });
 
   const hasMore = records.length > limit;
-  const messages = await hydrateBatchTransactions(
-    userId,
-    records
-      .slice(0, limit)
-      .reverse()
-      .map((record) => mapInboxMessage(record)),
-  );
+  const messages = records
+    .slice(0, limit)
+    .reverse()
+    .map((record) => mapInboxMessage(record));
 
   return { messages, hasMore };
-}
-
-async function hydrateBatchTransactions(
-  userId: string,
-  messages: ChatMessage[],
-): Promise<ChatMessage[]> {
-  const primaries = messages
-    .map((message) => message.transaction)
-    .filter((transaction): transaction is ParsedTransaction =>
-      Boolean(transaction?.id),
-    );
-
-  if (primaries.length === 0) {
-    return messages;
-  }
-
-  const primaryIds = primaries
-    .map((transaction) => transaction.id)
-    .filter((id): id is string => Boolean(id));
-
-  const primaryRows = await prisma.transaction.findMany({
-    where: scopedByUser(userId, { id: { in: primaryIds } }),
-    select: {
-      id: true,
-      rawInput: true,
-      createdAt: true,
-    },
-  });
-
-  if (primaryRows.length === 0) {
-    return messages;
-  }
-
-  const siblingGroups = await Promise.all(
-    primaryRows.map(async (row) => {
-      const siblings = await prisma.transaction.findMany({
-        where: scopedByUser(userId, {
-          rawInput: row.rawInput,
-          createdAt: {
-            gte: new Date(row.createdAt.getTime() - 5_000),
-            lte: new Date(row.createdAt.getTime() + 5_000),
-          },
-        }),
-        orderBy: { createdAt: "asc" },
-      });
-
-      return {
-        primaryId: row.id,
-        transactions: siblings.map(mapTransaction),
-      };
-    }),
-  );
-
-  const byPrimaryId = new Map(
-    siblingGroups.map((group) => [group.primaryId, group.transactions]),
-  );
-
-  return messages.map((message) => {
-    const primaryId = message.transaction?.id;
-    if (!primaryId) {
-      return message;
-    }
-
-    const transactions = byPrimaryId.get(primaryId);
-    if (!transactions || transactions.length <= 1) {
-      return message;
-    }
-
-    return {
-      ...message,
-      transactions,
-      transaction: transactions[0],
-    };
-  });
 }
 
 export async function getInboxMessagesPage(
@@ -314,7 +235,7 @@ export interface DeleteInboxMessagePairResult {
   content: string;
 }
 
-/** Removes a user chat message, its assistant reply, and linked transaction. */
+/** Removes a user chat message, its assistant reply, and linked transactions. */
 export async function deleteInboxMessagePair(
   userId: string,
   userMessageId: string,
@@ -351,25 +272,25 @@ export async function deleteInboxMessagePair(
     select: {
       id: true,
       role: true,
-      transactionId: true,
     },
   });
 
   const assistantRecord = nextRecord?.role === "assistant" ? nextRecord : null;
 
   const removedIds = [userRecord.id];
-  const transactionId = assistantRecord?.transactionId ?? null;
 
   if (assistantRecord) {
     removedIds.push(assistantRecord.id);
   }
 
-  const linkedTransaction = transactionId
-    ? await prisma.transaction.findFirst({
-        where: scopedId(userId, transactionId),
-        select: { id: true, rawInput: true, createdAt: true, occurredAt: true },
+  const linkedTransactions = assistantRecord
+    ? await prisma.transaction.findMany({
+        where: scopedByUser(userId, {
+          inboxMessageId: assistantRecord.id,
+        }),
+        select: { id: true, occurredAt: true },
       })
-    : null;
+    : [];
 
   await prisma.$transaction(async (tx) => {
     if (assistantRecord) {
@@ -382,24 +303,19 @@ export async function deleteInboxMessagePair(
       where: scopedId(userId, userRecord.id),
     });
 
-    if (linkedTransaction) {
+    if (linkedTransactions.length > 0) {
       await tx.transaction.deleteMany({
         where: scopedByUser(userId, {
-          rawInput: linkedTransaction.rawInput,
-          createdAt: {
-            gte: new Date(linkedTransaction.createdAt.getTime() - 5_000),
-            lte: new Date(linkedTransaction.createdAt.getTime() + 5_000),
-          },
+          id: { in: linkedTransactions.map((row) => row.id) },
         }),
       });
     }
   });
 
-  if (linkedTransaction) {
-    await invalidateAiInsightCacheOnTransactionMutation(
-      userId,
-      linkedTransaction.occurredAt,
-    );
+  for (const row of linkedTransactions) {
+    await invalidateAiInsightCacheOnTransactionMutation(userId, row.occurredAt);
+  }
+  if (linkedTransactions.length > 0) {
     revalidateAfterTransactionMutation(userId);
   }
 

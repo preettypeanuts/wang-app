@@ -13,6 +13,7 @@ interface CreateTransactionInput {
   userId: string;
   rawInput: string;
   transaction: ParsedTransaction;
+  inboxMessageId?: string;
 }
 
 function getTodayRange() {
@@ -23,6 +24,7 @@ export async function createTransaction({
   userId,
   rawInput,
   transaction,
+  inboxMessageId,
 }: CreateTransactionInput) {
   const saved = await prisma.transaction.create({
     data: {
@@ -33,6 +35,7 @@ export async function createTransaction({
       description: transaction.description,
       occurredAt: new Date(transaction.occurredAt),
       rawInput,
+      inboxMessageId,
     },
   });
 
@@ -46,6 +49,7 @@ interface CreateMultipleTransactionsInput {
   userId: string;
   rawInput: string;
   transactions: ParsedTransaction[];
+  inboxMessageId?: string;
 }
 
 /** Atomic batch insert for multi-transaction inbox messages. */
@@ -53,6 +57,7 @@ export async function createMultipleTransactions({
   userId,
   rawInput,
   transactions,
+  inboxMessageId,
 }: CreateMultipleTransactionsInput) {
   if (transactions.length === 0) {
     return [];
@@ -64,12 +69,13 @@ export async function createMultipleTransactions({
         userId,
         rawInput,
         transaction: transactions[0],
+        inboxMessageId,
       }),
     ];
   }
 
   const saved = await prisma.$transaction(
-    transactions.map((transaction) =>
+    transactions.map((transaction, index) =>
       prisma.transaction.create({
         data: {
           userId,
@@ -79,6 +85,8 @@ export async function createMultipleTransactions({
           description: transaction.description,
           occurredAt: new Date(transaction.occurredAt),
           rawInput,
+          inboxMessageId,
+          createdAt: new Date(Date.now() + index),
         },
       }),
     ),

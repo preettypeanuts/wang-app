@@ -41,20 +41,24 @@ function mapAssistantMessage(
     content: string;
     createdAt: Date;
   },
-  transaction: Transaction | null,
+  transactions: Transaction[],
 ): ChatMessage {
+  const parsed = transactions.map(mapTransaction);
+
   return {
     id: record.id,
     role: record.role as ChatMessage["role"],
     content: record.content,
     createdAt: record.createdAt.toISOString(),
-    ...(transaction ? { transaction: mapTransaction(transaction) } : {}),
+    ...(parsed[0] ? { transaction: parsed[0] } : {}),
+    ...(parsed.length > 0 ? { transactions: parsed } : {}),
   };
 }
 
 export async function submitInboxChatTransaction(input: {
   userId: string;
   rawInput: string;
+  userContent?: string;
   transaction: ParsedTransaction;
   assistantContent: string;
 }): Promise<{
@@ -62,19 +66,19 @@ export async function submitInboxChatTransaction(input: {
   assistantMessage: ChatMessage;
   transactions: ParsedTransaction[];
 }> {
-  const result = await submitInboxChatTransactions({
+  return submitInboxChatTransactions({
     userId: input.userId,
     rawInput: input.rawInput,
+    userContent: input.userContent,
     transactions: [input.transaction],
     assistantContent: input.assistantContent,
   });
-
-  return result;
 }
 
 export async function submitInboxChatTransactions(input: {
   userId: string;
   rawInput: string;
+  userContent?: string;
   transactions: ParsedTransaction[];
   assistantContent: string;
 }): Promise<{
@@ -83,6 +87,7 @@ export async function submitInboxChatTransactions(input: {
   transactions: ParsedTransaction[];
 }> {
   const trimmed = input.rawInput.trim();
+  const userContent = input.userContent?.trim() || trimmed;
   const now = new Date();
   const userAt = new Date(now.getTime() - 1_000);
   const assistantAt = now;
@@ -98,8 +103,24 @@ export async function submitInboxChatTransactions(input: {
         userId: input.userId,
         role: "user",
         kind: "chat",
-        content: trimmed,
+        content: userContent,
         createdAt: userAt,
+      },
+      select: {
+        id: true,
+        role: true,
+        content: true,
+        createdAt: true,
+      },
+    });
+
+    const assistantRecord = await tx.inboxMessage.create({
+      data: {
+        userId: input.userId,
+        role: "assistant",
+        kind: "chat",
+        content: input.assistantContent,
+        createdAt: assistantAt,
       },
       select: {
         id: true,
@@ -120,39 +141,17 @@ export async function submitInboxChatTransactions(input: {
           description: transaction.description,
           occurredAt: new Date(transaction.occurredAt),
           rawInput: trimmed,
+          inboxMessageId: assistantRecord.id,
           createdAt: new Date(assistantAt.getTime() + index),
         },
       });
       savedTransactions.push(saved);
     }
 
-    const primary = savedTransactions[0];
-    const assistantRecord = await tx.inboxMessage.create({
-      data: {
-        userId: input.userId,
-        role: "assistant",
-        kind: "chat",
-        content: input.assistantContent,
-        createdAt: assistantAt,
-        transactionId: primary.id,
-      },
-      select: {
-        id: true,
-        role: true,
-        content: true,
-        createdAt: true,
-      },
-    });
-
-    const parsed = savedTransactions.map(mapTransaction);
-
     return {
       userMessage: mapUserMessage(userRecord),
-      assistantMessage: {
-        ...mapAssistantMessage(assistantRecord, primary),
-        transactions: parsed,
-      },
-      transactions: parsed,
+      assistantMessage: mapAssistantMessage(assistantRecord, savedTransactions),
+      transactions: savedTransactions.map(mapTransaction),
       occurredAts: savedTransactions.map((row) => row.occurredAt),
     };
   });
@@ -220,7 +219,7 @@ export async function submitInboxChatFailure(input: {
 
     return {
       userMessage: mapUserMessage(userRecord),
-      assistantMessage: mapAssistantMessage(assistantRecord, null),
+      assistantMessage: mapAssistantMessage(assistantRecord, []),
     };
   });
 

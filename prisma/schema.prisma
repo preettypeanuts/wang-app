@@ -110,21 +110,23 @@ enum InboxMessageKind {
 }
 
 model Transaction {
-  id           String          @id @default(cuid())
-  userId       String
-  user         User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type         TransactionType
-  amount       Int
-  category     String
-  description  String
-  occurredAt   DateTime
-  rawInput     String
-  createdAt    DateTime        @default(now())
-  inboxMessage InboxMessage?
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type           TransactionType
+  amount         Int
+  category       String
+  description    String
+  occurredAt     DateTime
+  rawInput       String
+  createdAt      DateTime        @default(now())
+  inboxMessageId String?
+  inboxMessage   InboxMessage?   @relation(fields: [inboxMessageId], references: [id], onDelete: SetNull)
 
   @@index([userId, occurredAt])
   @@index([userId, type])
   @@index([userId, type, occurredAt])
+  @@index([inboxMessageId])
   @@schema("monmon_whethertie")
 }
 
@@ -243,17 +245,16 @@ model SavingsGoal {
 }
 
 model InboxMessage {
-  id            String           @id @default(cuid())
-  userId        String
-  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role          InboxMessageRole
-  kind          InboxMessageKind @default(chat)
-  content       String
-  insight       String?
-  createdAt     DateTime         @default(now())
-  summaryDate   DateTime?
-  transactionId String?          @unique
-  transaction   Transaction?     @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  id                  String           @id @default(cuid())
+  userId              String
+  user                User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role                InboxMessageRole
+  kind                InboxMessageKind @default(chat)
+  content             String
+  insight             String?
+  createdAt           DateTime         @default(now())
+  summaryDate         DateTime?
+  transactions        Transaction[]
   /// Snapshot when the linked transaction is removed from Journal.
   orphanedTransaction Json?
 
