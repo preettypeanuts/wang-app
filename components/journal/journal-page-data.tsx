@@ -1,6 +1,6 @@
 import { JournalPageContent } from "@/components/journal/journal-page-content";
 import { requireUserId } from "@/lib/auth/session";
-import { getJournalDaySummary } from "@/lib/db/journal-summary";
+import { getJournalFilteredSummary } from "@/lib/db/journal-summary";
 import {
   getJournalCategoryExpenseBreakdown,
   listJournalTransactions,
@@ -17,7 +17,7 @@ export async function JournalPageData({ searchParams }: JournalPageDataProps) {
   const filters = parseJournalSearchParams(params);
   const [result, daySummary, categoryBreakdown] = await Promise.all([
     listJournalTransactions(userId, filters),
-    getJournalDaySummary(userId),
+    getJournalFilteredSummary(userId, filters),
     getJournalCategoryExpenseBreakdown(userId, filters),
   ]);
 

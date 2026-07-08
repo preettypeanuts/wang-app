@@ -31,6 +31,11 @@ export function JournalSummaryWidget({
   const balance = JOURNAL_WIDGET_TILE_STYLES.balance;
   const condition = JOURNAL_WIDGET_TILE_STYLES.condition;
 
+  const deltaLabel = summary.periodDeltaLabel ?? "vs bulan lalu";
+  const balanceDeltaLabel = summary.periodLabel
+    ? "vs akhir periode sebelumnya"
+    : "vs akhir bulan lalu";
+
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex items-center justify-between md:justify-end">
@@ -45,7 +50,7 @@ export function JournalSummaryWidget({
           label="Keluar"
           value={formatAmount(summary.totalExpense)}
           delta={formatSignedDelta(summary.expenseDelta)}
-          deltaLabel="vs bulan lalu"
+          deltaLabel={deltaLabel}
           surfaceClassName={expense.surface}
           iconClassName={expense.iconColor}
           labelClassName={expense.labelColor}
@@ -57,7 +62,7 @@ export function JournalSummaryWidget({
           label="Masuk"
           value={formatAmount(summary.totalIncome)}
           delta={formatSignedDelta(summary.incomeDelta)}
-          deltaLabel="vs bulan lalu"
+          deltaLabel={deltaLabel}
           surfaceClassName={income.surface}
           iconClassName={income.iconColor}
           labelClassName={income.labelColor}
@@ -69,7 +74,7 @@ export function JournalSummaryWidget({
           label="Saldo"
           value={formatAmount(summary.cumulativeBalance)}
           delta={formatSignedDelta(summary.balanceDelta)}
-          deltaLabel="vs akhir bulan lalu"
+          deltaLabel={balanceDeltaLabel}
           surfaceClassName={balance.surface}
           iconClassName={balance.iconColor}
           labelClassName={balance.labelColor}

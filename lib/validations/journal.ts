@@ -1,5 +1,6 @@
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
 import { isTransactionCategory } from "@/config/categories";
+import { isValidJournalDateInput } from "@/lib/journal/journal-date-range";
 import type { JournalFilters } from "@/types/journal";
 import type { TransactionType } from "@/types/transaction";
 
@@ -17,6 +18,14 @@ function readParam(
   return value?.trim() ?? "";
 }
 
+function readDateParam(
+  searchParams: Record<string, string | string[] | undefined>,
+  key: string,
+): string | null {
+  const value = readParam(searchParams, key);
+  return value && isValidJournalDateInput(value) ? value : null;
+}
+
 export function parseJournalSearchParams(
   searchParams: Record<string, string | string[] | undefined>,
 ): JournalFilters {
@@ -24,6 +33,8 @@ export function parseJournalSearchParams(
   const typeRaw = readParam(searchParams, "type");
   const categoryRaw = readParam(searchParams, "category");
   const pageRaw = Number.parseInt(readParam(searchParams, "page") || "1", 10);
+  const dateFrom = readDateParam(searchParams, "from");
+  const dateTo = readDateParam(searchParams, "to");
 
   const type =
     typeRaw && VALID_TYPES.has(typeRaw as TransactionType)
@@ -36,7 +47,7 @@ export function parseJournalSearchParams(
   const page =
     Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
-  return { q, type, category, page };
+  return { q, type, category, page, dateFrom, dateTo };
 }
 
 export function buildJournalSearchParams(
@@ -55,6 +66,14 @@ export function buildJournalSearchParams(
 
   if (filters.category !== "all") {
     params.set("category", filters.category);
+  }
+
+  if (filters.dateFrom) {
+    params.set("from", filters.dateFrom);
+  }
+
+  if (filters.dateTo) {
+    params.set("to", filters.dateTo);
   }
 
   if (page > 1) {

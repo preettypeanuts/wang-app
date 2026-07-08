@@ -45,6 +45,8 @@ export const JOURNAL_FILTER_TRIGGER = [
 export const JOURNAL_FILTER_TRIGGER_ACTIVE =
   "ring-2 ring-primary/40 ring-offset-2 ring-offset-background";
 
+export const JOURNAL_DATE_RANGE_TRIGGER = JOURNAL_FILTER_TRIGGER;
+
 export const JOURNAL_EMPTY_STATE_MOBILE = [
   JOURNAL_MOBILE_SOLID_SURFACE,
   mobileOnly("!border-0"),

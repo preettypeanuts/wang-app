@@ -8,6 +8,7 @@ import {
 import { userDataTags } from "@/lib/cache/user-data-tags";
 import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
+import { resolveJournalDateRangeBounds } from "@/lib/journal/journal-date-range";
 import { prisma } from "@/lib/db/prisma";
 import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
@@ -71,11 +72,27 @@ function buildWhere(
     ];
   }
 
+  const dateRange = resolveJournalDateRangeBounds(filters);
+
+  if (dateRange) {
+    where.occurredAt = {
+      gte: dateRange.start,
+      lte: dateRange.end,
+    };
+  }
+
   return where;
 }
 
 function journalFiltersCacheKey(filters: JournalFilters): string {
-  return [filters.q, filters.type, filters.category, filters.page].join("|");
+  return [
+    filters.q,
+    filters.type,
+    filters.category,
+    filters.dateFrom ?? "",
+    filters.dateTo ?? "",
+    filters.page,
+  ].join("|");
 }
 
 async function queryJournalTransactions(

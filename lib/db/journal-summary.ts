@@ -8,12 +8,16 @@ import {
 } from "@/lib/cache/serialize-journal";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
 import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
-import { endOfDay, parseDayKey, startOfDay } from "@/lib/finance/day-range";
+import { addDays, endOfDay, parseDayKey, startOfDay } from "@/lib/finance/day-range";
 import { getDayFlowTotals } from "@/lib/finance/get-day-flow-totals";
+import {
+  formatJournalDateRangeLabel,
+  resolveJournalDateRangeBounds,
+} from "@/lib/journal/journal-date-range";
 import { getMonthRange, getCurrentMonthKey } from "@/lib/planner/calendar";
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser } from "@/lib/db/user-scope";
-import type { JournalDaySummary } from "@/types/journal";
+import type { JournalDaySummary, JournalFilters } from "@/types/journal";
 import { cache } from "react";
 
 async function getMonthTransactions(
@@ -61,6 +65,56 @@ async function getCumulativeBalance(userId: string, date: Date): Promise<number>
   ]);
 
   return (incomeAgg._sum?.amount ?? 0) - (expenseAgg._sum?.amount ?? 0);
+}
+
+async function buildJournalRangeSummary(
+  userId: string,
+  rangeStart: Date,
+  rangeEnd: Date,
+  periodLabel: string,
+): Promise<JournalDaySummary> {
+  const rangeDays =
+    Math.round(
+      (startOfDay(rangeEnd).getTime() - startOfDay(rangeStart).getTime()) /
+        86_400_000,
+    ) + 1;
+  const previousEnd = addDays(rangeStart, -1);
+  const previousStart = addDays(previousEnd, -(rangeDays - 1));
+
+  const [
+    currentFlow,
+    previousFlow,
+    rangeTransactions,
+    cumulativeBalance,
+    previousEndBalance,
+  ] = await Promise.all([
+    getDayFlowTotals(userId, rangeStart, rangeEnd),
+    getDayFlowTotals(userId, previousStart, previousEnd),
+    getMonthTransactions(userId, rangeStart, rangeEnd),
+    getCumulativeBalance(userId, rangeEnd),
+    getCumulativeBalance(userId, previousEnd),
+  ]);
+
+  const summary = buildTodaySummary(rangeTransactions);
+  const condition = buildFallbackJournalCondition(
+    rangeTransactions,
+    summary.totalExpense,
+    summary.totalIncome,
+    cumulativeBalance,
+  );
+
+  return {
+    date: rangeStart,
+    totalExpense: currentFlow.totalExpense,
+    totalIncome: currentFlow.totalIncome,
+    cumulativeBalance,
+    expenseDelta: currentFlow.totalExpense - previousFlow.totalExpense,
+    incomeDelta: currentFlow.totalIncome - previousFlow.totalIncome,
+    balanceDelta: cumulativeBalance - previousEndBalance,
+    condition,
+    periodLabel,
+    periodDeltaLabel: "vs periode sebelumnya",
+  };
 }
 
 async function buildJournalDaySummary(
@@ -111,6 +165,8 @@ async function buildJournalDaySummary(
     incomeDelta: currentMonthFlow.totalIncome - lastMonthFlow.totalIncome,
     balanceDelta: cumulativeBalance - lastMonthEndBalance,
     condition,
+    periodLabel: null,
+    periodDeltaLabel: "vs bulan lalu",
   };
 }
 
@@ -133,6 +189,62 @@ export const getJournalDaySummary = cache(
   ): Promise<JournalDaySummary> => {
     const monthKey = getCurrentMonthKey(date);
     const cached = await getCachedJournalDaySummary(userId, monthKey)();
+    return hydrateJournalDaySummary(cached);
+  },
+);
+
+function getCachedJournalRangeSummary(
+  userId: string,
+  dateFrom: string,
+  dateTo: string,
+) {
+  return unstable_cache(
+    async (): Promise<SerializedJournalDaySummary> => {
+      const filters: JournalFilters = {
+        q: "",
+        type: "all",
+        category: "all",
+        page: 1,
+        dateFrom: dateFrom || null,
+        dateTo: dateTo || null,
+      };
+      const bounds = resolveJournalDateRangeBounds(filters);
+
+      if (!bounds) {
+        const summary = await buildJournalDaySummary(userId, new Date());
+        return serializeJournalDaySummary(summary);
+      }
+
+      const summary = await buildJournalRangeSummary(
+        userId,
+        bounds.start,
+        bounds.end,
+        formatJournalDateRangeLabel(filters) ?? "",
+      );
+      return serializeJournalDaySummary(summary);
+    },
+    ["journal-range-summary", userId, dateFrom, dateTo],
+    { tags: [userDataTags.transactions(userId)] },
+  );
+}
+
+/** Summary tiles follow active journal filters (month default or custom range). */
+export const getJournalFilteredSummary = cache(
+  async (
+    userId: string,
+    filters: JournalFilters,
+  ): Promise<JournalDaySummary> => {
+    const bounds = resolveJournalDateRangeBounds(filters);
+
+    if (!bounds) {
+      return getJournalDaySummary(userId);
+    }
+
+    const cached = await getCachedJournalRangeSummary(
+      userId,
+      filters.dateFrom ?? "",
+      filters.dateTo ?? "",
+    )();
     return hydrateJournalDaySummary(cached);
   },
 );

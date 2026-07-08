@@ -29,6 +29,14 @@ import type {
   JournalListResult,
 } from "@/types/journal";
 
+function getJournalPeriodHeading(summary: JournalDaySummary): string {
+  if (summary.periodLabel) {
+    return summary.periodLabel;
+  }
+
+  return formatPlannerMonthLabel(getCurrentMonthKey(summary.date));
+}
+
 interface JournalPageContentProps {
   result: JournalListResult;
   daySummary: JournalDaySummary;
@@ -67,8 +75,8 @@ export function JournalPageContent({
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <p className="text-right text-sm font-semibold capitalize text-foreground/90">
-                  {formatPlannerMonthLabel(getCurrentMonthKey(daySummary.date))}
+                <p className="text-right text-sm font-semibold text-foreground/90">
+                  {getJournalPeriodHeading(daySummary)}
                 </p>
                 <Button
                   type="button"
@@ -86,8 +94,8 @@ export function JournalPageContent({
             <p className="text-[11px] text-muted-foreground">
               Semua transaksi — dari inbox atau input manual.
             </p>
-            <p className="shrink-0 text-[11px] font-semibold capitalize text-foreground/90">
-              {formatPlannerMonthLabel(getCurrentMonthKey(daySummary.date))}
+            <p className="shrink-0 text-[11px] font-semibold text-foreground/90">
+              {getJournalPeriodHeading(daySummary)}
             </p>
           </div>
 
