@@ -20,9 +20,12 @@ export function splitTransactionSegments(text: string): string[] {
     .filter(Boolean);
 }
 
-function tryParseLocally(segment: string): ParsedTransaction | null {
+async function tryParseLocally(
+  segment: string,
+  userId?: string,
+): Promise<ParsedTransaction | null> {
   try {
-    return parseTransactionLocally(segment);
+    return await parseTransactionLocally(segment, userId);
   } catch {
     return null;
   }
@@ -34,6 +37,7 @@ function tryParseLocally(segment: string): ParsedTransaction | null {
  */
 export async function parseMultipleTransactions(
   text: string,
+  userId?: string,
 ): Promise<ParsedTransaction[]> {
   const trimmed = text.trim();
   if (!trimmed) {
@@ -45,13 +49,13 @@ export async function parseMultipleTransactions(
   const segments = splitTransactionSegments(trimmed);
 
   if (segments.length <= 1) {
-    const single = await parseTransaction(trimmed);
+    const single = await parseTransaction(trimmed, userId);
     return [single];
   }
 
   const parsed: ParsedTransaction[] = [];
   for (const segment of segments) {
-    const local = tryParseLocally(segment);
+    const local = await tryParseLocally(segment, userId);
     if (local) {
       parsed.push(local);
       continue;
@@ -59,7 +63,7 @@ export async function parseMultipleTransactions(
 
     if (isGeminiConfigured()) {
       try {
-        parsed.push(await parseTransactionWithGemini(segment));
+        parsed.push(await parseTransactionWithGemini(segment, userId));
       } catch {
         // Skip segment that still cannot be parsed.
       }
@@ -75,10 +79,11 @@ export async function parseMultipleTransactions(
   return parsed;
 }
 
-/** Sync local-only helper (tests / callers that do not need Gemini). */
-export function parseMultipleTransactionsLocally(
+/** Local-only helper (tests / callers that do not need Gemini). */
+export async function parseMultipleTransactionsLocally(
   text: string,
-): ParsedTransaction[] {
+  userId?: string,
+): Promise<ParsedTransaction[]> {
   const trimmed = text.trim();
   if (!trimmed) {
     throw new TransactionParseError(
@@ -89,12 +94,16 @@ export function parseMultipleTransactionsLocally(
   const segments = splitTransactionSegments(trimmed);
 
   if (segments.length <= 1) {
-    return [parseTransactionLocally(trimmed)];
+    return [await parseTransactionLocally(trimmed, userId)];
   }
 
-  const parsed = segments
-    .map((segment) => tryParseLocally(segment))
-    .filter((item): item is ParsedTransaction => item !== null);
+  const parsed: ParsedTransaction[] = [];
+  for (const segment of segments) {
+    const local = await tryParseLocally(segment, userId);
+    if (local) {
+      parsed.push(local);
+    }
+  }
 
   if (parsed.length === 0) {
     throw new TransactionParseError(

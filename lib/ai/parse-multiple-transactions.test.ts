@@ -14,11 +14,11 @@ describe("splitTransactionSegments", () => {
 });
 
 describe("parseMultipleTransactionsLocally", () => {
-  it("parses three expense segments", () => {
+  it("parses three expense segments", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-08T10:00:00+07:00"));
 
-    const result = parseMultipleTransactionsLocally(
+    const result = await parseMultipleTransactionsLocally(
       "parkir 5rb, kopi 20rb, makan siang 35rb",
     );
 
@@ -29,11 +29,11 @@ describe("parseMultipleTransactionsLocally", () => {
     vi.useRealTimers();
   });
 
-  it("keeps single messages as one transaction", () => {
+  it("keeps single messages as one transaction", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-07-08T10:00:00+07:00"));
 
-    const result = parseMultipleTransactionsLocally("makan siang 25rb");
+    const result = await parseMultipleTransactionsLocally("makan siang 25rb");
 
     expect(result).toHaveLength(1);
     expect(result[0].amount).toBe(25_000);

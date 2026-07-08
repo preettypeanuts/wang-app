@@ -29,7 +29,8 @@ model User {
   savingsGoals    SavingsGoal[]
   pushSubscriptions PushSubscription[]
   appNotifications  AppNotification[]
-  aiInsightCaches   AiInsightCache[]
+  aiInsightCaches       AiInsightCache[]
+  categoryOverrides     UserCategoryOverride[]
 
   @@unique([email])
   @@map("user")
@@ -325,5 +326,20 @@ model AiInsightCache {
   @@unique([userId, type, dateKey])
   @@index([userId])
   @@map("ai_insight_cache")
+  @@schema("monmon_whethertie")
+}
+
+model UserCategoryOverride {
+  id        String          @id @default(cuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  keyword   String
+  type      TransactionType
+  category  String
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  @@unique([userId, keyword, type])
+  @@index([userId])
   @@schema("monmon_whethertie")
 }

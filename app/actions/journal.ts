@@ -19,6 +19,7 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
 import { getBudgetStatusForExpense } from "@/lib/finance/build-budget-reply";
+import { saveUserCategoryOverride } from "@/lib/finance/user-category-override";
 import { parseJournalEntryFormData } from "@/lib/validations/journal-entry";
 import type { JournalEntry } from "@/types/journal";
 import type { ParsedTransaction, TransactionType } from "@/types/transaction";
@@ -125,6 +126,17 @@ export async function updateTransactionCategoryAction(input: {
       input.category,
       input.type,
     );
+
+    try {
+      await saveUserCategoryOverride(
+        userId,
+        transaction.description,
+        transaction.type,
+        input.category,
+      );
+    } catch {
+      // Category update succeeded; override memory is best-effort.
+    }
 
     let budgetStatus = null;
     if (transaction.type === "expense") {

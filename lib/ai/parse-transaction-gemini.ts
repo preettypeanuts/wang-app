@@ -72,6 +72,7 @@ async function toParsedTransaction(
   fallbackDescription: string,
   explicitCategory: TransactionCategoryId | null,
   fallbackOccurredAt: Date,
+  userId?: string,
 ): Promise<ParsedTransaction> {
   const type = payload.type;
   const amount = payload.amount;
@@ -98,6 +99,7 @@ async function toParsedTransaction(
         payload.category,
         type,
         description,
+        userId,
       );
 
   if (!isTransactionCategory(category)) {
@@ -115,6 +117,7 @@ async function toParsedTransaction(
 
 export async function parseTransactionWithGemini(
   text: string,
+  userId?: string,
 ): Promise<ParsedTransaction> {
   const now = new Date();
   const trimmed = text.trim();
@@ -171,5 +174,6 @@ export async function parseTransactionWithGemini(
     parseText,
     explicitCategory,
     fallbackOccurredAt,
+    userId,
   );
 }

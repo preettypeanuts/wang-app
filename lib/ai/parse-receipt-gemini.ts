@@ -103,6 +103,7 @@ function buildReceiptRawInput(
 
 async function toReceiptDraft(
   payload: GeminiReceiptPayload,
+  userId?: string,
 ): Promise<ReceiptDraft> {
   const type = payload.type;
   const amount = payload.amount;
@@ -131,6 +132,7 @@ async function toReceiptDraft(
     payload.category,
     type,
     `${merchant} ${description}`,
+    userId,
   );
 
   if (!isTransactionCategory(category)) {
@@ -220,6 +222,7 @@ async function requestReceiptExtraction(
 export async function parseReceiptWithGemini(
   base64: string,
   mimeType: ReceiptMimeType,
+  userId?: string,
 ): Promise<ReceiptDraft> {
   let raw: string;
 
@@ -246,5 +249,5 @@ export async function parseReceiptWithGemini(
     );
   }
 
-  return toReceiptDraft(payload);
+  return toReceiptDraft(payload, userId);
 }

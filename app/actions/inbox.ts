@@ -112,7 +112,7 @@ export async function submitInboxMessage(
   }
 
   try {
-    const transactions = await parseMultipleTransactions(trimmed);
+    const transactions = await parseMultipleTransactions(trimmed, userId);
     const content = await buildInboxMultipleTransactionReplyForParsed(
       userId,
       transactions,
@@ -203,7 +203,7 @@ export async function retryInboxMessageAction(
   };
 
   try {
-    const transactions = await parseMultipleTransactions(trimmed);
+    const transactions = await parseMultipleTransactions(trimmed, userId);
 
     const savedRows = await createMultipleTransactions({
       userId,

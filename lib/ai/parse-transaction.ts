@@ -12,7 +12,10 @@ export { buildTransactionReply } from "@/lib/ai/build-inbox-transaction-reply";
 export { TransactionParseError };
 
 /** Rule-based fallback when Gemini API key is not configured. */
-export function parseTransactionLocally(text: string): ParsedTransaction {
+export async function parseTransactionLocally(
+  text: string,
+  userId?: string,
+): Promise<ParsedTransaction> {
   const now = new Date();
   const trimmed = text.trim();
   const dateParse = parseRelativeDate(trimmed, now);
@@ -33,7 +36,7 @@ export function parseTransactionLocally(text: string): ParsedTransaction {
 
   const category = explicitCategory
     ? explicitCategory
-    : resolveTransactionCategory(undefined, type, parseText);
+    : await resolveTransactionCategory(undefined, type, parseText, userId);
 
   return {
     type,
@@ -46,16 +49,17 @@ export function parseTransactionLocally(text: string): ParsedTransaction {
 
 export async function parseTransaction(
   text: string,
+  userId?: string,
 ): Promise<ParsedTransaction> {
   try {
-    return parseTransactionLocally(text);
+    return await parseTransactionLocally(text, userId);
   } catch (localError) {
     if (!isGeminiConfigured()) {
       throw localError;
     }
 
     try {
-      return await parseTransactionWithGemini(text);
+      return await parseTransactionWithGemini(text, userId);
     } catch {
       throw localError;
     }

@@ -6,14 +6,26 @@ import {
 import { classifyTransactionCategoryWithGemini } from "@/lib/ai/classify-transaction-category-gemini";
 import { isGeminiConfigured } from "@/lib/ai/gemini-client";
 import { detectCategory } from "@/lib/finance/categories";
-import { inferTransactionCategory, refineMisclassifiedCategory } from "@/lib/finance/infer-transaction-category";
+import {
+  inferTransactionCategory,
+  refineMisclassifiedCategory,
+} from "@/lib/finance/infer-transaction-category";
+import { findUserCategoryOverride } from "@/lib/finance/user-category-override";
 import type { TransactionType } from "@/types/transaction";
 
-function applyCategoryPipeline(
+async function applyCategoryPipeline(
+  userId: string | undefined,
   rawCategory: string | undefined,
   type: TransactionType,
   description: string,
-): TransactionCategoryId {
+): Promise<TransactionCategoryId> {
+  if (userId) {
+    const override = await findUserCategoryOverride(userId, description, type);
+    if (override) {
+      return resolveCategoryForType(override, type);
+    }
+  }
+
   let category = resolveCategoryForType(
     normalizeCategory(rawCategory ?? "other"),
     type,
@@ -40,12 +52,18 @@ function applyCategoryPipeline(
   return "other";
 }
 
-export function resolveTransactionCategory(
+export async function resolveTransactionCategory(
   rawCategory: string | undefined,
   type: TransactionType,
   description: string,
-): TransactionCategoryId {
-  const category = applyCategoryPipeline(rawCategory, type, description);
+  userId?: string,
+): Promise<TransactionCategoryId> {
+  const category = await applyCategoryPipeline(
+    userId,
+    rawCategory,
+    type,
+    description,
+  );
   return refineMisclassifiedCategory(category, description);
 }
 
@@ -53,8 +71,14 @@ export async function resolveTransactionCategoryAsync(
   rawCategory: string | undefined,
   type: TransactionType,
   description: string,
+  userId?: string,
 ): Promise<TransactionCategoryId> {
-  let category = applyCategoryPipeline(rawCategory, type, description);
+  let category = await applyCategoryPipeline(
+    userId,
+    rawCategory,
+    type,
+    description,
+  );
 
   category = refineMisclassifiedCategory(category, description);
 

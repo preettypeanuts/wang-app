@@ -40,7 +40,8 @@ export async function parseReceiptFromImageAction(
   }
 
   try {
-    const draft = await parseReceiptWithGemini(base64, mimeType);
+    const userId = await requireUserId();
+    const draft = await parseReceiptWithGemini(base64, mimeType, userId);
     return { ok: true, draft };
   } catch (error) {
     return {
