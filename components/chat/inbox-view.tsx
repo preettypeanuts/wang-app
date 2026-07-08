@@ -99,7 +99,7 @@ function isPendingMessageId(id: string): boolean {
   return id.startsWith("pending-");
 }
 
-const RECEIPT_READING_MESSAGE = "Membaca Struk";
+const RECEIPT_READING_MESSAGE = "Membaca struk";
 
 export function InboxView({
   initialMessages,
@@ -253,23 +253,36 @@ export function InboxView({
     setIsReceiptConfirmOpen(true);
   }
 
-  async function recordReceiptToInbox(input: ReceiptConfirmInput) {
-    const pendingId = createPendingId("user");
-    const optimisticUser: ChatMessage = {
-      id: pendingId,
-      role: "user",
-      content: `📄 Struk ${input.merchant.trim() || "Struk"} · ${input.description.trim()}`,
-      createdAt: new Date().toISOString(),
-    };
+  async function recordReceiptToInbox(
+    input: ReceiptConfirmInput,
+    options?: { excludeMessageIds?: string[]; skipOptimisticUser?: boolean },
+  ) {
+    const excludeIds = new Set(options?.excludeMessageIds ?? []);
+    const skipOptimisticUser = options?.skipOptimisticUser ?? false;
+    const pendingId = skipOptimisticUser ? null : createPendingId("user");
 
-    setMessages((current) => [...current, optimisticUser]);
+    if (!skipOptimisticUser && pendingId) {
+      const optimisticUser: ChatMessage = {
+        id: pendingId,
+        role: "user",
+        content: `📄 Struk ${input.merchant.trim() || "Struk"} · ${input.description.trim()}`,
+        createdAt: new Date().toISOString(),
+      };
+
+      setMessages((current) => [...current, optimisticUser]);
+    }
+
     beginInFlight();
 
     try {
       const result = await submitInboxMessageFromReceipt(input);
 
       setMessages((current) => [
-        ...current.filter((message) => message.id !== pendingId),
+        ...current.filter(
+          (message) =>
+            (pendingId ? message.id !== pendingId : true) &&
+            !excludeIds.has(message.id),
+        ),
         result.userMessage,
         result.assistantMessage,
       ]);
@@ -283,7 +296,11 @@ export function InboxView({
       }
     } catch (error) {
       setMessages((current) =>
-        current.filter((message) => message.id !== pendingId),
+        current.filter(
+          (message) =>
+            (pendingId ? message.id !== pendingId : true) &&
+            !excludeIds.has(message.id),
+        ),
       );
       setReceiptError(
         error instanceof Error ? error.message : "Gagal mencatat struk.",
@@ -330,16 +347,18 @@ export function InboxView({
         return;
       }
 
-      removeReadingMessage();
       clearReceiptPreview();
-      await recordReceiptToInbox({
-        type: result.draft.type,
-        amount: String(result.draft.amount),
-        category: result.draft.category,
-        description: result.draft.description,
-        merchant: result.draft.merchant,
-        occurredAt: result.draft.occurredAt,
-      });
+      await recordReceiptToInbox(
+        {
+          type: result.draft.type,
+          amount: String(result.draft.amount),
+          category: result.draft.category,
+          description: result.draft.description,
+          merchant: result.draft.merchant,
+          occurredAt: result.draft.occurredAt,
+        },
+        { excludeMessageIds: [readingMessageId], skipOptimisticUser: true },
+      );
     } catch (error) {
       removeReadingMessage();
       clearReceiptPreview();

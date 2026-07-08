@@ -101,7 +101,7 @@ export function ChatMessageMenu({
 
   return (
     <div
-      className="group/bubble-menu relative inline-flex max-w-[85%] select-none"
+      className="group/bubble-menu relative ml-auto w-fit max-w-[85%] select-none"
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
@@ -111,7 +111,7 @@ export function ChatMessageMenu({
     >
       {children}
 
-      <div className="absolute top-1/2 right-full z-10 flex -translate-y-1/2 items-center gap-1 pr-1.5">
+      <div className="absolute top-1/2 right-full z-10 flex -translate-y-1/2 items-center gap-2 pr-2">
         {leadingAction}
         <DropdownMenu open={open} onOpenChange={handleOpenChange}>
           <DropdownMenuTrigger
