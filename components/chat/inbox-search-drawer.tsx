@@ -100,6 +100,33 @@ export function InboxSearchDrawer({
     }
   }, [open]);
 
+  // Pin backdrop to layout viewport height — ignore visual viewport shrink from keyboard.
+  useEffect(() => {
+    if (!open) {
+      document.documentElement.style.removeProperty(
+        "--inbox-search-overlay-height",
+      );
+      return;
+    }
+
+    const lockOverlayHeight = () => {
+      document.documentElement.style.setProperty(
+        "--inbox-search-overlay-height",
+        `${window.innerHeight}px`,
+      );
+    };
+
+    lockOverlayHeight();
+    window.addEventListener("orientationchange", lockOverlayHeight);
+
+    return () => {
+      window.removeEventListener("orientationchange", lockOverlayHeight);
+      document.documentElement.style.removeProperty(
+        "--inbox-search-overlay-height",
+      );
+    };
+  }, [open]);
+
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setDebouncedQuery(query.trim());
