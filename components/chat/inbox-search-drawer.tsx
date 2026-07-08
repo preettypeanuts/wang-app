@@ -229,9 +229,9 @@ export function InboxSearchDrawer({
                         type="button"
                         onClick={() => handleSelect(message)}
                         className={cn(
-                          "flex w-full flex-col gap-1.5 rounded-2xl border border-black/6 bg-black/[0.02] p-3 text-left transition-colors",
-                          "hover:bg-black/[0.05] active:scale-[0.99]",
-                          "dark:border-white/8 dark:bg-white/[0.03] dark:hover:bg-white/[0.06]",
+                          "flex w-full flex-col gap-1.5 rounded-2xl border border-black/6 bg-black/2 p-3 text-left transition-colors",
+                          "hover:bg-black/5 active:scale-[0.99]",
+                          "dark:border-white/8 dark:bg-white/3 dark:hover:bg-white/6",
                         )}
                       >
                         <div className="flex items-center justify-between gap-2">
