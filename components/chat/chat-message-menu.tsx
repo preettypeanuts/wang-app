@@ -22,6 +22,7 @@ const LONG_PRESS_MS = 480;
 interface ChatMessageMenuProps {
   children: React.ReactNode;
   disabled?: boolean;
+  hideEdit?: boolean;
   onEdit: () => void;
   onUndo: () => void;
   onOpenChange?: (open: boolean) => void;
@@ -30,6 +31,7 @@ interface ChatMessageMenuProps {
 export function ChatMessageMenu({
   children,
   disabled = false,
+  hideEdit = false,
   onEdit,
   onUndo,
   onOpenChange,
@@ -130,16 +132,18 @@ export function ChatMessageMenu({
           <DotsThreeIcon className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent side="left" align="center" sideOffset={6}>
-          <DropdownMenuItem
-            disabled={disabled}
-            onClick={() => {
-              handleOpenChange(false);
-              onEdit();
-            }}
-          >
-            <PencilSimpleIcon className="size-4" />
-            Edit
-          </DropdownMenuItem>
+          {!hideEdit ? (
+            <DropdownMenuItem
+              disabled={disabled}
+              onClick={() => {
+                handleOpenChange(false);
+                onEdit();
+              }}
+            >
+              <PencilSimpleIcon className="size-4" />
+              Edit
+            </DropdownMenuItem>
+          ) : null}
           <DropdownMenuItem
             variant="destructive"
             disabled={disabled}
