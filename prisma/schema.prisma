@@ -124,6 +124,7 @@ model Transaction {
 
   @@index([userId, occurredAt])
   @@index([userId, type])
+  @@index([userId, type, occurredAt])
   @@schema("monmon_whethertie")
 }
 
