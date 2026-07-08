@@ -173,22 +173,27 @@ export function InboxSearchDrawer({
         <ResponsiveDialogBody
           className={cn(
             "flex min-h-0 flex-col gap-3 overflow-hidden max-md:pt-3",
-            "max-md:gap-2 max-md:bg-transparent max-md:px-0 max-md:pt-0 max-md:pb-[var(--mobile-safe-bottom)]",
+            "max-md:gap-2 max-md:bg-transparent max-md:px-0 max-md:pt-0 max-md:pb-(--mobile-safe-bottom)",
           )}
         >
           <div className="relative shrink-0 max-md:px-0">
             <MagnifyingGlassIcon
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground max-md:left-6 max-md:text-muted-foreground/70"
+              className={cn(
+                "pointer-events-none absolute top-1/2 z-10 size-4 -translate-y-1/2",
+                "left-3.5 text-foreground/55",
+                "max-md:left-4 max-md:size-[1.05rem] max-md:text-foreground/65",
+                "max-md:dark:text-white/70",
+              )}
             />
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Cari kopi, netflix, parkir…"
               className={cn(
-                "pl-9",
-                "max-md:h-11 max-md:rounded-full max-md:border-0 max-md:bg-white/55 max-md:shadow-none max-md:backdrop-blur-xl",
-                "max-md:dark:bg-black/40",
+                "pl-10",
+                "max-md:h-11 max-md:rounded-full max-md:border-0 max-md:bg-white/70 max-md:pl-11 max-md:shadow-none max-md:backdrop-blur-xl",
+                "max-md:dark:bg-black/45",
                 "max-md:placeholder:text-muted-foreground/80",
                 "max-md:focus-visible:border-transparent max-md:focus-visible:ring-0 max-md:focus-visible:ring-offset-0",
               )}
