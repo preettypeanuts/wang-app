@@ -397,27 +397,23 @@ export function MessageList({
                     {bubble}
                   </ChatMessageMenu>
                 ) : canEditReceipt || (canUndo && isReceiptUserMessage(message.content)) ? (
-                  <div className="inline-flex max-w-[85%] items-center gap-1.5">
-                    {canEditReceipt ? (
-                      <ChatReceiptEditButton
-                        disabled={actionsDisabled}
-                        onEdit={() => onEditReceipt?.(message.id)}
-                      />
-                    ) : null}
-                    {canUndo ? (
-                      <ChatMessageMenu
-                        disabled={actionsDisabled}
-                        hideEdit
-                        onEdit={() => {}}
-                        onUndo={() => void onUndoMessage?.(message.id)}
-                        onOpenChange={handleMessageMenuOpenChange}
-                      >
-                        {bubble}
-                      </ChatMessageMenu>
-                    ) : (
-                      bubble
-                    )}
-                  </div>
+                  <ChatMessageMenu
+                    disabled={actionsDisabled}
+                    hideEdit
+                    leadingAction={
+                      canEditReceipt ? (
+                        <ChatReceiptEditButton
+                          disabled={actionsDisabled}
+                          onEdit={() => onEditReceipt?.(message.id)}
+                        />
+                      ) : undefined
+                    }
+                    onEdit={() => {}}
+                    onUndo={() => void onUndoMessage?.(message.id)}
+                    onOpenChange={handleMessageMenuOpenChange}
+                  >
+                    {bubble}
+                  </ChatMessageMenu>
                 ) : (
                   bubble
                 )}

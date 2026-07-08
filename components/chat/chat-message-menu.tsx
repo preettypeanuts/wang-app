@@ -23,6 +23,7 @@ interface ChatMessageMenuProps {
   children: React.ReactNode;
   disabled?: boolean;
   hideEdit?: boolean;
+  leadingAction?: React.ReactNode;
   onEdit: () => void;
   onUndo: () => void;
   onOpenChange?: (open: boolean) => void;
@@ -32,6 +33,7 @@ export function ChatMessageMenu({
   children,
   disabled = false,
   hideEdit = false,
+  leadingAction = null,
   onEdit,
   onUndo,
   onOpenChange,
@@ -109,54 +111,56 @@ export function ChatMessageMenu({
     >
       {children}
 
-      <DropdownMenu open={open} onOpenChange={handleOpenChange}>
-        <DropdownMenuTrigger
-          disabled={disabled}
-          render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              aria-label="Menu pesan"
-              className={cn(
-                SEPARATED_CONTROL,
-                "absolute top-1/2 right-full z-10 mr-1.5 size-7 -translate-y-1/2",
-                "bg-background/90 text-foreground shadow-sm ring-1 ring-border/60",
-                "opacity-0 transition-opacity",
-                "group-hover/bubble-menu:opacity-100 data-popup-open:opacity-100",
-                "focus-visible:opacity-100",
-              )}
-            />
-          }
-        >
-          <DotsThreeIcon className="size-4" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="left" align="center" sideOffset={6}>
-          {!hideEdit ? (
+      <div className="absolute top-1/2 right-full z-10 flex -translate-y-1/2 items-center gap-1 pr-1.5">
+        {leadingAction}
+        <DropdownMenu open={open} onOpenChange={handleOpenChange}>
+          <DropdownMenuTrigger
+            disabled={disabled}
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                aria-label="Menu pesan"
+                className={cn(
+                  SEPARATED_CONTROL,
+                  "size-7 bg-background/90 text-foreground shadow-sm ring-1 ring-border/60",
+                  "opacity-0 transition-opacity",
+                  "group-hover/bubble-menu:opacity-100 data-popup-open:opacity-100",
+                  "focus-visible:opacity-100",
+                )}
+              />
+            }
+          >
+            <DotsThreeIcon className="size-4" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="left" align="center" sideOffset={6}>
+            {!hideEdit ? (
+              <DropdownMenuItem
+                disabled={disabled}
+                onClick={() => {
+                  handleOpenChange(false);
+                  onEdit();
+                }}
+              >
+                <PencilSimpleIcon className="size-4" />
+                Edit
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuItem
+              variant="destructive"
               disabled={disabled}
               onClick={() => {
                 handleOpenChange(false);
-                onEdit();
+                onUndo();
               }}
             >
-              <PencilSimpleIcon className="size-4" />
-              Edit
+              <ArrowUUpLeftIcon className="size-4" />
+              Batalkan kirim
             </DropdownMenuItem>
-          ) : null}
-          <DropdownMenuItem
-            variant="destructive"
-            disabled={disabled}
-            onClick={() => {
-              handleOpenChange(false);
-              onUndo();
-            }}
-          >
-            <ArrowUUpLeftIcon className="size-4" />
-            Batalkan kirim
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }
