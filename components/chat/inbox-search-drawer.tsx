@@ -162,7 +162,7 @@ export function InboxSearchDrawer({
         title="Cari di Inbox"
         wide
       >
-        <ResponsiveDialogHeader>
+        <ResponsiveDialogHeader className="max-md:hidden">
           <div className="flex flex-col gap-1">
             <p className="text-base font-semibold tracking-tight">
               Cari di Inbox
@@ -173,8 +173,8 @@ export function InboxSearchDrawer({
           </div>
         </ResponsiveDialogHeader>
 
-        <ResponsiveDialogBody className="flex min-h-0 flex-col gap-3 overflow-hidden">
-          <div className="relative shrink-0">
+        <ResponsiveDialogBody className="flex min-h-0 flex-col gap-3 overflow-hidden max-md:gap-2 max-md:px-0 max-md:pb-0 max-md:pt-2">
+          <div className="relative shrink-0 max-md:px-3">
             <MagnifyingGlassIcon
               aria-hidden="true"
               className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground max-md:text-muted-foreground/70"
@@ -187,8 +187,8 @@ export function InboxSearchDrawer({
                 // Keep desktop spacing (pl-9) unchanged; apply iOS styling only on mobile.
                 "pl-9",
                 // iOS-like search field: pill, no visible border, subtle frosted background.
-                "max-md:rounded-full max-md:border-0 max-md:bg-white/70 max-md:shadow-sm max-md:backdrop-blur",
-                "max-md:dark:bg-black/20 max-md:dark:shadow-none",
+                "max-md:rounded-full max-md:border-0 max-md:bg-white/10 max-md:shadow-none max-md:backdrop-blur",
+                "max-md:dark:bg-black/15",
                 // Keep placeholder softer.
                 "max-md:placeholder:text-muted-foreground/80",
                 // iOS doesn't show a heavy focus ring; keep focus purely visual.
