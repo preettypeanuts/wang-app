@@ -58,7 +58,11 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
       savingsGoals={savingsGoals}
       savingsOverview={savingsOverview}
       aiInsight={
-        <Suspense fallback={<PlansAiInsightSkeleton />}>
+        <Suspense
+          fallback={
+            <PlansAiInsightSkeleton showMetrics={estimatedCost > 0} />
+          }
+        >
           <PlansAiInsight
             userId={userId}
             plans={plans}
