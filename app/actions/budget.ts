@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireUserId } from "@/lib/auth/session";
+import { revalidateUserBudgets } from "@/lib/cache/revalidate-user-data";
 import {
   createCategoryBudget,
   deleteCategoryBudget,
@@ -23,7 +24,8 @@ interface BudgetActionFailure {
 
 export type BudgetActionResult = BudgetActionSuccess | BudgetActionFailure;
 
-function revalidateBudgetPaths() {
+function revalidateBudgetPaths(userId: string) {
+  revalidateUserBudgets(userId);
   revalidatePath("/payplan");
   revalidatePath("/");
 }
@@ -44,7 +46,7 @@ export async function saveCategoryBudgetAction(
       ? await updateCategoryBudget(userId, id.trim(), parsed.data)
       : await createCategoryBudget(userId, parsed.data);
 
-  revalidateBudgetPaths();
+  revalidateBudgetPaths(userId);
 
   return { ok: true, budget };
 }
@@ -60,7 +62,7 @@ export async function deleteCategoryBudgetAction(
   }
 
   await deleteCategoryBudget(userId, trimmed);
-  revalidateBudgetPaths();
+  revalidateBudgetPaths(userId);
 
   return { ok: true };
 }

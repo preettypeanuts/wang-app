@@ -1,9 +1,11 @@
 import { getCategoryLabel } from "@/config/categories";
 import { getAvailableBalance } from "@/lib/db/balance";
 import { listPlans } from "@/lib/db/plans";
-import { prisma } from "@/lib/db/prisma";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
-import { scopedByUser } from "@/lib/db/user-scope";
+import {
+  getMonthTransactionAggregates,
+  getTodayTransactionRows,
+} from "@/lib/db/transactions";
 import { buildOverviewAlerts } from "@/lib/finance/build-overview-alerts";
 import {
   buildFallbackPlansInsight,
@@ -11,7 +13,7 @@ import {
 } from "@/lib/finance/build-plans-overview";
 import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
-import { addDays, getDayRange } from "@/lib/finance/day-range";
+import { addDays, getDayRange, toDayKey } from "@/lib/finance/day-range";
 import { formatJournalTime } from "@/lib/finance/format-datetime";
 import { formatOverviewGreeting } from "@/lib/finance/format-overview-greeting";
 import { getDayFlowTotals } from "@/lib/finance/get-day-flow-totals";
@@ -51,39 +53,13 @@ export async function getOverviewPageData(
     getPlansUpcomingImpact(userId, now),
     getDayFlowTotals(userId, todayStart, todayEnd),
     getDayFlowTotals(userId, yesterdayStart, yesterdayEnd),
-    prisma.transaction.findMany({
-      where: scopedByUser(userId, {
-        occurredAt: {
-          gte: todayStart,
-          lte: todayEnd,
-        },
-      }),
-      select: {
-        id: true,
-        type: true,
-        amount: true,
-        category: true,
-        description: true,
-        rawInput: true,
-        occurredAt: true,
-      },
-      orderBy: {
-        occurredAt: "asc",
-      },
-    }),
-    prisma.transaction.findMany({
-      where: scopedByUser(userId, {
-        occurredAt: {
-          gte: parsedMonth.start,
-          lte: parsedMonth.end,
-        },
-      }),
-      select: {
-        type: true,
-        amount: true,
-        category: true,
-      },
-    }),
+    getTodayTransactionRows(userId, toDayKey(now)),
+    getMonthTransactionAggregates(
+      userId,
+      monthKey,
+      parsedMonth.start,
+      parsedMonth.end,
+    ),
   ]);
 
   const journalTransactions = todayTransactionRows.map((transaction) => ({
@@ -96,7 +72,8 @@ export async function getOverviewPageData(
   const todayActivityRows = [...todayTransactionRows]
     .sort(
       (left, right) =>
-        right.occurredAt.getTime() - left.occurredAt.getTime(),
+        new Date(right.occurredAt).getTime() -
+        new Date(left.occurredAt).getTime(),
     )
     .slice(0, 6);
 
@@ -149,7 +126,7 @@ export async function getOverviewPageData(
         title: transaction.rawInput.trim() || transaction.description,
         amount: transaction.amount,
         type: transaction.type,
-        timeLabel: formatJournalTime(transaction.occurredAt),
+        timeLabel: formatJournalTime(new Date(transaction.occurredAt)),
         categoryLabel: getCategoryLabel(transaction.category),
       })),
     },

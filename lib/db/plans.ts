@@ -2,6 +2,11 @@ import { invalidatePlansInsightCache } from "@/lib/db/ai-insight-cache";
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
 import { recordPlanPurchase } from "@/lib/finance/record-plan-purchase";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import {
+  revalidateUserPlans,
+} from "@/lib/cache/revalidate-user-data";
+import { unstable_cache } from "next/cache";
 import type { PlanFormInput, PlanRecord, PlanStatus } from "@/types/plan";
 import type { Plan, PlanStatus as PrismaPlanStatus } from "@/generated/prisma/client";
 
@@ -18,7 +23,7 @@ function mapPlan(record: Plan): PlanRecord {
   };
 }
 
-export async function listPlans(userId: string): Promise<PlanRecord[]> {
+async function queryPlans(userId: string): Promise<PlanRecord[]> {
   const records = await prisma.plan.findMany({
     where: { userId },
     orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
@@ -27,13 +32,17 @@ export async function listPlans(userId: string): Promise<PlanRecord[]> {
   return records.map(mapPlan);
 }
 
-export async function listActivePlans(userId: string): Promise<PlanRecord[]> {
-  const records = await prisma.plan.findMany({
-    where: { userId, status: "active" },
-    orderBy: { updatedAt: "desc" },
-  });
+export async function listPlans(userId: string): Promise<PlanRecord[]> {
+  return unstable_cache(
+    () => queryPlans(userId),
+    ["plans", userId],
+    { tags: [userDataTags.plans(userId)] },
+  )();
+}
 
-  return records.map(mapPlan);
+export async function listActivePlans(userId: string): Promise<PlanRecord[]> {
+  const plans = await listPlans(userId);
+  return plans.filter((plan) => plan.status === "active");
 }
 
 export async function createPlan(
@@ -58,6 +67,7 @@ export async function createPlan(
   }
 
   await invalidatePlansInsightCache(userId);
+  revalidateUserPlans(userId);
 
   return plan;
 }
@@ -101,6 +111,7 @@ export async function updatePlan(
   }
 
   await invalidatePlansInsightCache(userId);
+  revalidateUserPlans(userId);
 
   return plan;
 }
@@ -115,6 +126,7 @@ export async function deletePlan(userId: string, id: string): Promise<void> {
   }
 
   await invalidatePlansInsightCache(userId);
+  revalidateUserPlans(userId);
 }
 
 export async function markPlanDone(
@@ -149,6 +161,7 @@ export async function markPlanDone(
   const plan = mapPlan(record);
   await recordPlanPurchase(userId, plan);
   await invalidatePlansInsightCache(userId);
+  revalidateUserPlans(userId);
 
   return plan;
 }

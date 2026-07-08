@@ -1,12 +1,15 @@
-import { endOfDay } from "@/lib/finance/day-range";
+import { unstable_cache } from "next/cache";
+
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import { endOfDay, toDayKey } from "@/lib/finance/day-range";
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser } from "@/lib/db/user-scope";
 
-/** Cumulative balance from all transactions up to now. */
-export async function getAvailableBalance(
+async function queryAvailableBalance(
   userId: string,
-  asOf = new Date(),
+  asOfIso: string,
 ): Promise<number> {
+  const asOf = new Date(asOfIso);
   const end = endOfDay(asOf);
 
   const [incomeAgg, expenseAgg] = await Promise.all([
@@ -27,4 +30,18 @@ export async function getAvailableBalance(
   ]);
 
   return (incomeAgg._sum?.amount ?? 0) - (expenseAgg._sum?.amount ?? 0);
+}
+
+/** Cumulative balance from all transactions up to now. */
+export async function getAvailableBalance(
+  userId: string,
+  asOf = new Date(),
+): Promise<number> {
+  const dayKey = toDayKey(asOf);
+
+  return unstable_cache(
+    () => queryAvailableBalance(userId, asOf.toISOString()),
+    ["available-balance", userId, dayKey],
+    { tags: [userDataTags.transactions(userId)] },
+  )();
 }

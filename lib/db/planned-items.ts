@@ -2,9 +2,17 @@ import {
   getDefaultCategoryForKind,
   getFlowTypeForKind,
 } from "@/config/planner-items";
+import {
+  hydratePlannedItem,
+  serializePlannedItem,
+  type SerializedPlannedItemRecord,
+} from "@/lib/cache/serialize-planned-items";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import { revalidateUserPlannedItems } from "@/lib/cache/revalidate-user-data";
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
 import { parseDateOnlyInput } from "@/lib/finance/day-range";
+import { unstable_cache } from "next/cache";
 import type {
   PlannedItemFormInput,
   PlannedItemKind,
@@ -122,16 +130,28 @@ async function requirePlannedItem(
   return mapPlannedItem(record);
 }
 
-export async function listPlannedItems(
+async function queryPlannedItems(
   userId: string,
-): Promise<PlannedItemRecord[]> {
+): Promise<SerializedPlannedItemRecord[]> {
   const records = await prisma.plannedItem.findMany({
     where: { userId },
     orderBy: [{ createdAt: "asc" }],
     select: PLANNED_ITEM_SELECT,
   });
 
-  return records.map(mapPlannedItem);
+  return records.map(mapPlannedItem).map(serializePlannedItem);
+}
+
+export async function listPlannedItems(
+  userId: string,
+): Promise<PlannedItemRecord[]> {
+  const cached = await unstable_cache(
+    () => queryPlannedItems(userId),
+    ["planned-items", userId],
+    { tags: [userDataTags.plannedItems(userId)] },
+  )();
+
+  return cached.map(hydratePlannedItem);
 }
 
 export async function getPlannedItemsForExpansion(
@@ -149,6 +169,7 @@ export async function createPlannedItem(
     select: PLANNED_ITEM_SELECT,
   });
 
+  revalidateUserPlannedItems(userId);
   return mapPlannedItem(record);
 }
 
@@ -166,6 +187,7 @@ export async function updatePlannedItem(
     throw new Error("Item tidak ditemukan.");
   }
 
+  revalidateUserPlannedItems(userId);
   return requirePlannedItem(userId, id);
 }
 
@@ -180,6 +202,8 @@ export async function deletePlannedItem(
   if (deleted.count === 0) {
     throw new Error("Item tidak ditemukan.");
   }
+
+  revalidateUserPlannedItems(userId);
 }
 
 export async function markInstallmentPaid(
@@ -224,5 +248,6 @@ export async function markInstallmentPaid(
     throw new Error("Item tidak ditemukan.");
   }
 
+  revalidateUserPlannedItems(userId);
   return requirePlannedItem(userId, id);
 }

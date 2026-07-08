@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { requireUserId } from "@/lib/auth/session";
 import {
+  revalidateUserPlannedItems,
+} from "@/lib/cache/revalidate-user-data";
+import {
   createPlannedItem,
   deletePlannedItem,
   markInstallmentPaid,
@@ -26,7 +29,8 @@ export type PlannedItemActionResult =
   | PlannedItemActionSuccess
   | PlannedItemActionFailure;
 
-function revalidatePayPlan() {
+function revalidatePayPlan(userId: string) {
+  revalidateUserPlannedItems(userId);
   revalidatePath("/payplan");
 }
 
@@ -46,7 +50,7 @@ export async function savePlannedItemAction(
       ? await updatePlannedItem(userId, id.trim(), parsed.data)
       : await createPlannedItem(userId, parsed.data);
 
-  revalidatePayPlan();
+  revalidatePayPlan(userId);
 
   return { ok: true, item };
 }
@@ -66,7 +70,7 @@ export async function markInstallmentPaidAction(
 
   try {
     const item = await markInstallmentPaid(userId, trimmed, installmentIndex);
-    revalidatePayPlan();
+    revalidatePayPlan(userId);
     return { ok: true, paidCount: item.paidInstallmentCount };
   } catch {
     return { ok: false, error: "Gagal menandai cicilan." };
@@ -85,7 +89,7 @@ export async function deletePlannedItemAction(
 
   try {
     await deletePlannedItem(userId, trimmed);
-    revalidatePayPlan();
+    revalidatePayPlan(userId);
     return { ok: true };
   } catch {
     return { ok: false, error: "Gagal menghapus item." };

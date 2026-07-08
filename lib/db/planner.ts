@@ -1,3 +1,11 @@
+import { unstable_cache } from "next/cache";
+
+import {
+  hydratePlannedOccurrence,
+  serializePlannedOccurrence,
+  type SerializedPlannedOccurrence,
+} from "@/lib/cache/serialize-planned-items";
+import { userDataTags } from "@/lib/cache/user-data-tags";
 import { toDayKey } from "@/lib/finance/day-range";
 import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
 import { expandPlannedItems } from "@/lib/planner/expand-planned-items";
@@ -38,20 +46,22 @@ function buildDayMarks(items: PlannedOccurrence[]): PlannerDayMark[] {
   );
 }
 
-export async function getPlannerMonthData(
+type SerializedPlannerMonthData = Omit<PlannerMonthData, "items"> & {
+  items: SerializedPlannedOccurrence[];
+};
+
+function computePlannerMonthData(
   userId: string,
-  monthKey: string = getCurrentMonthKey(),
-  plannedItems?: PlannedItemRecord[],
-): Promise<PlannerMonthData> {
+  monthKey: string,
+  plannedItems: PlannedItemRecord[],
+): PlannerMonthData {
   const parsed = parseMonthKey(monthKey) ?? {
     year: new Date().getFullYear(),
     month: new Date().getMonth(),
   };
 
   const { start, end } = getMonthRange(parsed.year, parsed.month);
-  const itemsSource =
-    plannedItems ?? (await getPlannedItemsForExpansion(userId));
-  const items = expandPlannedItems(itemsSource, start, end);
+  const items = expandPlannedItems(plannedItems, start, end);
 
   return {
     monthKey,
@@ -60,4 +70,49 @@ export async function getPlannerMonthData(
     marks: buildDayMarks(items),
     items,
   };
+}
+
+async function queryPlannerMonthData(
+  userId: string,
+  monthKey: string,
+): Promise<SerializedPlannerMonthData> {
+  const plannedItems = await getPlannedItemsForExpansion(userId);
+  const data = computePlannerMonthData(userId, monthKey, plannedItems);
+
+  return {
+    ...data,
+    items: data.items.map(serializePlannedOccurrence),
+  };
+}
+
+function hydratePlannerMonthData(
+  data: SerializedPlannerMonthData,
+): PlannerMonthData {
+  return {
+    ...data,
+    items: data.items.map(hydratePlannedOccurrence),
+  };
+}
+
+export async function getPlannerMonthData(
+  userId: string,
+  monthKey: string = getCurrentMonthKey(),
+  plannedItems?: PlannedItemRecord[],
+): Promise<PlannerMonthData> {
+  if (plannedItems) {
+    return computePlannerMonthData(userId, monthKey, plannedItems);
+  }
+
+  const cached = await unstable_cache(
+    () => queryPlannerMonthData(userId, monthKey),
+    ["planner-month", userId, monthKey],
+    {
+      tags: [
+        userDataTags.plannedItems(userId),
+        userDataTags.transactions(userId),
+      ],
+    },
+  )();
+
+  return hydratePlannerMonthData(cached);
 }

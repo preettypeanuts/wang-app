@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { createInboxMessage } from "@/lib/db/inbox-messages";
+import { revalidateUserSavings } from "@/lib/cache/revalidate-user-data";
 import {
   createSavingsGoal,
   depositSavingsGoal,
@@ -27,7 +28,8 @@ interface SavingsInboxResult {
   assistantMessage: ChatMessage;
 }
 
-function revalidateSavings() {
+function revalidateSavings(userId: string) {
+  revalidateUserSavings(userId);
   revalidatePath("/");
   revalidatePath("/plans");
   revalidatePath("/overview");
@@ -68,7 +70,7 @@ export async function executeSavingsInboxCommand(
           savedAmount: 0,
           status: "active",
         });
-        revalidateSavings();
+        revalidateSavings(userId);
         content = `Tabungan "${goal.name}" dibuat dengan target ${formatIdr(goal.targetAmount)}.`;
         break;
       }
@@ -84,7 +86,7 @@ export async function executeSavingsInboxCommand(
           status: goal.status,
           note: goal.note ?? undefined,
         });
-        revalidateSavings();
+        revalidateSavings(userId);
         content = `Target tabungan "${updated.name}" diubah jadi ${formatIdr(updated.targetAmount)}.`;
         break;
       }
@@ -98,7 +100,7 @@ export async function executeSavingsInboxCommand(
           goal.id,
           command.amount,
         );
-        revalidateSavings();
+        revalidateSavings(userId);
         const progress = getSavingsGoalProgress(updated);
         content = `Setor ${formatIdr(command.amount)} ke "${updated.name}". Sekarang ${formatIdr(updated.savedAmount)} (${progress}%).`;
         break;
@@ -113,7 +115,7 @@ export async function executeSavingsInboxCommand(
           goal.id,
           command.amount,
         );
-        revalidateSavings();
+        revalidateSavings(userId);
         content = `Tarik ${formatIdr(command.amount)} dari "${updated.name}". Sisa ${formatIdr(updated.savedAmount)}.`;
         break;
       }

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireUserId } from "@/lib/auth/session";
+import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
 import {
   createJournalTransaction,
   deleteJournalTransaction,
@@ -26,7 +27,8 @@ interface JournalActionFailure {
 
 export type JournalActionResult = JournalActionSuccess | JournalActionFailure;
 
-function revalidateJournal() {
+function revalidateJournal(userId: string) {
+  revalidateAfterTransactionMutation(userId);
   revalidatePath("/journal");
   revalidatePath("/overview");
   revalidatePath("/");
@@ -59,7 +61,7 @@ export async function saveJournalEntryAction(
   }
 
   const entry = await updateJournalTransaction(userId, id, parsed.data);
-  revalidateJournal();
+  revalidateJournal(userId);
 
   return { ok: true, entry };
 }
@@ -75,7 +77,7 @@ export async function createJournalEntryAction(
   }
 
   const entry = await createJournalTransaction(userId, parsed.data);
-  revalidateJournal();
+  revalidateJournal(userId);
 
   return { ok: true, entry };
 }
@@ -101,7 +103,7 @@ export async function deleteJournalEntryAction(
 
   try {
     const deleted = await deleteJournalTransaction(userId, trimmed);
-    revalidateJournal();
+    revalidateJournal(userId);
     revalidatePath("/");
     return { ok: true, deleted };
   } catch {

@@ -1,5 +1,7 @@
 import { normalizeCategory } from "@/config/categories";
 import type { Prisma } from "@/generated/prisma/client";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import { revalidateUserBudgets } from "@/lib/cache/revalidate-user-data";
 import {
   toBudgetWriteData,
   toNextMonthBudgetInput,
@@ -12,6 +14,7 @@ import {
   parseMonthKey,
   shiftMonthKey,
 } from "@/lib/planner/calendar";
+import { unstable_cache } from "next/cache";
 import type {
   BudgetStatus,
   CategoryBudgetFormInput,
@@ -179,12 +182,10 @@ async function syncNextMonthBudget(
   });
 }
 
-export async function listBudgetsForMonth(
+async function queryBudgetsForMonth(
   userId: string,
   periodMonth: string,
 ): Promise<BudgetStatus[]> {
-  await provisionRepeatingBudgetsFromPreviousMonth(userId, periodMonth);
-
   const [budgets, spentMap] = await Promise.all([
     prisma.categoryBudget.findMany({
       where: { userId, periodMonth },
@@ -197,6 +198,24 @@ export async function listBudgetsForMonth(
   return budgets.map((budget) =>
     buildBudgetStatus(mapBudget(budget), spentMap.get(budget.category) ?? 0),
   );
+}
+
+export async function listBudgetsForMonth(
+  userId: string,
+  periodMonth: string,
+): Promise<BudgetStatus[]> {
+  await provisionRepeatingBudgetsFromPreviousMonth(userId, periodMonth);
+
+  return unstable_cache(
+    () => queryBudgetsForMonth(userId, periodMonth),
+    ["budgets-for-month", userId, periodMonth],
+    {
+      tags: [
+        userDataTags.budgets(userId),
+        userDataTags.transactions(userId),
+      ],
+    },
+  )();
 }
 
 export async function getBudgetForCategory(
@@ -262,6 +281,7 @@ export async function createCategoryBudget(
   });
 
   await syncNextMonthBudget(userId, input);
+  revalidateUserBudgets(userId);
 
   return mapBudget(created);
 }
@@ -286,6 +306,7 @@ export async function updateCategoryBudget(
   });
 
   await syncNextMonthBudget(userId, input);
+  revalidateUserBudgets(userId);
 
   return mapBudget(record);
 }
@@ -301,4 +322,6 @@ export async function deleteCategoryBudget(
   if (deleted.count === 0) {
     throw new Error("Budget tidak ditemukan.");
   }
+
+  revalidateUserBudgets(userId);
 }

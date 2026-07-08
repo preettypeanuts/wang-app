@@ -1,9 +1,17 @@
 import { TRANSACTION_CATEGORIES, normalizeCategory } from "@/config/categories";
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
+import {
+  hydrateJournalListResult,
+  serializeJournalListResult,
+  type SerializedJournalListResult,
+} from "@/lib/cache/serialize-journal";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
 import { prisma } from "@/lib/db/prisma";
 import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
+import { unstable_cache } from "next/cache";
 import type {
   JournalCategoryExpenseBreakdown,
   JournalEntry,
@@ -65,10 +73,14 @@ function buildWhere(
   return where;
 }
 
-export async function listJournalTransactions(
+function journalFiltersCacheKey(filters: JournalFilters): string {
+  return [filters.q, filters.type, filters.category, filters.page].join("|");
+}
+
+async function queryJournalTransactions(
   userId: string,
   filters: JournalFilters,
-): Promise<JournalListResult> {
+): Promise<SerializedJournalListResult> {
   const where = buildWhere(userId, filters);
   const page = filters.page;
   const skip = (page - 1) * JOURNAL_PAGE_SIZE;
@@ -86,16 +98,30 @@ export async function listJournalTransactions(
 
   const totalPages = Math.max(1, Math.ceil(total / JOURNAL_PAGE_SIZE));
 
-  return {
+  return serializeJournalListResult({
     items,
     total,
     page: Math.min(page, totalPages),
     pageSize: JOURNAL_PAGE_SIZE,
     totalPages,
-  };
+  });
 }
 
-export async function getJournalCategoryExpenseBreakdown(
+export async function listJournalTransactions(
+  userId: string,
+  filters: JournalFilters,
+): Promise<JournalListResult> {
+  const cacheKey = journalFiltersCacheKey(filters);
+  const cached = await unstable_cache(
+    () => queryJournalTransactions(userId, filters),
+    ["journal-transactions", userId, cacheKey],
+    { tags: [userDataTags.transactions(userId)] },
+  )();
+
+  return hydrateJournalListResult(cached);
+}
+
+async function queryJournalCategoryExpenseBreakdown(
   userId: string,
   filters: JournalFilters,
 ): Promise<JournalCategoryExpenseBreakdown> {
@@ -120,6 +146,19 @@ export async function getJournalCategoryExpenseBreakdown(
   );
 }
 
+export async function getJournalCategoryExpenseBreakdown(
+  userId: string,
+  filters: JournalFilters,
+): Promise<JournalCategoryExpenseBreakdown> {
+  const cacheKey = journalFiltersCacheKey(filters);
+
+  return unstable_cache(
+    () => queryJournalCategoryExpenseBreakdown(userId, filters),
+    ["journal-category-breakdown", userId, cacheKey],
+    { tags: [userDataTags.transactions(userId)] },
+  )();
+}
+
 export async function createJournalTransaction(
   userId: string,
   data: JournalEntryFormInput,
@@ -138,6 +177,7 @@ export async function createJournalTransaction(
   });
 
   await invalidateAiInsightCacheOnTransactionMutation(userId, entry.occurredAt);
+  revalidateAfterTransactionMutation(userId);
 
   return entry;
 }
@@ -169,6 +209,7 @@ export async function updateJournalTransaction(
   });
 
   await invalidateAiInsightCacheOnTransactionMutation(userId, entry.occurredAt);
+  revalidateAfterTransactionMutation(userId);
 
   return entry;
 }
@@ -222,6 +263,7 @@ export async function deleteJournalTransaction(
     userId,
     record.occurredAt,
   );
+  revalidateAfterTransactionMutation(userId);
 
   return {
     transaction: snapshot,

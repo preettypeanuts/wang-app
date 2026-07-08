@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireUserId } from "@/lib/auth/session";
+import { revalidateUserSavings } from "@/lib/cache/revalidate-user-data";
 import {
   createSavingsGoal,
   deleteSavingsGoal,
@@ -25,7 +26,8 @@ interface SavingsActionFailure {
 
 export type SavingsActionResult = SavingsActionSuccess | SavingsActionFailure;
 
-function revalidateSavings() {
+function revalidateSavings(userId: string) {
+  revalidateUserSavings(userId);
   revalidatePath("/plans");
   revalidatePath("/overview");
   revalidatePath("/");
@@ -47,7 +49,7 @@ export async function saveSavingsGoalAction(
       ? await updateSavingsGoal(userId, id.trim(), parsed.data)
       : await createSavingsGoal(userId, parsed.data);
 
-  revalidateSavings();
+  revalidateSavings(userId);
 
   return { ok: true, goal };
 }
@@ -64,7 +66,7 @@ export async function deleteSavingsGoalAction(
 
   try {
     await deleteSavingsGoal(userId, trimmed);
-    revalidateSavings();
+    revalidateSavings(userId);
     return { ok: true };
   } catch {
     return { ok: false, error: "Gagal menghapus tabungan." };
@@ -79,7 +81,7 @@ export async function depositSavingsGoalAction(
 
   try {
     const goal = await depositSavingsGoal(userId, id.trim(), amount);
-    revalidateSavings();
+    revalidateSavings(userId);
     return { ok: true, goal };
   } catch (error) {
     return {
@@ -98,7 +100,7 @@ export async function withdrawSavingsGoalAction(
 
   try {
     const goal = await withdrawSavingsGoal(userId, id.trim(), amount);
-    revalidateSavings();
+    revalidateSavings(userId);
     return { ok: true, goal };
   } catch (error) {
     return {

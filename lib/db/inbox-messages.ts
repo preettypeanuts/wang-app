@@ -1,10 +1,16 @@
 import { normalizeCategory } from "@/config/categories";
 import { INBOX_MESSAGE_PAGE_SIZE } from "@/config/inbox-messages";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import {
+  revalidateAfterTransactionMutation,
+  revalidateUserInbox,
+} from "@/lib/cache/revalidate-user-data";
 import { backfillInboxMessagesFromTransactions } from "@/lib/db/backfill-inbox-messages";
 import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
 import { ensurePendingDailySummaries } from "@/lib/db/daily-summary";
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
+import { unstable_cache } from "next/cache";
 import type { ChatMessage, MessageRole } from "@/types/chat";
 import type { ParsedTransaction } from "@/types/transaction";
 import type {
@@ -111,6 +117,7 @@ export async function createInboxMessage({
     },
   });
 
+  revalidateUserInbox(userId);
   return mapInboxMessage(record);
 }
 
@@ -143,6 +150,7 @@ export async function updateInboxMessage(
     },
   });
 
+  revalidateUserInbox(userId);
   return mapInboxMessage(record);
 }
 
@@ -161,16 +169,11 @@ export interface InboxMessagesPage {
   hasMore: boolean;
 }
 
-export async function getInboxMessagesPage(
+async function queryInboxMessagesPage(
   userId: string,
-  options: {
-    limit?: number;
-    before?: InboxMessagesPageCursor;
-  } = {},
+  limit: number,
+  before?: InboxMessagesPageCursor,
 ): Promise<InboxMessagesPage> {
-  const limit = options.limit ?? INBOX_MESSAGE_PAGE_SIZE;
-  const before = options.before;
-
   const where: Prisma.InboxMessageWhereInput = scopedByUser(userId, {
     kind: "chat",
   });
@@ -199,6 +202,27 @@ export async function getInboxMessagesPage(
     .map((record) => mapInboxMessage(record));
 
   return { messages, hasMore };
+}
+
+export async function getInboxMessagesPage(
+  userId: string,
+  options: {
+    limit?: number;
+    before?: InboxMessagesPageCursor;
+  } = {},
+): Promise<InboxMessagesPage> {
+  const limit = options.limit ?? INBOX_MESSAGE_PAGE_SIZE;
+  const before = options.before;
+
+  if (before || limit !== INBOX_MESSAGE_PAGE_SIZE) {
+    return queryInboxMessagesPage(userId, limit, before);
+  }
+
+  return unstable_cache(
+    () => queryInboxMessagesPage(userId, limit),
+    ["inbox-messages-first-page", userId],
+    { tags: [userDataTags.inbox(userId)] },
+  )();
 }
 
 /** Backfill + daily summaries — run off the inbox hot path (client/cron). */
@@ -297,7 +321,10 @@ export async function deleteInboxMessagePair(
       userId,
       linkedTransaction.occurredAt,
     );
+    revalidateAfterTransactionMutation(userId);
   }
+
+  revalidateUserInbox(userId);
 
   return {
     removedIds,

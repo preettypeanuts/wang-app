@@ -1,5 +1,8 @@
+import { unstable_cache } from "next/cache";
+
 import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
-import { addDays, startOfDay } from "@/lib/finance/day-range";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import { addDays, parseDayKey, startOfDay, toDayKey } from "@/lib/finance/day-range";
 import { formatCompactDayMonth } from "@/lib/finance/format-datetime";
 import {
   getDueDateForInstallmentIndex,
@@ -27,6 +30,21 @@ export async function getPlansUpcomingImpact(
   referenceDate: Date = new Date(),
   horizonDays = DEFAULT_HORIZON_DAYS,
 ): Promise<PlansUpcomingImpactItem[]> {
+  const dayKey = toDayKey(referenceDate);
+
+  return unstable_cache(
+    () => buildPlansUpcomingImpact(userId, dayKey, horizonDays),
+    ["plans-upcoming-impact", userId, dayKey, String(horizonDays)],
+    { tags: [userDataTags.plannedItems(userId)] },
+  )();
+}
+
+async function buildPlansUpcomingImpact(
+  userId: string,
+  dayKey: string,
+  horizonDays: number,
+): Promise<PlansUpcomingImpactItem[]> {
+  const referenceDate = parseDayKey(dayKey);
   const today = startOfDay(referenceDate);
   const rangeEnd = addDays(today, horizonDays);
   const plannedItems = await getPlannedItemsForExpansion(userId);

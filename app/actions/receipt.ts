@@ -6,6 +6,7 @@ import { buildInboxTransactionReplyForParsed } from "@/lib/ai/build-inbox-transa
 import { isGeminiConfigured } from "@/lib/ai/gemini-client";
 import { parseReceiptWithGemini } from "@/lib/ai/parse-receipt-gemini";
 import { requireUserId } from "@/lib/auth/session";
+import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
 import { formatInboxProcessingError } from "@/lib/chat/inbox-error";
 import { createInboxMessage } from "@/lib/db/inbox-messages";
 import { createTransaction } from "@/lib/db/transactions";
@@ -102,6 +103,7 @@ export async function submitInboxMessageFromReceipt(input: {
       transactionId: savedTransaction.id,
     });
 
+    revalidateAfterTransactionMutation(userId);
     revalidatePath("/");
     revalidatePath("/journal");
     revalidatePath("/payplan");

@@ -6,6 +6,12 @@ import { buildInboxTransactionReplyForParsed } from "@/lib/ai/build-inbox-transa
 import { parseTransaction } from "@/lib/ai/parse-transaction";
 import { formatInboxProcessingError } from "@/lib/chat/inbox-error";
 import {
+  revalidateAfterTransactionMutation,
+  revalidateUserInbox,
+  revalidateUserPlannedItems,
+  revalidateUserPlans,
+} from "@/lib/cache/revalidate-user-data";
+import {
   createInboxMessage,
   type DeleteInboxMessagePairResult,
   deleteInboxMessagePair,
@@ -215,6 +221,8 @@ export async function undoInboxMessageAction(
   const userId = await requireUserId();
   const result = await deleteInboxMessagePair(userId, userMessageId);
 
+  revalidateAfterTransactionMutation(userId);
+  revalidateUserInbox(userId);
   revalidatePath("/");
   revalidatePath("/journal");
 
@@ -289,6 +297,7 @@ export async function payPayPlanFromInboxAction(
       content: `${item.name} (${formatIdr(item.amount)}) ditandai sudah dibayar.`,
     });
 
+    revalidateUserPlannedItems(userId);
     revalidatePath("/");
     revalidatePath("/payplan");
 
@@ -442,6 +451,8 @@ export async function markPlanDoneFromInboxAction(
       content: `${plan.name} (${formatIdr(plan.amount)}) ditandai sudah dibeli.`,
     });
 
+    revalidateUserPlans(userId);
+    revalidateAfterTransactionMutation(userId);
     revalidatePath("/");
     revalidatePath("/plans");
     revalidatePath("/journal");

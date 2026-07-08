@@ -2,6 +2,9 @@ import { getAvailableBalance } from "@/lib/db/balance";
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
 import { formatIdr } from "@/lib/finance/format-currency";
+import { userDataTags } from "@/lib/cache/user-data-tags";
+import { revalidateUserSavings } from "@/lib/cache/revalidate-user-data";
+import { unstable_cache } from "next/cache";
 import type {
   SavingsGoalFormInput,
   SavingsGoalRecord,
@@ -41,9 +44,7 @@ function resolveStatus(
   return status === "completed" ? "completed" : "active";
 }
 
-export async function listSavingsGoals(
-  userId: string,
-): Promise<SavingsGoalRecord[]> {
+async function querySavingsGoals(userId: string): Promise<SavingsGoalRecord[]> {
   const records = await prisma.savingsGoal.findMany({
     where: { userId },
     orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
@@ -52,15 +53,21 @@ export async function listSavingsGoals(
   return records.map(mapSavingsGoal);
 }
 
+export async function listSavingsGoals(
+  userId: string,
+): Promise<SavingsGoalRecord[]> {
+  return unstable_cache(
+    () => querySavingsGoals(userId),
+    ["savings-goals", userId],
+    { tags: [userDataTags.savings(userId)] },
+  )();
+}
+
 export async function listActiveSavingsGoals(
   userId: string,
 ): Promise<SavingsGoalRecord[]> {
-  const records = await prisma.savingsGoal.findMany({
-    where: { userId, status: "active" },
-    orderBy: { updatedAt: "desc" },
-  });
-
-  return records.map(mapSavingsGoal);
+  const goals = await listSavingsGoals(userId);
+  return goals.filter((goal) => goal.status === "active");
 }
 
 export async function createSavingsGoal(
@@ -84,6 +91,7 @@ export async function createSavingsGoal(
     },
   });
 
+  revalidateUserSavings(userId);
   return mapSavingsGoal(record);
 }
 
@@ -117,6 +125,7 @@ export async function updateSavingsGoal(
     where: scopedId(userId, id),
   });
 
+  revalidateUserSavings(userId);
   return mapSavingsGoal(record);
 }
 
@@ -131,6 +140,8 @@ export async function deleteSavingsGoal(
   if (deleted.count === 0) {
     throw new Error("Tabungan tidak ditemukan.");
   }
+
+  revalidateUserSavings(userId);
 }
 
 export async function depositSavingsGoal(
@@ -187,6 +198,7 @@ export async function depositSavingsGoal(
     where: scopedId(userId, id),
   });
 
+  revalidateUserSavings(userId);
   return mapSavingsGoal(updated);
 }
 
@@ -230,5 +242,6 @@ export async function withdrawSavingsGoal(
     where: scopedId(userId, id),
   });
 
+  revalidateUserSavings(userId);
   return mapSavingsGoal(record);
 }

@@ -4,6 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { requireUserId } from "@/lib/auth/session";
 import {
+  revalidateUserPlans,
+} from "@/lib/cache/revalidate-user-data";
+import {
   createPlan,
   deletePlan,
   markPlanDone,
@@ -24,7 +27,8 @@ interface PlanActionFailure {
 
 export type PlanActionResult = PlanActionSuccess | PlanActionFailure;
 
-function revalidatePlans() {
+function revalidatePlans(userId: string) {
+  revalidateUserPlans(userId);
   revalidatePath("/plans");
   revalidatePath("/overview");
   revalidatePath("/journal");
@@ -46,7 +50,7 @@ export async function savePlanAction(
       ? await updatePlan(userId, id.trim(), parsed.data)
       : await createPlan(userId, parsed.data);
 
-  revalidatePlans();
+  revalidatePlans(userId);
 
   return { ok: true, plan };
 }
@@ -63,7 +67,7 @@ export async function deletePlanAction(
 
   try {
     await deletePlan(userId, trimmed);
-    revalidatePlans();
+    revalidatePlans(userId);
     return { ok: true };
   } catch {
     return { ok: false, error: "Gagal menghapus wish." };
@@ -82,7 +86,7 @@ export async function markPlanPurchasedAction(
 
   try {
     const plan = await markPlanDone(userId, trimmed);
-    revalidatePlans();
+    revalidatePlans(userId);
     return { ok: true, plan };
   } catch {
     return { ok: false, error: "Gagal menandai wish sudah dibeli." };
