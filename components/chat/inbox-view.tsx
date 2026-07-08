@@ -18,7 +18,6 @@ import {
 } from "@/app/actions/receipt";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatReceiptDropOverlay } from "@/components/chat/chat-receipt-drop-overlay";
-import { ChatReceiptProcessingOverlay } from "@/components/chat/chat-receipt-processing-overlay";
 import { MessageList } from "@/components/chat/message-list";
 import { ReceiptConfirmDialog } from "@/components/chat/receipt-confirm-dialog";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
@@ -99,6 +98,8 @@ function createPendingId(prefix: "user" | "assistant"): string {
 function isPendingMessageId(id: string): boolean {
   return id.startsWith("pending-");
 }
+
+const RECEIPT_READING_MESSAGE = "Membaca Struk";
 
 export function InboxView({
   initialMessages,
@@ -294,6 +295,21 @@ export function InboxView({
 
   async function handleReceiptFile(file: File) {
     setReceiptError(null);
+    const readingMessageId = createPendingId("assistant");
+    const readingMessage: ChatMessage = {
+      id: readingMessageId,
+      role: "assistant",
+      content: RECEIPT_READING_MESSAGE,
+      createdAt: new Date().toISOString(),
+    };
+
+    function removeReadingMessage() {
+      setMessages((current) =>
+        current.filter((message) => message.id !== readingMessageId),
+      );
+    }
+
+    setMessages((current) => [...current, readingMessage]);
     setIsParsingReceipt(true);
 
     try {
@@ -306,6 +322,7 @@ export function InboxView({
       );
 
       if (!result.ok) {
+        removeReadingMessage();
         setReceiptEditContext(null);
         setReceiptDraft(createEmptyReceiptDraft());
         setReceiptParseNotice(buildReceiptManualFallbackNotice(result.error));
@@ -313,6 +330,7 @@ export function InboxView({
         return;
       }
 
+      removeReadingMessage();
       clearReceiptPreview();
       await recordReceiptToInbox({
         type: result.draft.type,
@@ -323,6 +341,7 @@ export function InboxView({
         occurredAt: result.draft.occurredAt,
       });
     } catch (error) {
+      removeReadingMessage();
       clearReceiptPreview();
       setReceiptError(
         error instanceof ReceiptImageError
@@ -853,7 +872,6 @@ export function InboxView({
         actionsDisabled={isProcessing}
       />
       <ChatReceiptDropOverlay visible={isDraggingReceipt} />
-      <ChatReceiptProcessingOverlay visible={isParsingReceipt} />
       {pinInputToViewport ? (
         <FixedViewportPortal>{chatInputDock}</FixedViewportPortal>
       ) : (
