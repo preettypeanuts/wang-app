@@ -754,9 +754,27 @@
 
   @media (prefers-reduced-motion: reduce) {
     .animate-marquee,
-    .mobile-bottom-nav-indicator {
+    .mobile-bottom-nav-indicator,
+    .mobile-tab-refresh-bar-fill {
       animation: none;
       transition: none;
     }
+  }
+
+  @keyframes mobile-tab-refresh-indeterminate {
+    from {
+      transform: translateX(-120%);
+    }
+
+    to {
+      transform: translateX(320%);
+    }
+  }
+
+  .mobile-tab-refresh-bar-fill {
+    height: 100%;
+    width: 38%;
+    background: color-mix(in oklab, var(--primary) 88%, transparent);
+    animation: mobile-tab-refresh-indeterminate 1.15s ease-in-out infinite;
   }
 }

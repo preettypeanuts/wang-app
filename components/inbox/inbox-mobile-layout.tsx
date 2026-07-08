@@ -6,6 +6,7 @@ import { InboxMobileEdgeBlur } from "@/components/inbox/inbox-mobile-edge-blur";
 import { InboxMobileTopBar } from "@/components/inbox/inbox-mobile-top-bar";
 import { InboxTodaySummaryDrawer } from "@/components/inbox/inbox-today-summary-drawer";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
+import { MobileTabRefreshBar } from "@/components/shared/mobile-tab-refresh-bar";
 import { INBOX_MOBILE_PAGE } from "@/config/inbox-mobile";
 import { cn } from "@/lib/utils";
 import type { DailySummarySnapshot, TodaySummary } from "@/types/summary";
@@ -43,6 +44,7 @@ export function InboxMobileLayout({
     >
       <FixedViewportPortal>
         <div className="md:hidden">
+          <MobileTabRefreshBar active={refreshing} />
           <InboxMobileEdgeBlur />
           <InboxMobileTopBar
             onOpenSummary={handleOpenSummary}

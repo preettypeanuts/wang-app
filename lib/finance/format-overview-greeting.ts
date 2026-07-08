@@ -19,9 +19,25 @@ function resolveGreetingTitle(date: Date): string {
   return "Selamat malam";
 }
 
-export function formatOverviewGreeting(date: Date = new Date()): OverviewGreeting {
+function resolveGreetingFirstName(userName?: string | null): string | null {
+  const trimmed = userName?.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  return trimmed.split(/\s+/)[0] ?? null;
+}
+
+export function formatOverviewGreeting(
+  date: Date = new Date(),
+  userName?: string | null,
+): OverviewGreeting {
+  const timeGreeting = resolveGreetingTitle(date);
+  const firstName = resolveGreetingFirstName(userName);
+
   return {
-    title: resolveGreetingTitle(date),
+    title: firstName ? `${timeGreeting}, ${firstName}` : timeGreeting,
     subtitle: formatJournalHeaderDate(date),
   };
 }

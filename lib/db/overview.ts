@@ -27,6 +27,7 @@ import type { OverviewPageResult } from "@/types/overview";
 
 export async function getOverviewPageData(
   userId: string,
+  userName?: string | null,
 ): Promise<OverviewPageResult> {
   const now = new Date();
   const yesterday = addDays(now, -1);
@@ -98,7 +99,7 @@ export async function getOverviewPageData(
 
   return {
     data: {
-      greeting: formatOverviewGreeting(now),
+      greeting: formatOverviewGreeting(now, userName),
       balance: availableBalance,
       dayDeltas: {
         incomeDelta: todayFlow.totalIncome - yesterdayFlow.totalIncome,

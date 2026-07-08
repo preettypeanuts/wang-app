@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
   EMPTY_TODAY_SUMMARY,
@@ -116,44 +116,98 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
     useState<DailySummarySnapshot | null>(null);
   const [slash, setSlash] = useState(EMPTY_SLASH);
   const [slashRequested, setSlashRequested] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const prevEnabledRef = useRef<boolean | null>(null);
+  const syncInFlightRef = useRef(false);
 
-  useEffect(() => {
-    if (!enabled) {
-      return;
-    }
-
-    const cached = readInboxBootstrapCache();
-    const controller = new AbortController();
-
-    function applyPayload(payload: InboxBootstrapPayload | null) {
-      if (!payload || controller.signal.aborted) {
-        return;
-      }
-
+  const applyBootstrapPayload = useCallback(
+    (payload: InboxBootstrapPayload, mode: "merge" | "force") => {
       setState((current) => {
-        const merged = mergeInboxBootstrapPayload(
-          {
-            messages: current.messages,
-            summary: current.summary,
-            hasMoreMessages: current.hasMoreMessages,
-          },
-          payload,
-        );
+        const merged =
+          mode === "force"
+            ? applyForcedRefreshPayload(
+                {
+                  messages: current.messages,
+                  summary: current.summary,
+                  hasMoreMessages: current.hasMoreMessages,
+                },
+                payload,
+              )
+            : mergeInboxBootstrapPayload(
+                {
+                  messages: current.messages,
+                  summary: current.summary,
+                  hasMoreMessages: current.hasMoreMessages,
+                },
+                payload,
+              );
 
         writeInboxBootstrapCache(merged);
 
         return toBootstrapState(merged, true);
       });
+    },
+    [],
+  );
+
+  const runBootstrapSync = useCallback(
+    async (options?: { force?: boolean; clearDailySummary?: boolean }) => {
+      if (syncInFlightRef.current) {
+        return;
+      }
+
+      syncInFlightRef.current = true;
+      setIsSyncing(true);
+
+      try {
+        if (options?.force) {
+          triggerInboxMaintenance(true);
+        }
+
+        const payload = await fetchInboxBootstrap();
+
+        if (!payload) {
+          return;
+        }
+
+        applyBootstrapPayload(payload, options?.force ? "force" : "merge");
+
+        if (options?.clearDailySummary) {
+          setDailySummary(null);
+        }
+      } finally {
+        syncInFlightRef.current = false;
+        setIsSyncing(false);
+      }
+    },
+    [applyBootstrapPayload],
+  );
+
+  useEffect(() => {
+    if (!enabled) {
+      prevEnabledRef.current = false;
+      return;
     }
+
+    const prev = prevEnabledRef.current;
+    prevEnabledRef.current = true;
+
+    if (prev === false) {
+      void runBootstrapSync();
+      return;
+    }
+
+    if (prev !== null) {
+      return;
+    }
+
+    const cached = readInboxBootstrapCache();
 
     if (!cached) {
       triggerInboxMaintenance();
-      void fetchInboxBootstrap().then(applyPayload).catch(() => {});
+      void runBootstrapSync();
     }
-
-    return () => controller.abort();
-  }, [enabled]);
+  }, [enabled, runBootstrapSync]);
 
   useEffect(() => {
     function handleBootstrapPatched(event: Event) {
@@ -272,46 +326,19 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
   }
 
   const refreshInbox = useCallback(async () => {
-    if (isRefreshing) {
+    if (isSyncing) {
       return;
     }
 
-    setIsRefreshing(true);
-
-    try {
-      triggerInboxMaintenance(true);
-      const payload = await fetchInboxBootstrap();
-
-      if (!payload) {
-        return;
-      }
-
-      setState((current) => {
-        const merged = applyForcedRefreshPayload(
-          {
-            messages: current.messages,
-            summary: current.summary,
-            hasMoreMessages: current.hasMoreMessages,
-          },
-          payload,
-        );
-
-        writeInboxBootstrapCache(merged);
-
-        return toBootstrapState(merged, true);
-      });
-
-      setDailySummary(null);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [isRefreshing]);
+    await runBootstrapSync({ force: true, clearDailySummary: true });
+  }, [isSyncing, runBootstrapSync]);
 
   return {
     ...state,
     dailySummary,
     slash,
-    isRefreshing,
+    isRefreshing: isSyncing,
+    isSyncing,
     requestSlashContext,
     requestDailySummary,
     refreshInbox,

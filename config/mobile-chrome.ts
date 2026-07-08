@@ -176,3 +176,11 @@ export const MOBILE_TOP_BAR_ORB_BUTTON = [
 
 /** @deprecated Use MOBILE_TOP_BAR_ORB_BUTTON */
 export const MOBILE_TOP_BAR_INBOX_BUTTON = MOBILE_TOP_BAR_ORB_BUTTON;
+
+/** Fixed thin progress line during background inbox sync on mobile. */
+export const MOBILE_TAB_REFRESH_BAR = [
+  "pointer-events-none fixed inset-x-0 top-0 z-[31]",
+  "md:hidden",
+].join(" ");
+
+export const MOBILE_TAB_REFRESH_BAR_FILL = "mobile-tab-refresh-bar-fill";
