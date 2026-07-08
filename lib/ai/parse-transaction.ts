@@ -4,6 +4,7 @@ import { TransactionParseError } from "@/lib/ai/transaction-parse-error";
 import { resolveExplicitCategoryForType } from "@/lib/chat/category-mentions";
 import { detectTransactionType } from "@/lib/finance/categories";
 import { parseAmount } from "@/lib/finance/parse-amount";
+import { parseRelativeDate } from "@/lib/finance/parse-relative-date";
 import { resolveTransactionCategory } from "@/lib/finance/resolve-transaction-category";
 import type { ParsedTransaction } from "@/types/transaction";
 
@@ -12,7 +13,12 @@ export { TransactionParseError };
 
 /** Rule-based fallback when Gemini API key is not configured. */
 export function parseTransactionLocally(text: string): ParsedTransaction {
-  const description = text.trim();
+  const now = new Date();
+  const trimmed = text.trim();
+  const dateParse = parseRelativeDate(trimmed, now);
+  const description = dateParse?.cleanedText ?? trimmed;
+  const occurredAt = dateParse?.occurredAt ?? now;
+
   const type = detectTransactionType(description);
   const { category: explicitCategory, cleanedText } =
     resolveExplicitCategoryForType(description, type);
@@ -34,7 +40,7 @@ export function parseTransactionLocally(text: string): ParsedTransaction {
     amount,
     category,
     description: parseText,
-    occurredAt: new Date().toISOString(),
+    occurredAt: occurredAt.toISOString(),
   };
 }
 

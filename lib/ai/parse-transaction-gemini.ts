@@ -11,6 +11,7 @@ import { getGeminiClient } from "@/lib/ai/gemini-client";
 import { TransactionParseError } from "@/lib/ai/transaction-parse-error";
 import { resolveExplicitCategoryForType } from "@/lib/chat/category-mentions";
 import { detectTransactionType } from "@/lib/finance/categories";
+import { parseRelativeDate } from "@/lib/finance/parse-relative-date";
 import { resolveTransactionCategoryAsync } from "@/lib/finance/resolve-transaction-category";
 import type { ParsedTransaction, TransactionType } from "@/types/transaction";
 
@@ -22,6 +23,7 @@ interface GeminiTransactionPayload {
   amount?: number;
   category?: string;
   description?: string;
+  occurredAt?: string;
   message?: string;
 }
 
@@ -48,10 +50,28 @@ function parseGeminiPayload(raw: string): GeminiTransactionPayload {
   }
 }
 
+function resolveOccurredAt(
+  payloadValue: string | undefined,
+  fallback: Date,
+): string {
+  const trimmed = payloadValue?.trim();
+  if (!trimmed) {
+    return fallback.toISOString();
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return fallback.toISOString();
+  }
+
+  return parsed.toISOString();
+}
+
 async function toParsedTransaction(
   payload: GeminiTransactionPayload,
   fallbackDescription: string,
   explicitCategory: TransactionCategoryId | null,
+  fallbackOccurredAt: Date,
 ): Promise<ParsedTransaction> {
   const type = payload.type;
   const amount = payload.amount;
@@ -89,18 +109,22 @@ async function toParsedTransaction(
     amount,
     category,
     description,
-    occurredAt: new Date().toISOString(),
+    occurredAt: resolveOccurredAt(payload.occurredAt, fallbackOccurredAt),
   };
 }
 
 export async function parseTransactionWithGemini(
   text: string,
 ): Promise<ParsedTransaction> {
-  const description = text.trim();
-  const typeHint = detectTransactionType(description);
+  const now = new Date();
+  const trimmed = text.trim();
+  const dateParse = parseRelativeDate(trimmed, now);
+  const afterDate = dateParse?.cleanedText ?? trimmed;
+  const fallbackOccurredAt = dateParse?.occurredAt ?? now;
+  const typeHint = detectTransactionType(afterDate);
   const { category: explicitCategory, cleanedText } =
-    resolveExplicitCategoryForType(description, typeHint);
-  const parseText = cleanedText || description;
+    resolveExplicitCategoryForType(afterDate, typeHint);
+  const parseText = cleanedText || afterDate;
   const ai = getGeminiClient();
 
   const response = await ai.models.generateContent({
@@ -119,6 +143,7 @@ export async function parseTransactionWithGemini(
           amount: { type: Type.NUMBER },
           category: { type: Type.STRING },
           description: { type: Type.STRING },
+          occurredAt: { type: Type.STRING },
           message: { type: Type.STRING },
         },
         required: ["success", "message"],
@@ -141,5 +166,10 @@ export async function parseTransactionWithGemini(
     );
   }
 
-  return toParsedTransaction(payload, parseText, explicitCategory);
+  return toParsedTransaction(
+    payload,
+    parseText,
+    explicitCategory,
+    fallbackOccurredAt,
+  );
 }

@@ -1,5 +1,6 @@
 import { getCategoryLabel } from "@/config/categories";
 import { formatIdr } from "@/lib/finance/format-currency";
+import { formatTransactionOccurredAtHint } from "@/lib/finance/parse-relative-date";
 import type { BudgetStatus } from "@/types/budget";
 import type { ParsedTransaction } from "@/types/transaction";
 
@@ -50,6 +51,7 @@ export function buildWarmTransactionReply(
   const opener = pickOpener(transaction);
   const amountLabel = formatIdr(transaction.amount);
   const categoryLabel = getCategoryLabel(transaction.category);
+  const dateHint = formatTransactionOccurredAtHint(transaction.occurredAt);
   const subject =
     transaction.description.length <= 36
       ? transaction.description
@@ -59,11 +61,11 @@ export function buildWarmTransactionReply(
 
   if (transaction.type === "income") {
     lines.push(
-      `${opener} Pemasukan ${amountLabel} (${categoryLabel}) dari "${subject}" sudah masuk.`,
+      `${opener} Pemasukan ${amountLabel} (${categoryLabel}) dari "${subject}"${dateHint ? ` ${dateHint}` : ""} sudah masuk.`,
     );
   } else {
     lines.push(
-      `${opener} ${amountLabel} untuk ${subject} masuk kategori ${categoryLabel}.`,
+      `${opener} ${amountLabel} untuk ${subject} masuk kategori ${categoryLabel}${dateHint ? ` ${dateHint}` : ""}.`,
     );
   }
 

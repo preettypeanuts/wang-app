@@ -7,6 +7,7 @@
     "build": "prisma generate && next build --webpack",
     "start": "next start",
     "lint": "biome check",
+    "test": "vitest run",
     "format": "biome format --write",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
     "push:vapid": "node scripts/generate-vapid-keys.mjs",
@@ -56,6 +57,7 @@
     "serwist": "^9.5.11",
     "sharp": "^0.35.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }
