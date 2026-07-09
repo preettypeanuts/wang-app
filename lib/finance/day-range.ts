@@ -111,6 +111,17 @@ export function clampDateOnlyDay(
   return dateOnlyFromParts(year, month, Math.min(day, lastDay));
 }
 
-export function getYesterday(): Date {
-  return addDays(startOfDay(new Date()), -1);
+export function getYesterday(referenceDate: Date = new Date()): Date {
+  return addDays(startOfDay(referenceDate), -1);
+}
+
+export function getHourInAppTimezone(value: Date = new Date()): number {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: APP_TIMEZONE,
+    hour: "numeric",
+    hour12: false,
+  }).formatToParts(value);
+
+  const hour = parts.find((part) => part.type === "hour")?.value;
+  return Number(hour ?? 0);
 }

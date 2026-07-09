@@ -1,38 +1,42 @@
+import {
+  DAILY_DIGEST_HOUR_WIB,
+  NOTIFICATION_ROUTES,
+} from "@/config/notifications";
 import { generateJournalCondition } from "@/lib/ai/generate-journal-condition";
 import { getAvailableBalance } from "@/lib/db/balance";
 import {
+  ensureDailySummaryForDay,
   ensurePendingDailySummaries,
   getYesterdayDailySummary,
 } from "@/lib/db/daily-summary";
 import { listPlans } from "@/lib/db/plans";
-import { listSavingsGoals } from "@/lib/db/savings-goals";
 import { prisma } from "@/lib/db/prisma";
+import { listSavingsGoals } from "@/lib/db/savings-goals";
 import { scopedByUser } from "@/lib/db/user-scope";
 import {
   ensurePendingWeeklySummary,
   isMondayInAppTimezone,
 } from "@/lib/db/weekly-summary";
+import { buildDailySummaryTitle } from "@/lib/finance/build-daily-summary-message";
+import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
 import { buildOverviewAlerts } from "@/lib/finance/build-overview-alerts";
 import { buildOverviewBrief } from "@/lib/finance/build-overview-brief";
-import { buildDailySummaryTitle } from "@/lib/finance/build-daily-summary-message";
-import { buildWeeklySummaryTitle } from "@/lib/finance/build-weekly-summary-message";
-import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
 import {
   buildFallbackPlansInsight,
   buildPlansOverview,
 } from "@/lib/finance/build-plans-overview";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
+import { buildWeeklySummaryTitle } from "@/lib/finance/build-weekly-summary-message";
 import {
   addDays,
   getDayRange,
-  getYesterday,
+  getHourInAppTimezone,
   startOfDay,
   toDayKey,
 } from "@/lib/finance/day-range";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
 import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
-import { NOTIFICATION_ROUTES } from "@/config/notifications";
 import type { NotificationDraft } from "@/types/notification";
 
 function firstLine(text: string): string {
@@ -54,9 +58,8 @@ interface BuildUserNotificationDraftsOptions {
 
 async function getYesterdaySummaryContentForCron(
   userId: string,
+  yesterday: Date,
 ): Promise<{ content: string; date: Date } | null> {
-  const yesterday = getYesterday();
-
   const message = await prisma.inboxMessage.findFirst({
     where: {
       userId,
@@ -73,6 +76,10 @@ async function getYesterdaySummaryContentForCron(
   return { content: message.content, date: yesterday };
 }
 
+function isDailyDigestDeliveryTime(referenceDate: Date): boolean {
+  return getHourInAppTimezone(referenceDate) === DAILY_DIGEST_HOUR_WIB;
+}
+
 export async function buildUserNotificationDrafts(
   userId: string,
   referenceDate: Date = new Date(),
@@ -80,12 +87,17 @@ export async function buildUserNotificationDrafts(
 ): Promise<NotificationDraft[]> {
   const isCron = options.cron === true;
   const dayKey = toDayKey(referenceDate);
-  const yesterday = addDays(referenceDate, -1);
-  const { start: todayStart, end: todayEnd } = getDayRange(referenceDate);
+  const yesterday = addDays(startOfDay(referenceDate), -1);
+  const shouldDeliverDailyDigest =
+    !isCron || isDailyDigestDeliveryTime(referenceDate);
+  const digestDay = isCron ? yesterday : referenceDate;
+  const { start: digestStart, end: digestEnd } = getDayRange(digestDay);
   const shouldEnsureWeekly = isCron || isMondayInAppTimezone(referenceDate);
 
   if (!isCron) {
     await ensurePendingDailySummaries(userId);
+  } else if (shouldDeliverDailyDigest) {
+    await ensureDailySummaryForDay(userId, yesterday);
   }
 
   const weeklySummaryPromise = shouldEnsureWeekly
@@ -112,7 +124,7 @@ export async function buildUserNotificationDrafts(
     getPlansUpcomingImpact(userId, referenceDate, 14),
     prisma.transaction.findMany({
       where: scopedByUser(userId, {
-        occurredAt: { gte: todayStart, lte: todayEnd },
+        occurredAt: { gte: digestStart, lte: digestEnd },
       }),
       select: {
         type: true,
@@ -122,7 +134,7 @@ export async function buildUserNotificationDrafts(
       },
     }),
     isCron
-      ? getYesterdaySummaryContentForCron(userId)
+      ? getYesterdaySummaryContentForCron(userId, yesterday)
       : getYesterdayDailySummary(userId),
     weeklySummaryPromise,
   ]);
@@ -181,7 +193,7 @@ export async function buildUserNotificationDrafts(
     });
   }
 
-  if (yesterdaySummary) {
+  if (shouldDeliverDailyDigest && yesterdaySummary) {
     drafts.push({
       kind: "daily_summary",
       title: buildDailySummaryTitle(yesterday),
@@ -209,12 +221,12 @@ export async function buildUserNotificationDrafts(
     });
   }
 
-  const todaySummary = buildTodaySummary(todayTransactions);
+  const digestSummary = buildTodaySummary(todayTransactions);
   const condition = isCron
     ? buildFallbackJournalCondition(
         todayTransactions,
-        todaySummary.totalExpense,
-        todaySummary.totalIncome,
+        digestSummary.totalExpense,
+        digestSummary.totalIncome,
         availableBalance,
       )
     : await generateJournalCondition(
@@ -223,15 +235,19 @@ export async function buildUserNotificationDrafts(
         todayTransactions,
         availableBalance,
       );
-  const brief = buildOverviewBrief(condition, todaySummary, plansOverview);
-
-  drafts.push({
-    kind: "ai_brief",
-    title: `Ringkasan AI · ${brief.conditionLabel}`,
-    body: brief.text,
-    href: NOTIFICATION_ROUTES.overview,
-    dedupeKey: `ai-brief:${dayKey}`,
+  const brief = buildOverviewBrief(condition, digestSummary, plansOverview, {
+    period: isCron ? "yesterday" : "today",
   });
+
+  if (shouldDeliverDailyDigest) {
+    drafts.push({
+      kind: "ai_brief",
+      title: `Ringkasan AI · ${brief.conditionLabel}`,
+      body: brief.text,
+      href: NOTIFICATION_ROUTES.overview,
+      dedupeKey: `ai-brief:${dayKey}`,
+    });
+  }
 
   const alerts = buildOverviewAlerts({
     upcoming,
