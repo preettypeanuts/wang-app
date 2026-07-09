@@ -17,11 +17,9 @@ import type { CategoryMentionOption } from "@/config/category-mentions";
 import {
   CHAT_INPUT_CONTROL_MIN_HEIGHT,
   CHAT_INPUT_FIELD,
-  CHAT_INPUT_FIELD_BODY,
   CHAT_INPUT_MENU_BUTTON,
   CHAT_INPUT_SEND_BUTTON,
   CHAT_INPUT_TEXTAREA,
-  CHAT_INPUT_TEXTAREA_MAX_HEIGHT_PX,
 } from "@/config/chat-input-mobile";
 import { GLASS_SURFACE } from "@/config/glass";
 import { RECEIPT_ACCEPT_ATTRIBUTE } from "@/config/receipt";
@@ -50,23 +48,6 @@ import type {
 
 /** Min height shared by menu btn & input — keep in sync with config/chat-input-mobile.ts */
 const CONTROL_MIN_HEIGHT = CHAT_INPUT_CONTROL_MIN_HEIGHT;
-
-function syncMobileTextareaHeight(
-  textarea: HTMLTextAreaElement | null | undefined,
-) {
-  if (!textarea) {
-    return;
-  }
-
-  const isMobile = window.matchMedia("(max-width: 767px)").matches;
-  if (!isMobile) {
-    textarea.style.height = "";
-    return;
-  }
-
-  textarea.style.height = "0px";
-  textarea.style.height = `${Math.min(textarea.scrollHeight, CHAT_INPUT_TEXTAREA_MAX_HEIGHT_PX)}px`;
-}
 
 interface ChatInputProps {
   onSubmit: (text: string) => Promise<void>;
@@ -174,7 +155,6 @@ export function ChatInput({
 
       textarea.focus();
       textarea.setSelectionRange(draftText.length, draftText.length);
-      syncMobileTextareaHeight(textarea);
     });
   }, [draftText, onDraftTextApplied]);
 
@@ -194,7 +174,6 @@ export function ChatInput({
     setIsSubmitting(true);
     setValue("");
     setCursor(0);
-    requestAnimationFrame(() => syncMobileTextareaHeight(textareaRef.current));
 
     try {
       await onSubmit(text);
@@ -211,7 +190,6 @@ export function ChatInput({
     setIsSubmitting(true);
     setValue("");
     setCursor(0);
-    requestAnimationFrame(() => syncMobileTextareaHeight(textareaRef.current));
 
     try {
       if (entry.kind === "payplan") {
@@ -264,7 +242,6 @@ export function ChatInput({
 
       textarea.focus();
       textarea.setSelectionRange(nextCursor, nextCursor);
-      syncMobileTextareaHeight(textarea);
     });
   }
 
@@ -275,7 +252,6 @@ export function ChatInput({
       return trimmed.length === 0 ? amountText : `${trimmed} ${amountText}`;
     });
     syncCursor();
-    requestAnimationFrame(() => syncMobileTextareaHeight(textareaRef.current));
   }
 
   async function handleReceiptFileChange(
@@ -348,7 +324,6 @@ export function ChatInput({
 
       textarea.focus();
       textarea.setSelectionRange(nextCursor, nextCursor);
-      syncMobileTextareaHeight(textarea);
     });
   }
 
@@ -464,7 +439,6 @@ export function ChatInput({
           className={cn(
             CONTROL_MIN_HEIGHT,
             CHAT_INPUT_FIELD,
-            CHAT_INPUT_FIELD_BODY,
             GLASS_SURFACE,
             "flex max-h-28 min-w-0 flex-1 items-center overflow-hidden rounded-full py-0",
           )}
@@ -476,7 +450,6 @@ export function ChatInput({
               setValue(event.target.value);
               setCursor(event.target.selectionStart ?? 0);
               setHighlightedIndex(0);
-              syncMobileTextareaHeight(event.target);
             }}
             onSelect={syncCursor}
             onClick={syncCursor}
@@ -488,7 +461,7 @@ export function ChatInput({
             className={cn(
               CONTROL_MIN_HEIGHT,
               CHAT_INPUT_TEXTAREA,
-              "max-h-24 min-h-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent px-0 shadow-none focus-visible:border-0 focus-visible:ring-0 md:py-0",
+              "max-h-24 flex-1 resize-none overflow-y-auto rounded-full border-0 bg-transparent px-0 py-0 shadow-none focus-visible:border-0 focus-visible:ring-0",
             )}
           />
 
@@ -503,7 +476,7 @@ export function ChatInput({
                 "-mr-0.5 flex-1 rounded-full w-10 max-w-10",
               )}
             >
-              <ArrowUpIcon aria-hidden="true" weight={1} />
+              <ArrowUpIcon aria-hidden="true"  weight={1} />
             </Button>
           ) : !isPickerOpen ? (
             <ChatInputHintBadges
