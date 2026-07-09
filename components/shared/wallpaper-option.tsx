@@ -1,6 +1,7 @@
 "use client";
 
 import { SEPARATED_CONTROL } from "@/config/shape";
+import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { CheckIcon, TrashIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { getWallpaperPreviewStyle } from "@/lib/wallpaper/resolve-wallpaper";
@@ -19,6 +20,8 @@ export function WallpaperOption({
   onSelect,
   onRemove,
 }: WallpaperOptionProps) {
+  const isMobile = useIsMobileViewport();
+
   return (
     <div
       className={cn(
@@ -55,9 +58,12 @@ export function WallpaperOption({
           onClick={() => void onRemove()}
           className={cn(
             "absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full",
-            "bg-black/45 text-white opacity-0 shadow-sm ring-1 ring-white/20 backdrop-blur-sm",
-            "transition-opacity group-hover:opacity-100 group-focus-within:opacity-100",
-            "hover:bg-black/60 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none",
+            "bg-black/45 text-white shadow-sm ring-1 ring-white/20 backdrop-blur-sm",
+            "transition-opacity hover:bg-black/60",
+            "focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:outline-none",
+            isMobile
+              ? "opacity-70"
+              : "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
           )}
         >
           <TrashIcon className="size-3.5" />
