@@ -88,6 +88,17 @@ function parseReceiptOccurredAt(value: string | undefined): string {
     return new Date().toISOString();
   }
 
+  const now = new Date();
+  const yearDelta = now.getFullYear() - parsed.getFullYear();
+
+  if (yearDelta > 1 || yearDelta < -1) {
+    parsed.setFullYear(now.getFullYear());
+  }
+
+  if (parsed.getTime() > now.getTime() + 86_400_000) {
+    parsed.setFullYear(now.getFullYear());
+  }
+
   return parsed.toISOString();
 }
 

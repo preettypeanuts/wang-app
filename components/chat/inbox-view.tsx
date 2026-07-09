@@ -277,6 +277,18 @@ export function InboxView({
     try {
       const result = await submitInboxMessageFromReceipt(input);
 
+      if (!result.ok) {
+        setMessages((current) =>
+          current.filter(
+            (message) =>
+              (pendingId ? message.id !== pendingId : true) &&
+              !excludeIds.has(message.id),
+          ),
+        );
+        setReceiptError(result.content);
+        return;
+      }
+
       setMessages((current) => [
         ...current.filter(
           (message) =>
@@ -287,7 +299,7 @@ export function InboxView({
         result.assistantMessage,
       ]);
 
-      if (result.ok && result.transaction) {
+      if (result.transaction) {
         onTransactionRecorded?.(
           "transactions" in result && result.transactions?.length
             ? result.transactions

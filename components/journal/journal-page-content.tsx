@@ -16,6 +16,7 @@ import { JOURNAL_DESKTOP_SCROLL_SURFACE } from "@/config/journal-desktop";
 import { JOURNAL_DESKTOP_SCROLL_TRAIL } from "@/config/journal-desktop";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { STACK_GAP } from "@/config/spacing";
+import { useRefreshOnTabActive } from "@/hooks/use-refresh-on-tab-active";
 import {
   formatPlannerMonthLabel,
   getCurrentMonthKey,
@@ -51,6 +52,7 @@ export function JournalPageContent({
   filters,
 }: JournalPageContentProps) {
   const [createOpen, setCreateOpen] = useState(false);
+  useRefreshOnTabActive();
 
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col")}>
