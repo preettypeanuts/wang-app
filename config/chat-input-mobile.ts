@@ -15,19 +15,10 @@ export const CHAT_INPUT_SEND_BUTTON =
 
 /** 16px on mobile prevents Safari auto-zoom on focus. */
 export const CHAT_INPUT_TEXTAREA =
-  "max-md:text-base max-md:leading-5 max-md:py-1 md:text-sm md:leading-9";
+  "max-md:text-base max-md:leading-10 md:text-sm md:leading-9";
 
-export const CHAT_INPUT_FIELD = "max-md:pl-4 max-md:pr-1.5 md:pl-3 md:pr-1";
-
-/** Multi-line field — bottom-align send/hints; pill grows with textarea. */
-export const CHAT_INPUT_FIELD_BODY = [
-  "max-md:items-end",
-  "max-md:rounded-[1.375rem]",
-  "max-md:py-1.5",
-].join(" ");
-
-/** Max textarea height on mobile (matches max-h-24). */
-export const CHAT_INPUT_TEXTAREA_MAX_HEIGHT_PX = 96;
+export const CHAT_INPUT_FIELD =
+  "max-md:pl-4 max-md:pr-1.5 md:pl-3 md:pr-1";
 
 export const CHAT_INPUT_HINT_BADGE = [
   "flex size-7 shrink-0 items-center justify-center rounded-full",
