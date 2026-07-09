@@ -8,13 +8,26 @@ import {
 } from "@/lib/cache/serialize-journal";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
 import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
-import { addDays, endOfDay, parseDayKey, startOfDay } from "@/lib/finance/day-range";
+import {
+  addDays,
+  endOfDay,
+  getDateOnlyParts,
+  parseDayKey,
+  startOfDay,
+  toDayKey,
+} from "@/lib/finance/day-range";
 import { getDayFlowTotals } from "@/lib/finance/get-day-flow-totals";
 import {
   formatJournalDateRangeLabel,
   resolveJournalDateRangeBounds,
 } from "@/lib/journal/journal-date-range";
-import { getMonthRange, getCurrentMonthKey } from "@/lib/planner/calendar";
+import {
+  getCurrentMonthKey,
+  getMonthRange,
+  parseMonthKey,
+  shiftMonthKey,
+  toMonthKey,
+} from "@/lib/planner/calendar";
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser } from "@/lib/db/user-scope";
 import type { JournalDaySummary, JournalFilters } from "@/types/journal";
@@ -122,15 +135,20 @@ async function buildJournalDaySummary(
   date: Date,
 ): Promise<JournalDaySummary> {
   const anchor = startOfDay(date);
-  const year = anchor.getFullYear();
-  const month = anchor.getMonth();
+  const { year, month } = getDateOnlyParts(anchor);
   const currentMonthStart = getMonthRange(year, month).start;
   const currentMonthEnd = endOfDay(anchor);
 
-  const lastMonthAnchor = new Date(year, month - 1, 1);
+  const lastMonthKey = shiftMonthKey(toMonthKey(year, month), -1);
+  const lastMonthParsed = parseMonthKey(lastMonthKey);
+
+  if (!lastMonthParsed) {
+    throw new Error("Bulan journal tidak valid.");
+  }
+
   const lastMonthRange = getMonthRange(
-    lastMonthAnchor.getFullYear(),
-    lastMonthAnchor.getMonth(),
+    lastMonthParsed.year,
+    lastMonthParsed.month,
   );
 
   const [
@@ -170,13 +188,20 @@ async function buildJournalDaySummary(
   };
 }
 
-function getCachedJournalDaySummary(userId: string, monthKey: string) {
+function getCachedJournalDaySummary(
+  userId: string,
+  monthKey: string,
+  asOfDayKey: string,
+) {
   return unstable_cache(
     async (): Promise<SerializedJournalDaySummary> => {
-      const summary = await buildJournalDaySummary(userId, parseDayKey(`${monthKey}-01`));
+      const summary = await buildJournalDaySummary(
+        userId,
+        parseDayKey(asOfDayKey),
+      );
       return serializeJournalDaySummary(summary);
     },
-    ["journal-day-summary", userId, monthKey],
+    ["journal-day-summary", userId, monthKey, asOfDayKey],
     { tags: [userDataTags.transactions(userId)] },
   );
 }
@@ -188,7 +213,12 @@ export const getJournalDaySummary = cache(
     date: Date = new Date(),
   ): Promise<JournalDaySummary> => {
     const monthKey = getCurrentMonthKey(date);
-    const cached = await getCachedJournalDaySummary(userId, monthKey)();
+    const asOfDayKey = toDayKey(date);
+    const cached = await getCachedJournalDaySummary(
+      userId,
+      monthKey,
+      asOfDayKey,
+    )();
     return hydrateJournalDaySummary(cached);
   },
 );
