@@ -33,6 +33,8 @@ export interface PlansOverview {
   availableBalance: number;
   upcomingPayPlanTotal: number;
   upcomingPayPlanCount: number;
+  /** Positive remaining budget across all PayPlan categories this month. */
+  remainingBudgetTotal: number;
   projectedBalance: number;
   budgetImpacts: PlanBudgetImpact[];
   insight: string;
@@ -57,6 +59,7 @@ export interface PlansInsightInputs {
   availableBalance: number;
   upcomingPayPlanTotal: number;
   upcomingPayPlanCount: number;
+  remainingBudgetTotal: number;
   budgetImpacts: PlanBudgetImpact[];
 }
 

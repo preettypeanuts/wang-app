@@ -33,6 +33,7 @@ export async function generatePlansInsight(
   plans: PlanRecord[],
   availableBalance: number,
   upcomingPayPlanTotal: number,
+  remainingBudgetTotal: number,
   budgetImpacts: PlanBudgetImpact[],
 ): Promise<string> {
   const dateKey = todayDateKey();
@@ -60,6 +61,7 @@ export async function generatePlansInsight(
         estimatedCost,
         availableBalance,
         upcomingPayPlanTotal,
+        remainingBudgetTotal,
         planNames: activePlans.map((plan) => plan.name),
         riskyBudgetImpacts,
         wishNamesByCategory,
@@ -71,6 +73,7 @@ export async function generatePlansInsight(
         estimatedCost,
         availableBalance,
         upcomingPayPlanTotal,
+        remainingBudgetTotal,
       );
     }
   }
@@ -79,5 +82,6 @@ export async function generatePlansInsight(
     estimatedCost,
     availableBalance,
     upcomingPayPlanTotal,
+    remainingBudgetTotal,
   );
 }

@@ -50,14 +50,14 @@ export function buildOverviewAlerts({
       id: "plans-unsafe",
       tone: "danger",
       title: "Wish melebihi saldo",
-      message: `Estimasi wish ${formatIdr(plansOverview.estimatedCost)}${plansOverview.upcomingPayPlanTotal > 0 ? ` + PayPlan bulan ini ${formatIdr(plansOverview.upcomingPayPlanTotal)}` : ""} vs saldo ${formatIdr(plansOverview.availableBalance)}.`,
+      message: `Estimasi wish ${formatIdr(plansOverview.estimatedCost)}${plansOverview.upcomingPayPlanTotal > 0 ? ` + PayPlan bulan ini ${formatIdr(plansOverview.upcomingPayPlanTotal)}` : ""}${plansOverview.remainingBudgetTotal > 0 ? ` + sisa budget ${formatIdr(plansOverview.remainingBudgetTotal)}` : ""} vs saldo ${formatIdr(plansOverview.availableBalance)}.`,
     });
   } else if (plansOverview.insightMeta.tone === "tight") {
     alerts.push({
       id: "plans-tight",
       tone: "warning",
       title: "Sisa wish tipis",
-      message: `Proyeksi sisa setelah wish dan PayPlan bulan ini ${formatIdr(plansOverview.projectedBalance)}.`,
+      message: `Proyeksi sisa setelah wish, PayPlan, dan sisa budget bulan ini ${formatIdr(plansOverview.projectedBalance)}.`,
     });
   }
 

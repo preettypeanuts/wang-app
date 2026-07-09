@@ -6,6 +6,7 @@ import { PlansPageContent } from "@/components/plans/plans-page-content";
 import type { PlansPageTab } from "@/components/plans/plans-page-tabs";
 import { requireUserId } from "@/lib/auth/session";
 import { getAvailableBalance } from "@/lib/db/balance";
+import { listBudgetsForMonth } from "@/lib/db/budgets";
 import { listPlans } from "@/lib/db/plans";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
 import {
@@ -13,6 +14,7 @@ import {
   buildPlansOverview,
 } from "@/lib/finance/build-plans-overview";
 import { buildPlansBudgetImpact } from "@/lib/finance/build-plans-budget-impact";
+import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
 import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
 import { getCurrentMonthKey } from "@/lib/planner/calendar";
@@ -35,17 +37,20 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
   const params = await searchParams;
   const initialTab = parsePlansPageTab(params);
 
-  const [plans, savingsGoals, availableBalance, upcomingImpact] =
+  const monthKey = getCurrentMonthKey();
+
+  const [plans, savingsGoals, availableBalance, upcomingImpact, budgets] =
     await Promise.all([
       listPlans(userId),
       listSavingsGoals(userId),
       getAvailableBalance(userId),
       getPlansUpcomingImpact(userId),
+      listBudgetsForMonth(userId, monthKey),
     ]);
 
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
-  const monthKey = getCurrentMonthKey();
+  const remainingBudgetTotal = sumRemainingBudgetTotal(budgets);
   const { upcomingPayPlanTotal, upcomingPayPlanCount } =
     sumUpcomingPayPlanThisMonth(upcomingImpact);
   const budgetImpacts = await buildPlansBudgetImpact(
@@ -60,10 +65,12 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
       estimatedCost,
       availableBalance,
       upcomingPayPlanTotal,
+      remainingBudgetTotal,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
     budgetImpacts,
+    remainingBudgetTotal,
   );
   const savingsOverview = buildSavingsOverview(savingsGoals, availableBalance);
 
@@ -79,7 +86,11 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
         <Suspense
           fallback={
             <PlansAiInsightSkeleton
-              showMetrics={estimatedCost > 0 || upcomingPayPlanTotal > 0}
+              showMetrics={
+                estimatedCost > 0 ||
+                upcomingPayPlanTotal > 0 ||
+                remainingBudgetTotal > 0
+              }
             />
           }
         >
@@ -89,6 +100,7 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
             availableBalance={availableBalance}
             upcomingPayPlanTotal={upcomingPayPlanTotal}
             upcomingPayPlanCount={upcomingPayPlanCount}
+            remainingBudgetTotal={remainingBudgetTotal}
             budgetImpacts={budgetImpacts}
           />
         </Suspense>

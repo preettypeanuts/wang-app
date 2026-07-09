@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireUserId } from "@/lib/auth/session";
 import { revalidateUserBudgets } from "@/lib/cache/revalidate-user-data";
+import { invalidatePlansInsightCache } from "@/lib/db/ai-insight-cache";
 import {
   createCategoryBudget,
   deleteCategoryBudget,
@@ -27,6 +28,7 @@ export type BudgetActionResult = BudgetActionSuccess | BudgetActionFailure;
 function revalidateBudgetPaths(userId: string) {
   revalidateUserBudgets(userId);
   revalidatePath("/payplan");
+  revalidatePath("/plans");
   revalidatePath("/");
 }
 
@@ -47,6 +49,7 @@ export async function saveCategoryBudgetAction(
       : await createCategoryBudget(userId, parsed.data);
 
   revalidateBudgetPaths(userId);
+  await invalidatePlansInsightCache(userId);
 
   return { ok: true, budget };
 }
@@ -63,6 +66,7 @@ export async function deleteCategoryBudgetAction(
 
   await deleteCategoryBudget(userId, trimmed);
   revalidateBudgetPaths(userId);
+  await invalidatePlansInsightCache(userId);
 
   return { ok: true };
 }

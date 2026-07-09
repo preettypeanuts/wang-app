@@ -9,6 +9,7 @@ export async function PlansAiInsight({
   availableBalance,
   upcomingPayPlanTotal,
   upcomingPayPlanCount,
+  remainingBudgetTotal,
   budgetImpacts,
 }: PlansInsightInputs) {
   const insight = await generatePlansInsight(
@@ -16,6 +17,7 @@ export async function PlansAiInsight({
     plans,
     availableBalance,
     upcomingPayPlanTotal,
+    remainingBudgetTotal,
     budgetImpacts,
   );
   const overview = buildPlansOverview(
@@ -25,6 +27,7 @@ export async function PlansAiInsight({
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
     budgetImpacts,
+    remainingBudgetTotal,
   );
 
   return <PlansAiSummary overview={overview} />;

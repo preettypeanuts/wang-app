@@ -93,7 +93,9 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
           {overview.insight}
         </p>
 
-        {overview.estimatedCost > 0 || overview.upcomingPayPlanTotal > 0 ? (
+        {overview.estimatedCost > 0 ||
+        overview.upcomingPayPlanTotal > 0 ||
+        overview.remainingBudgetTotal > 0 ? (
           <div className={cn("mt-2.5 space-y-1 text-xs", style.subtitleColor)}>
             {overview.estimatedCost > 0 ? (
               <p>
@@ -112,6 +114,14 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
                 Tagihan PayPlan bulan ini{" "}
                 <span className={cn("font-semibold", style.metricSpend)}>
                   {formatAmount(overview.upcomingPayPlanTotal)}
+                </span>
+              </p>
+            ) : null}
+            {overview.remainingBudgetTotal > 0 ? (
+              <p>
+                Sisa budget PayPlan bulan ini{" "}
+                <span className={cn("font-semibold", style.metricSpend)}>
+                  {formatAmount(overview.remainingBudgetTotal)}
                 </span>
               </p>
             ) : null}
