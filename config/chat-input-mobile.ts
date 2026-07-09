@@ -11,11 +11,11 @@ export const CHAT_INPUT_MENU_BUTTON =
   "max-md:size-10 max-md:[&_svg]:size-[1.05rem] md:size-9";
 
 export const CHAT_INPUT_SEND_BUTTON =
-  "max-md:size-8 max-md:[&_svg]:size-3.5 md:size-7";
+  "max-md:size-8 max-md:[&_svg]:size-2.5 md:size-7";
 
 /** 16px on mobile prevents Safari auto-zoom on focus. */
 export const CHAT_INPUT_TEXTAREA =
-  "max-md:text-base max-md:leading-10 md:text-sm md:leading-9";
+  "max-md:text-base max-md:leading-6 md:text-sm md:leading-9";
 
 export const CHAT_INPUT_FIELD =
   "max-md:pl-4 max-md:pr-1.5 md:pl-3 md:pr-1";

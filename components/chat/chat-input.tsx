@@ -21,7 +21,7 @@ import {
   CHAT_INPUT_SEND_BUTTON,
   CHAT_INPUT_TEXTAREA,
 } from "@/config/chat-input-mobile";
-import { GLASS_SURFACE } from "@/config/glass";
+import { GLASS_SURFACE, GLASS_TILE_BASE, GLASS_FILL } from "@/config/glass";
 import { RECEIPT_ACCEPT_ATTRIBUTE } from "@/config/receipt";
 import { CONTROL_GAP } from "@/config/spacing";
 import {
@@ -405,7 +405,8 @@ export function ChatInput({
                 className={cn(
                   CONTROL_MIN_HEIGHT,
                   CHAT_INPUT_MENU_BUTTON,
-                  GLASS_SURFACE,
+                  GLASS_TILE_BASE,
+                  GLASS_FILL,
                   "shrink-0 rounded-full p-0",
                 )}
               />
@@ -439,8 +440,9 @@ export function ChatInput({
           className={cn(
             CONTROL_MIN_HEIGHT,
             CHAT_INPUT_FIELD,
-            GLASS_SURFACE,
-            "flex max-h-28 min-w-0 flex-1 items-center overflow-hidden rounded-full py-0",
+            GLASS_TILE_BASE,
+            GLASS_FILL,
+            "flex max-h-28 min-w-0 flex-1 items-center overflow-hidden rounded-[20px] py-0",
           )}
         >
           <Textarea
@@ -461,7 +463,7 @@ export function ChatInput({
             className={cn(
               CONTROL_MIN_HEIGHT,
               CHAT_INPUT_TEXTAREA,
-              "max-h-24 flex-1 resize-none overflow-y-auto rounded-full border-0 bg-transparent px-0 py-0 shadow-none focus-visible:border-0 focus-visible:ring-0",
+              "max-h-24 py-[8px]! flex-1 resize-none overflow-y-auto rounded-lg border-0 bg-transparent px-0 shadow-none focus-visible:border-0 focus-visible:ring-0 no-scrollbar",
             )}
           />
 
@@ -473,7 +475,7 @@ export function ChatInput({
               aria-label="Kirim pesan"
               className={cn(
                 CHAT_INPUT_SEND_BUTTON,
-                "-mr-0.5 flex-1 rounded-full w-10 max-w-10",
+                "self-end -mr-px flex-1 mb-[5px] rounded-full w-9.5 max-w-9.5 h-[29px] max-h-[29px]",
               )}
             >
               <ArrowUpIcon aria-hidden="true"  weight={1} />
