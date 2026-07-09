@@ -8,7 +8,7 @@ export const CHAT_INPUT_DOCK_INSET_X = [
 export const CHAT_INPUT_CONTROL_MIN_HEIGHT = "max-md:min-h-10 md:min-h-9";
 
 export const CHAT_INPUT_MENU_BUTTON =
-  "max-md:size-10 max-md:[&_svg]:size-[1.05rem] md:size-9";
+  "max-md:size-10 max-md:[&_svg]:size-[1.05rem] md:size-7";
 
 export const CHAT_INPUT_SEND_BUTTON =
   "max-md:size-8 max-md:[&_svg]:size-2.5 md:size-7";

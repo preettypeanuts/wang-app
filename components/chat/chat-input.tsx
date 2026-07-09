@@ -85,6 +85,7 @@ export function ChatInput({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
+  const [isMultiline, setIsMultiline] = useState(false);
   const hasText = value.trim().length > 0;
   const isInputDisabled = disabled;
   const slashMatch = value.match(/^\/(.*)$/);
@@ -155,8 +156,33 @@ export function ChatInput({
 
       textarea.focus();
       textarea.setSelectionRange(draftText.length, draftText.length);
+      syncTextareaLayout();
     });
   }, [draftText, onDraftTextApplied]);
+
+  function syncTextareaLayout() {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+
+    textarea.style.height = "auto";
+    const scrollHeight = textarea.scrollHeight;
+    const maxHeight = 96;
+    const style = window.getComputedStyle(textarea);
+    const lineHeight = Number.parseFloat(style.lineHeight) || 24;
+    const paddingY =
+      Number.parseFloat(style.paddingTop) +
+      Number.parseFloat(style.paddingBottom);
+    const singleLineHeight = lineHeight + paddingY;
+
+    setIsMultiline(scrollHeight > singleLineHeight + 1);
+    textarea.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+  }
+
+  useEffect(() => {
+    syncTextareaLayout();
+  }, [value]);
 
   function syncCursor() {
     const nextCursor = textareaRef.current?.selectionStart ?? 0;
@@ -442,7 +468,8 @@ export function ChatInput({
             CHAT_INPUT_FIELD,
             GLASS_TILE_BASE,
             GLASS_FILL,
-            "flex max-h-28 min-w-0 flex-1 items-center overflow-hidden rounded-[20px] py-0",
+            "flex max-h-28 min-w-0 flex-1 overflow-hidden rounded-[20px] py-0",
+            isMultiline ? "items-end" : "items-center",
           )}
         >
           <Textarea
@@ -452,6 +479,7 @@ export function ChatInput({
               setValue(event.target.value);
               setCursor(event.target.selectionStart ?? 0);
               setHighlightedIndex(0);
+              requestAnimationFrame(syncTextareaLayout);
             }}
             onSelect={syncCursor}
             onClick={syncCursor}
@@ -463,7 +491,7 @@ export function ChatInput({
             className={cn(
               CONTROL_MIN_HEIGHT,
               CHAT_INPUT_TEXTAREA,
-              "max-h-24 py-[8px]! flex-1 resize-none overflow-y-auto rounded-lg border-0 bg-transparent px-0 shadow-none focus-visible:border-0 focus-visible:ring-0 no-scrollbar",
+              "max-h-24 py-0  max-md:py-[8px]! flex-1 resize-none overflow-y-auto rounded-lg border-0 bg-transparent placeholder:text-gray-500/60 dark:placeholder:text-gray-200/60 px-0 shadow-none focus-visible:border-0 focus-visible:ring-0 no-scrollbar",
             )}
           />
 
@@ -475,7 +503,10 @@ export function ChatInput({
               aria-label="Kirim pesan"
               className={cn(
                 CHAT_INPUT_SEND_BUTTON,
-                "self-end -mr-px flex-1 mb-[5px] rounded-full w-9.5 max-w-9.5 h-[29px] max-h-[29px]",
+                isMultiline
+                  ? "mb-[6px] self-end"
+                  : "self-center",
+                "-mr-px shrink-0 rounded-full h-[29px] max-h-[29px] w-9! max-w-9! md:hidden",
               )}
             >
               <ArrowUpIcon aria-hidden="true"  weight={1} />
