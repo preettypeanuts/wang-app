@@ -12,8 +12,11 @@ import {
   buildFallbackPlansInsight,
   buildPlansOverview,
 } from "@/lib/finance/build-plans-overview";
-import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
+import { buildPlansBudgetImpact } from "@/lib/finance/build-plans-budget-impact";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
+import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
+import { getCurrentMonthKey } from "@/lib/planner/calendar";
+import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
 
 interface PlansPageDataProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -42,10 +45,25 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
 
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
+  const monthKey = getCurrentMonthKey();
+  const { upcomingPayPlanTotal, upcomingPayPlanCount } =
+    sumUpcomingPayPlanThisMonth(upcomingImpact);
+  const budgetImpacts = await buildPlansBudgetImpact(
+    userId,
+    activePlans,
+    monthKey,
+  );
   const plansOverview = buildPlansOverview(
     plans,
     availableBalance,
-    buildFallbackPlansInsight(estimatedCost, availableBalance),
+    buildFallbackPlansInsight(
+      estimatedCost,
+      availableBalance,
+      upcomingPayPlanTotal,
+    ),
+    upcomingPayPlanTotal,
+    upcomingPayPlanCount,
+    budgetImpacts,
   );
   const savingsOverview = buildSavingsOverview(savingsGoals, availableBalance);
 
@@ -60,13 +78,18 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
       aiInsight={
         <Suspense
           fallback={
-            <PlansAiInsightSkeleton showMetrics={estimatedCost > 0} />
+            <PlansAiInsightSkeleton
+              showMetrics={estimatedCost > 0 || upcomingPayPlanTotal > 0}
+            />
           }
         >
           <PlansAiInsight
             userId={userId}
             plans={plans}
             availableBalance={availableBalance}
+            upcomingPayPlanTotal={upcomingPayPlanTotal}
+            upcomingPayPlanCount={upcomingPayPlanCount}
+            budgetImpacts={budgetImpacts}
           />
         </Suspense>
       }

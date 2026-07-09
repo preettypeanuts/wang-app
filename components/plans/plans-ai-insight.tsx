@@ -7,9 +7,25 @@ export async function PlansAiInsight({
   userId,
   plans,
   availableBalance,
+  upcomingPayPlanTotal,
+  upcomingPayPlanCount,
+  budgetImpacts,
 }: PlansInsightInputs) {
-  const insight = await generatePlansInsight(userId, plans, availableBalance);
-  const overview = buildPlansOverview(plans, availableBalance, insight);
+  const insight = await generatePlansInsight(
+    userId,
+    plans,
+    availableBalance,
+    upcomingPayPlanTotal,
+    budgetImpacts,
+  );
+  const overview = buildPlansOverview(
+    plans,
+    availableBalance,
+    insight,
+    upcomingPayPlanTotal,
+    upcomingPayPlanCount,
+    budgetImpacts,
+  );
 
   return <PlansAiSummary overview={overview} />;
 }

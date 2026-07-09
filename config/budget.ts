@@ -1,4 +1,5 @@
 import { GRID_GAP } from "@/config/spacing";
+import type { PlanBudgetImpactStatus } from "@/types/plan";
 
 export const BUDGET_CARD_GRID = `grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 ${GRID_GAP}`;
 
@@ -41,6 +42,25 @@ export function getBudgetStatusBadge(remainingPercent: number): {
     label: "Aman",
     className:
       "bg-[#34C759]/14 text-[#34C759] ring-1 ring-[#34C759]/25 dark:bg-[#34C759]/18 dark:ring-[#34C759]/30",
+  };
+}
+
+export function getPlanBudgetImpactBadge(status: PlanBudgetImpactStatus): {
+  label: string;
+  className: string;
+} {
+  if (status === "over") {
+    return {
+      label: "Over budget",
+      className:
+        "bg-[#FF3B30]/14 text-[#FF3B30] ring-1 ring-[#FF3B30]/25 dark:bg-[#FF3B30]/18 dark:ring-[#FF3B30]/30",
+    };
+  }
+
+  return {
+    label: "Waspada",
+    className:
+      "bg-[#FF9500]/14 text-[#FF9500] ring-1 ring-[#FF9500]/25 dark:bg-[#FF9500]/18 dark:ring-[#FF9500]/30",
   };
 }
 

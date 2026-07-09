@@ -23,6 +23,7 @@ import {
   getMonthRange,
 } from "@/lib/planner/calendar";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
+import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
 import type { OverviewPageResult } from "@/types/overview";
 
 export async function getOverviewPageData(
@@ -81,15 +82,21 @@ export async function getOverviewPageData(
   const todaySummary = buildTodaySummary(journalTransactions);
   const monthSummary = buildTodaySummary(monthTransactions);
 
+  const { upcomingPayPlanTotal, upcomingPayPlanCount } =
+    sumUpcomingPayPlanThisMonth(upcomingImpact, now);
+  const activePlanCost = plans
+    .filter((plan) => plan.status === "active")
+    .reduce((sum, plan) => sum + plan.amount, 0);
   const plansOverview = buildPlansOverview(
     plans,
     availableBalance,
     buildFallbackPlansInsight(
-      plans
-        .filter((plan) => plan.status === "active")
-        .reduce((sum, plan) => sum + plan.amount, 0),
+      activePlanCost,
       availableBalance,
+      upcomingPayPlanTotal,
     ),
+    upcomingPayPlanTotal,
+    upcomingPayPlanCount,
   );
 
   const savingsOverview = buildSavingsOverview(

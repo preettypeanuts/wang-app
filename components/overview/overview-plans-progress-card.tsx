@@ -93,16 +93,16 @@ export function OverviewPlansProgressCard({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-muted-foreground">Sisa setelah wish</p>
+            <p className="text-muted-foreground">Proyeksi sisa</p>
             <p
               className={cn(
                 "mt-0.5 font-semibold tabular-nums",
-                overview.remainingBalance < 0
+                overview.projectedBalance < 0
                   ? "text-[#FF3B30]"
                   : "text-foreground/90",
               )}
             >
-              {formatAmount(overview.remainingBalance)}
+              {formatAmount(overview.projectedBalance)}
             </p>
           </div>
         </div>

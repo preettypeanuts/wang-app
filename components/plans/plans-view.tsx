@@ -20,7 +20,7 @@ import { SEPARATED_CONTROL } from "@/config/shape";
 import { STACK_GAP } from "@/config/spacing";
 import {
   buildFallbackPlansInsight,
-  resolvePlansInsightMeta,
+  buildPlansOverview,
 } from "@/lib/finance/build-plans-overview";
 import { PlusIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -47,19 +47,23 @@ function sortPlans(plans: PlanRecord[]): PlanRecord[] {
 
 function buildLocalOverview(
   plans: PlanRecord[],
-  availableBalance: number,
+  base: PlansOverview,
 ): PlansOverview {
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
 
-  return {
-    activeCount: activePlans.length,
-    estimatedCost,
-    availableBalance,
-    remainingBalance: availableBalance - estimatedCost,
-    insight: buildFallbackPlansInsight(estimatedCost, availableBalance),
-    insightMeta: resolvePlansInsightMeta(estimatedCost, availableBalance),
-  };
+  return buildPlansOverview(
+    plans,
+    base.availableBalance,
+    buildFallbackPlansInsight(
+      estimatedCost,
+      base.availableBalance,
+      base.upcomingPayPlanTotal,
+    ),
+    base.upcomingPayPlanTotal,
+    base.upcomingPayPlanCount,
+    base.budgetImpacts,
+  );
 }
 
 export function PlansView({
@@ -108,7 +112,7 @@ export function PlansView({
             )
           : [result.plan, ...current],
       );
-      setSummary(buildLocalOverview(next, summary.availableBalance));
+      setSummary(buildLocalOverview(next, summary));
       return next;
     });
 
@@ -125,7 +129,7 @@ export function PlansView({
 
     setItems((current) => {
       const next = current.filter((entry) => entry.id !== plan.id);
-      setSummary(buildLocalOverview(next, summary.availableBalance));
+      setSummary(buildLocalOverview(next, summary));
       return next;
     });
     setDialogOpen(false);
@@ -145,7 +149,7 @@ export function PlansView({
           entry.id === result.plan.id ? result.plan : entry,
         ),
       );
-      setSummary(buildLocalOverview(next, summary.availableBalance));
+      setSummary(buildLocalOverview(next, summary));
       return next;
     });
     setSelectedPlan(result.plan);

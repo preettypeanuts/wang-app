@@ -31,6 +31,7 @@ import {
 } from "@/lib/finance/day-range";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
+import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
 import { NOTIFICATION_ROUTES } from "@/config/notifications";
 import type { NotificationDraft } from "@/types/notification";
 
@@ -128,10 +129,18 @@ export async function buildUserNotificationDrafts(
 
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
+  const { upcomingPayPlanTotal, upcomingPayPlanCount } =
+    sumUpcomingPayPlanThisMonth(upcoming, referenceDate);
   const plansOverview = buildPlansOverview(
     plans,
     availableBalance,
-    buildFallbackPlansInsight(estimatedCost, availableBalance),
+    buildFallbackPlansInsight(
+      estimatedCost,
+      availableBalance,
+      upcomingPayPlanTotal,
+    ),
+    upcomingPayPlanTotal,
+    upcomingPayPlanCount,
   );
 
   const drafts: NotificationDraft[] = [];
