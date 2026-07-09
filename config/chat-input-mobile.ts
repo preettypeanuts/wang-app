@@ -22,7 +22,7 @@ export const CHAT_INPUT_FIELD =
 
 export const CHAT_INPUT_HINT_BADGE = [
   "flex size-7 shrink-0 items-center justify-center rounded-full",
-  "bg-black/6 text-[11px] font-semibold text-muted-foreground",
+  "bg-black/6 text-[11px] font-semibold text-gray-500/60 dark::text-gray-200/60",
   "transition-colors hover:bg-black/10 active:scale-95",
   "disabled:pointer-events-none disabled:opacity-40",
   "dark:bg-white/10 dark:hover:bg-white/14",
