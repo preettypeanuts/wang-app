@@ -1,6 +1,9 @@
 import { buildTodaySummary } from "@/lib/finance/build-summary";
-import { formatDayMonth, formatJournalDate } from "@/lib/finance/format-datetime";
 import { formatIdr } from "@/lib/finance/format-currency";
+import {
+  formatDayMonth,
+  formatJournalDate,
+} from "@/lib/finance/format-datetime";
 import type { DailySummarySnapshot, FinanceCondition } from "@/types/summary";
 
 interface DailySummaryTransaction {
@@ -23,7 +26,7 @@ export function buildDailySummaryMessage(
   const transactionCount = transactions.length;
 
   if (transactionCount === 0) {
-    return `Ringkasan harian — ${dateLabel}\n\nTidak ada transaksi tercatat hari ini.`;
+    return `Ringkasan harian — ${dateLabel}\n\nTidak ada transaksi tercatat.`;
   }
 
   const lines = [

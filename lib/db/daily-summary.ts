@@ -205,6 +205,28 @@ async function backfillLegacyDailySummaryInsights(
 
 const ensurePendingDailySummariesByUser = new Map<string, Promise<void>>();
 
+export async function ensureDailySummaryForDay(
+  userId: string,
+  date: Date,
+): Promise<void> {
+  const summaryDate = startOfDay(date);
+
+  const existing = await prisma.inboxMessage.findFirst({
+    where: {
+      userId,
+      kind: "daily_summary",
+      summaryDate,
+    },
+    select: { id: true },
+  });
+
+  if (existing) {
+    return;
+  }
+
+  await createDailySummaryForDay(userId, date);
+}
+
 export async function ensurePendingDailySummaries(
   userId: string,
 ): Promise<void> {

@@ -3,6 +3,12 @@ import { OVERVIEW_ROUTE, PAYPLAN_ROUTE } from "@/config/navigation";
 
 export const NOTIFICATION_CRON_PATH = "/api/cron/notifications";
 
+/** Morning digest push — 05:00 WIB (22:00 UTC). */
+export const DAILY_DIGEST_HOUR_WIB = 5;
+
+/** Vercel cron expression for {@link DAILY_DIGEST_HOUR_WIB}. */
+export const NOTIFICATION_CRON_SCHEDULE_UTC = "0 22 * * *";
+
 export const NOTIFICATION_ROUTES = {
   overview: OVERVIEW_ROUTE,
   payplan: PAYPLAN_ROUTE,
@@ -18,7 +24,8 @@ export const IOS_NOTIFICATION_ALERT = [
   "backdrop-blur-3xl",
 ].join(" ");
 
-export const IOS_NOTIFICATION_ALERT_INNER = "flex items-start gap-3 px-3.5 py-3";
+export const IOS_NOTIFICATION_ALERT_INNER =
+  "flex items-start gap-3 px-3.5 py-3";
 
 export const IOS_NOTIFICATION_ALERT_ICON =
   "mt-0.5 size-10 shrink-0 rounded-[0.85rem] object-cover shadow-sm";

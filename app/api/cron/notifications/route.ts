@@ -22,7 +22,7 @@ function isAuthorized(request: Request): boolean {
   return bearer === secret || headerSecret === secret;
 }
 
-/** Optional `?date=YYYY-MM-DD` for manual Monday weekly-summary tests. */
+/** Vercel cron (see vercel.json) — 05:00 WIB / 22:00 UTC. Optional `?date=YYYY-MM-DD` for manual tests. */
 function resolveReferenceDate(request: Request): Date {
   const raw = new URL(request.url).searchParams.get("date")?.trim();
   if (!raw || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
