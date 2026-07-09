@@ -14,16 +14,29 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  GLASS_BACKDROP,
+  GLASS_BORDER,
+  GLASS_FILL,
+  GLASS_HIGHLIGHT,
+} from "@/config/glass";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { cn } from "@/lib/utils";
 
 const LONG_PRESS_MS = 480;
 
+const MENU_TRIGGER_GLASS = cn(
+  GLASS_BACKDROP,
+  GLASS_BORDER,
+  GLASS_FILL,
+  GLASS_HIGHLIGHT,
+);
+
 interface ChatMessageMenuProps {
   children: React.ReactNode;
   disabled?: boolean;
-  hideEdit?: boolean;
-  leadingAction?: React.ReactNode;
+  receiptMenu?: boolean;
+  showEdit?: boolean;
   onEdit: () => void;
   onUndo: () => void;
   onOpenChange?: (open: boolean) => void;
@@ -32,8 +45,8 @@ interface ChatMessageMenuProps {
 export function ChatMessageMenu({
   children,
   disabled = false,
-  hideEdit = false,
-  leadingAction = null,
+  receiptMenu = false,
+  showEdit = true,
   onEdit,
   onUndo,
   onOpenChange,
@@ -111,8 +124,7 @@ export function ChatMessageMenu({
     >
       {children}
 
-      <div className="absolute top-1/2 right-full z-10 flex -translate-y-1/2 items-center gap-2 pr-2">
-        {leadingAction}
+      <div className="absolute top-1/2 right-full z-10 flex -translate-y-1/2 items-center pr-2">
         <DropdownMenu open={open} onOpenChange={handleOpenChange}>
           <DropdownMenuTrigger
             disabled={disabled}
@@ -121,13 +133,25 @@ export function ChatMessageMenu({
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                aria-label="Menu pesan"
+                aria-label={receiptMenu ? "Menu struk" : "Menu pesan"}
                 className={cn(
                   SEPARATED_CONTROL,
-                  "size-7 bg-background/90 text-foreground shadow-sm ring-1 ring-border/60",
-                  "opacity-0 transition-opacity",
-                  "group-hover/bubble-menu:opacity-100 data-popup-open:opacity-100",
-                  "focus-visible:opacity-100",
+                  "size-7 text-foreground transition-[background-color,box-shadow,opacity]",
+                  receiptMenu
+                    ? cn(
+                        "bg-transparent opacity-100 shadow-none ring-0",
+                        "hover:shadow-sm data-popup-open:shadow-sm",
+                        "hover:ring-1 data-popup-open:ring-1 hover:ring-border/60 data-popup-open:ring-border/60",
+                        "hover:bg-[var(--glass-fill)] data-popup-open:bg-[var(--glass-fill)]",
+                        "hover:glass-backdrop data-popup-open:glass-backdrop",
+                        "active:bg-[var(--glass-fill)] active:glass-backdrop",
+                      )
+                    : cn(
+                        MENU_TRIGGER_GLASS,
+                        "opacity-0 shadow-sm ring-1 ring-border/60",
+                        "group-hover/bubble-menu:opacity-100 data-popup-open:opacity-100",
+                        "focus-visible:opacity-100",
+                      ),
                 )}
               />
             }
@@ -135,7 +159,7 @@ export function ChatMessageMenu({
             <DotsThreeIcon className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent side="left" align="center" sideOffset={6}>
-            {!hideEdit ? (
+            {showEdit ? (
               <DropdownMenuItem
                 disabled={disabled}
                 onClick={() => {
@@ -144,7 +168,7 @@ export function ChatMessageMenu({
                 }}
               >
                 <PencilSimpleIcon className="size-4" />
-                Edit
+                {receiptMenu ? "Perbaiki struk" : "Edit"}
               </DropdownMenuItem>
             ) : null}
             <DropdownMenuItem

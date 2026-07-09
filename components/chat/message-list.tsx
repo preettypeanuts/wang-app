@@ -5,7 +5,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatMessageMenu } from "@/components/chat/chat-message-menu";
 import { ChatMessageMenuHint } from "@/components/chat/chat-message-menu-hint";
 import { ChatMessageRetryButton } from "@/components/chat/chat-message-retry-button";
-import { ChatReceiptEditButton } from "@/components/chat/chat-receipt-edit-button";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageTimestamp } from "@/components/chat/message-timestamp";
 import { TransactionPreview } from "@/components/chat/transaction-preview";
@@ -405,16 +404,9 @@ export function MessageList({
                 ) : canEditReceipt || (canUndo && isReceiptUserMessage(message.content)) ? (
                   <ChatMessageMenu
                     disabled={actionsDisabled}
-                    hideEdit
-                    leadingAction={
-                      canEditReceipt ? (
-                        <ChatReceiptEditButton
-                          disabled={actionsDisabled}
-                          onEdit={() => onEditReceipt?.(message.id)}
-                        />
-                      ) : undefined
-                    }
-                    onEdit={() => {}}
+                    receiptMenu={isReceiptUserMessage(message.content)}
+                    showEdit={canEditReceipt}
+                    onEdit={() => onEditReceipt?.(message.id)}
                     onUndo={() => void onUndoMessage?.(message.id)}
                     onOpenChange={handleMessageMenuOpenChange}
                   >
