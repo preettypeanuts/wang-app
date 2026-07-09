@@ -1,5 +1,6 @@
 import { getCategoryLabel } from "@/config/categories";
 import { getAvailableBalance } from "@/lib/db/balance";
+import { listBudgetsForMonth } from "@/lib/db/budgets";
 import { listPlans } from "@/lib/db/plans";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
 import {
@@ -12,6 +13,7 @@ import {
   buildPlansOverview,
 } from "@/lib/finance/build-plans-overview";
 import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
+import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
 import { addDays, getDayRange, toDayKey } from "@/lib/finance/day-range";
 import { formatJournalTime } from "@/lib/finance/format-datetime";
@@ -47,6 +49,7 @@ export async function getOverviewPageData(
     yesterdayFlow,
     todayTransactionRows,
     monthTransactions,
+    budgets,
   ] = await Promise.all([
     getAvailableBalance(userId, now),
     getAvailableBalance(userId, yesterday),
@@ -62,6 +65,7 @@ export async function getOverviewPageData(
       parsedMonth.start,
       parsedMonth.end,
     ),
+    listBudgetsForMonth(userId, monthKey),
   ]);
 
   const journalTransactions = todayTransactionRows.map((transaction) => ({
@@ -87,6 +91,7 @@ export async function getOverviewPageData(
   const activePlanCost = plans
     .filter((plan) => plan.status === "active")
     .reduce((sum, plan) => sum + plan.amount, 0);
+  const remainingBudgetTotal = sumRemainingBudgetTotal(budgets);
   const plansOverview = buildPlansOverview(
     plans,
     availableBalance,
@@ -94,9 +99,12 @@ export async function getOverviewPageData(
       activePlanCost,
       availableBalance,
       upcomingPayPlanTotal,
+      remainingBudgetTotal,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
+    [],
+    remainingBudgetTotal,
   );
 
   const savingsOverview = buildSavingsOverview(

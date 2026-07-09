@@ -4,6 +4,7 @@ import {
 } from "@/config/notifications";
 import { generateJournalCondition } from "@/lib/ai/generate-journal-condition";
 import { getAvailableBalance } from "@/lib/db/balance";
+import { listBudgetsForMonth } from "@/lib/db/budgets";
 import {
   ensureDailySummaryForDay,
   ensurePendingDailySummaries,
@@ -35,7 +36,9 @@ import {
   toDayKey,
 } from "@/lib/finance/day-range";
 import { formatIdr } from "@/lib/finance/format-currency";
+import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
+import { getCurrentMonthKey } from "@/lib/planner/calendar";
 import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
 import type { NotificationDraft } from "@/types/notification";
 
@@ -117,6 +120,7 @@ export async function buildUserNotificationDrafts(
     todayTransactions,
     yesterdaySummary,
     weeklySummary,
+    budgets,
   ] = await Promise.all([
     getAvailableBalance(userId, referenceDate),
     listPlans(userId),
@@ -137,12 +141,14 @@ export async function buildUserNotificationDrafts(
       ? getYesterdaySummaryContentForCron(userId, yesterday)
       : getYesterdayDailySummary(userId),
     weeklySummaryPromise,
+    listBudgetsForMonth(userId, getCurrentMonthKey(referenceDate)),
   ]);
 
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
   const { upcomingPayPlanTotal, upcomingPayPlanCount } =
     sumUpcomingPayPlanThisMonth(upcoming, referenceDate);
+  const remainingBudgetTotal = sumRemainingBudgetTotal(budgets);
   const plansOverview = buildPlansOverview(
     plans,
     availableBalance,
@@ -150,9 +156,12 @@ export async function buildUserNotificationDrafts(
       estimatedCost,
       availableBalance,
       upcomingPayPlanTotal,
+      remainingBudgetTotal,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
+    [],
+    remainingBudgetTotal,
   );
 
   const drafts: NotificationDraft[] = [];

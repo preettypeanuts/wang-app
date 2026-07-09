@@ -59,10 +59,12 @@ function buildLocalOverview(
       estimatedCost,
       base.availableBalance,
       base.upcomingPayPlanTotal,
+      base.remainingBudgetTotal,
     ),
     base.upcomingPayPlanTotal,
     base.upcomingPayPlanCount,
     base.budgetImpacts,
+    base.remainingBudgetTotal,
   );
 }
 
