@@ -17,13 +17,18 @@ import type { OverviewPageData } from "@/types/overview";
 interface OverviewViewProps {
   data: OverviewPageData;
   aiBrief: React.ReactNode;
+  greetingAction?: React.ReactNode;
 }
 
-export function OverviewView({ data, aiBrief }: OverviewViewProps) {
+export function OverviewView({ data, aiBrief, greetingAction }: OverviewViewProps) {
   return (
     <div className={OVERVIEW_BENTO_GRID}>
       <div className={OVERVIEW_TOP_PAIR}>
-        <OverviewGreetingCard greeting={data.greeting} className="h-full" />
+        <OverviewGreetingCard
+          greeting={data.greeting}
+          action={greetingAction}
+          className="h-full"
+        />
         {aiBrief}
       </div>
 

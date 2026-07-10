@@ -33,7 +33,7 @@ function OverviewCardSkeleton({
 function OverviewSectionHeaderSkeleton() {
   return (
     <div className="flex items-start gap-2.5">
-      <Skeleton className="size-8 shrink-0 rounded-[0.65rem]" />
+      <Skeleton className="size-8 shrink-0 rounded-4xl" />
       <div className="min-w-0 flex-1 space-y-2">
         <Skeleton className="h-2.5 w-16" />
         <Skeleton className="h-4 w-28" />
@@ -51,9 +51,14 @@ export function OverviewPageSkeleton() {
     >
       <div className={OVERVIEW_TOP_PAIR}>
         <OverviewCardSkeleton className="h-full">
-          <p className={OVERVIEW_SECTION_LABEL}>Overview</p>
-          <Skeleton className="mt-2 h-7 w-40 max-w-full" />
-          <Skeleton className="mt-2 h-4 w-32" />
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <p className={OVERVIEW_SECTION_LABEL}>Overview</p>
+              <Skeleton className="mt-2 h-7 w-40 max-w-full" />
+              <Skeleton className="mt-2 h-4 w-32" />
+            </div>
+            <Skeleton className="hidden h-9 w-24 shrink-0 rounded-xl md:block" />
+          </div>
         </OverviewCardSkeleton>
         <OverviewAiBriefSkeleton className="h-full" />
       </div>
@@ -69,7 +74,7 @@ export function OverviewPageSkeleton() {
         <div className={OVERVIEW_BALANCE_METRICS}>
           {Array.from({ length: 3 }).map((_, index) => (
             <div key={index} className={OVERVIEW_BALANCE_METRIC}>
-              <Skeleton className="size-8 rounded-[0.65rem]" />
+              <Skeleton className="size-8 rounded-4xl" />
               <Skeleton className="mt-3 h-3 w-14" />
               <Skeleton className="mt-2 h-6 w-24" />
               <Skeleton className="mt-2 h-2.5 w-20" />
@@ -122,7 +127,7 @@ export function OverviewPageSkeleton() {
         <div className="mt-4 space-y-2">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="flex items-center gap-3 py-1">
-              <Skeleton className="size-8 shrink-0 rounded-[0.65rem]" />
+              <Skeleton className="size-8 shrink-0 rounded-4xl" />
               <div className="min-w-0 flex-1 space-y-1.5">
                 <Skeleton className="h-3.5 w-[70%]" />
                 <Skeleton className="h-2.5 w-16" />

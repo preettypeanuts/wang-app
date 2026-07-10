@@ -15,14 +15,13 @@ import { Button } from "@/components/ui/button";
 import { MOBILE_TOP_BAR_ORB_BUTTON } from "@/config/mobile-chrome";
 import { JOURNAL_FILTER_TRIGGER_ACTIVE } from "@/config/journal-mobile";
 import { isOverviewRoute } from "@/config/overview-desktop";
-import { OVERVIEW_DESKTOP_FILTER_TRIGGER } from "@/config/overview-mobile";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { FunnelIcon } from "@/lib/icons";
 import { isJournalDateRangeActive } from "@/lib/journal/journal-date-range";
+import { parseOverviewFilters } from "@/lib/overview/parse-overview-filters";
 import { cn } from "@/lib/utils";
 import {
   buildJournalSearchParams,
-  parseJournalSearchParams,
 } from "@/lib/validations/journal";
 import type { JournalFilters } from "@/types/journal";
 
@@ -41,18 +40,6 @@ function hasActiveOverviewFilters(filters: JournalFilters): boolean {
     filters.category !== "all" ||
     isJournalDateRangeActive(filters)
   );
-}
-
-export function parseOverviewFilters(
-  searchParams: Record<string, string | string[] | undefined>,
-): JournalFilters {
-  const parsed = parseJournalSearchParams(searchParams);
-
-  return {
-    ...parsed,
-    q: "",
-    page: 1,
-  };
 }
 
 function OverviewFiltersBridgeInner({ children }: { children: ReactNode }) {
@@ -187,22 +174,20 @@ export function OverviewDesktopFilterTrigger() {
   }
 
   return (
-    <div className={OVERVIEW_DESKTOP_FILTER_TRIGGER}>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        aria-label="Buka filter"
-        className={cn(
-          SEPARATED_CONTROL,
-          "h-9 gap-1.5",
-          hasFilters && JOURNAL_FILTER_TRIGGER_ACTIVE,
-        )}
-        onClick={openDrawer}
-      >
-        <FunnelIcon aria-hidden className="size-4" />
-        Filter
-      </Button>
-    </div>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      aria-label="Buka filter"
+      className={cn(
+        SEPARATED_CONTROL,
+        "h-9 gap-1.5",
+        hasFilters && JOURNAL_FILTER_TRIGGER_ACTIVE,
+      )}
+      onClick={openDrawer}
+    >
+      <FunnelIcon aria-hidden className="size-4" />
+      Filter
+    </Button>
   );
 }

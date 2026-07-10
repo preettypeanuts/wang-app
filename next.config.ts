@@ -23,6 +23,8 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   cacheComponents: true,
+  // Serwist injects webpack config for production builds; dev uses Turbopack.
+  turbopack: {},
   experimental: {
     serverActions: {
       bodySizeLimit: "4mb",
