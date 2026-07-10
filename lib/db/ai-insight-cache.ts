@@ -4,6 +4,23 @@ import { toDayKey } from "@/lib/finance/day-range";
 
 export type AiInsightType = AiInsightCacheType;
 
+function readCacheError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
+}
+
+function isMissingAiInsightCache(error: unknown): boolean {
+  const message = readCacheError(error).toLowerCase();
+
+  return (
+    message.includes("ai_insight_cache") &&
+    message.includes("does not exist")
+  );
+}
+
 export function todayDateKey(): string {
   return toDayKey(new Date());
 }
@@ -13,22 +30,30 @@ export async function getCachedAiInsight<T>(
   type: AiInsightType,
   dateKey: string,
 ): Promise<T | null> {
-  const row = await prisma.aiInsightCache.findUnique({
-    where: {
-      userId_type_dateKey: {
-        userId,
-        type,
-        dateKey,
+  try {
+    const row = await prisma.aiInsightCache.findUnique({
+      where: {
+        userId_type_dateKey: {
+          userId,
+          type,
+          dateKey,
+        },
       },
-    },
-    select: { payload: true },
-  });
+      select: { payload: true },
+    });
 
-  if (!row) {
-    return null;
+    if (!row) {
+      return null;
+    }
+
+    return row.payload as T;
+  } catch (error) {
+    if (isMissingAiInsightCache(error)) {
+      return null;
+    }
+
+    throw error;
   }
-
-  return row.payload as T;
 }
 
 export async function setCachedAiInsight(
@@ -37,25 +62,33 @@ export async function setCachedAiInsight(
   dateKey: string,
   payload: unknown,
 ): Promise<void> {
-  await prisma.aiInsightCache.upsert({
-    where: {
-      userId_type_dateKey: {
+  try {
+    await prisma.aiInsightCache.upsert({
+      where: {
+        userId_type_dateKey: {
+          userId,
+          type,
+          dateKey,
+        },
+      },
+      create: {
         userId,
         type,
         dateKey,
+        payload: payload as object,
       },
-    },
-    create: {
-      userId,
-      type,
-      dateKey,
-      payload: payload as object,
-    },
-    update: {
-      payload: payload as object,
-      createdAt: new Date(),
-    },
-  });
+      update: {
+        payload: payload as object,
+        createdAt: new Date(),
+      },
+    });
+  } catch (error) {
+    if (isMissingAiInsightCache(error)) {
+      return;
+    }
+
+    throw error;
+  }
 }
 
 function collectTransactionInvalidationDateKeys(occurredAt?: Date): string[] {
@@ -75,21 +108,37 @@ export async function invalidateAiInsightCacheOnTransactionMutation(
 ): Promise<void> {
   const dateKeys = collectTransactionInvalidationDateKeys(occurredAt);
 
-  await prisma.aiInsightCache.deleteMany({
-    where: {
-      userId,
-      dateKey: { in: dateKeys },
-    },
-  });
+  try {
+    await prisma.aiInsightCache.deleteMany({
+      where: {
+        userId,
+        dateKey: { in: dateKeys },
+      },
+    });
+  } catch (error) {
+    if (isMissingAiInsightCache(error)) {
+      return;
+    }
+
+    throw error;
+  }
 }
 
 /** Drop plans insight cache after wishlist mutations. */
 export async function invalidatePlansInsightCache(userId: string): Promise<void> {
-  await prisma.aiInsightCache.deleteMany({
-    where: {
-      userId,
-      type: "plans_insight",
-      dateKey: todayDateKey(),
-    },
-  });
+  try {
+    await prisma.aiInsightCache.deleteMany({
+      where: {
+        userId,
+        type: "plans_insight",
+        dateKey: todayDateKey(),
+      },
+    });
+  } catch (error) {
+    if (isMissingAiInsightCache(error)) {
+      return;
+    }
+
+    throw error;
+  }
 }

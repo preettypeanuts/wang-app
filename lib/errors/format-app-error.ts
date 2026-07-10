@@ -71,5 +71,12 @@ export function formatAppError(error: unknown): string {
     return "Database belum dikonfigurasi di server.";
   }
 
+  if (
+    message.includes("does not exist in the current database") ||
+    (message.includes("column") && message.includes("does not exist"))
+  ) {
+    return "Database belum diperbarui. Jalankan migrasi schema lalu coba lagi.";
+  }
+
   return "Terjadi kesalahan. Coba muat ulang halaman.";
 }
