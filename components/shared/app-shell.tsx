@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 
 import { AppContentSurface } from "@/components/shared/app-content-surface";
@@ -8,6 +9,7 @@ import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
 import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 import { NotificationBannerStack } from "@/components/notifications/notification-banner-stack";
 import { InboxBootstrapPrefetch } from "@/components/inbox/inbox-bootstrap-prefetch";
+import { OverviewFiltersBridge } from "@/components/overview/overview-filters-bridge";
 import { PushNotificationManager } from "@/components/shared/push-notification-manager";
 import { MobileScrollChrome } from "@/components/shared/mobile-scroll-chrome";
 import { MobileScrollChromeProvider } from "@/components/shared/mobile-scroll-chrome-provider";
@@ -32,10 +34,7 @@ interface AppShellProps {
   initialSidebarOpen: boolean;
 }
 
-export function AppShell({
-  children,
-  initialSidebarOpen,
-}: AppShellProps) {
+export function AppShell({ children, initialSidebarOpen }: AppShellProps) {
   const pathname = usePathname();
   const isAuthRoute = pathname === "/login" || pathname === "/register";
   const customDesktopPageShell = usesCustomDesktopPageShell(pathname);
@@ -82,11 +81,15 @@ export function AppShell({
             >
               <MobileScrollChromeProvider>
                 <MobileTopBlurProvider>
-                  <FixedViewportPortal>
-                    <MobileTopBlurLayer />
-                    <MobileScrollChrome />
-                  </FixedViewportPortal>
-                  <AppContentSurface>{children}</AppContentSurface>
+                  <Suspense fallback={null}>
+                    <OverviewFiltersBridge>
+                      <FixedViewportPortal>
+                        <MobileTopBlurLayer />
+                        <MobileScrollChrome />
+                      </FixedViewportPortal>
+                      <AppContentSurface>{children}</AppContentSurface>
+                    </OverviewFiltersBridge>
+                  </Suspense>
                 </MobileTopBlurProvider>
               </MobileScrollChromeProvider>
             </SidebarInset>

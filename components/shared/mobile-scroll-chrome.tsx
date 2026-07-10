@@ -5,7 +5,7 @@ import { Suspense } from "react";
 
 import { PlannerMobileTopBarTabs } from "@/components/planner/planner-mobile-top-bar-tabs";
 import { PlansMobileTopBarTabs } from "@/components/plans/plans-mobile-top-bar-tabs";
-import { OverviewMobileTopBarFilterButton } from "@/components/overview/overview-mobile-top-bar-filter-button";
+import { OverviewMobileTopBarFilterButton } from "@/components/overview/overview-filters-bridge";
 import { useMobileScrollChromeSnapshot } from "@/components/shared/mobile-scroll-chrome-provider";
 import { MobileTopBarBackButton } from "@/components/shared/mobile-top-bar-back-button";
 import { MobileTopBarDrawerButton } from "@/components/shared/mobile-top-bar-drawer-button";

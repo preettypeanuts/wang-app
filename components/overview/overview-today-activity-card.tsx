@@ -1,7 +1,10 @@
+"use client";
+
 import { ReceiptIcon } from "@/lib/icons";
 
 import { OverviewActionLink } from "@/components/overview/overview-action-link";
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
+import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import {
   OVERVIEW_CARD,
   OVERVIEW_CARD_PADDING,
@@ -9,7 +12,6 @@ import {
   OVERVIEW_SECTION_LABEL,
   OVERVIEW_SECTION_TITLE,
 } from "@/config/overview";
-import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import type {
   OverviewActivityItem,
@@ -27,6 +29,8 @@ export function OverviewTodayActivityCard({
   filterContext,
   className,
 }: OverviewTodayActivityCardProps) {
+  const { formatAmount, formatSignedAmount, formatExpenseAmount } =
+    useProtectedCurrency();
   const activityTitle = filterContext?.activityTitle ?? "Aktivitas hari ini";
   const activitySubtitle = filterContext?.activitySubtitle;
   const emptyMessage =
@@ -80,8 +84,9 @@ export function OverviewTodayActivityCard({
                     : "text-foreground/88",
                 )}
               >
-                {item.type === "income" ? "+" : "−"}
-                {formatIdr(item.amount)}
+                {item.type === "income"
+                  ? formatSignedAmount(item.amount)
+                  : formatExpenseAmount(item.amount)}
               </p>
             </li>
           ))}

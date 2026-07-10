@@ -17,11 +17,13 @@ import type { OverviewMonthlySnapshot } from "@/types/overview";
 
 interface OverviewMonthlySnapshotCardProps {
   snapshot: OverviewMonthlySnapshot;
+  isCustomPeriod?: boolean;
   className?: string;
 }
 
 export function OverviewMonthlySnapshotCard({
   snapshot,
+  isCustomPeriod = snapshot.isCustomPeriod ?? false,
   className,
 }: OverviewMonthlySnapshotCardProps) {
   const { formatAmount, formatSignedAmount } = useProtectedCurrency();
@@ -34,7 +36,9 @@ export function OverviewMonthlySnapshotCard({
             <TableIcon />
           </OverviewIconShell>
           <div className="min-w-0">
-            <p className={OVERVIEW_SECTION_LABEL}>Monthly Snapshot</p>
+            <p className={OVERVIEW_SECTION_LABEL}>
+              {isCustomPeriod ? "Period Snapshot" : "Monthly Snapshot"}
+            </p>
             <h2 className={cn("mt-0.5 capitalize", OVERVIEW_SECTION_TITLE)}>
               {snapshot.monthLabel}
             </h2>

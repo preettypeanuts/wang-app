@@ -1,13 +1,15 @@
 import { Suspense } from "react";
 
-import { OverviewFiltersControl } from "@/components/overview/overview-filters-control";
+import {
+  OverviewDesktopFilterTrigger,
+  parseOverviewFilters,
+} from "@/components/overview/overview-filters-bridge";
 import { OverviewAiBrief } from "@/components/overview/overview-ai-brief";
 import { OverviewAiBriefSkeleton } from "@/components/overview/overview-ai-brief-skeleton";
 import { OverviewScrollShell } from "@/components/overview/overview-scroll-shell";
 import { OverviewView } from "@/components/overview/overview-view";
 import { getSession, requireUserId } from "@/lib/auth/session";
 import { getOverviewPageData } from "@/lib/db/overview";
-import { parseJournalSearchParams } from "@/lib/validations/journal";
 
 interface OverviewPageDataProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -21,7 +23,7 @@ export async function OverviewPageData({
     getSession(),
     searchParams,
   ]);
-  const filters = parseJournalSearchParams(params);
+  const filters = parseOverviewFilters(params);
   const { data, aiBriefInputs } = await getOverviewPageData(
     userId,
     session?.user?.name,
@@ -29,11 +31,7 @@ export async function OverviewPageData({
   );
 
   return (
-    <OverviewScrollShell
-      filtersSlot={
-        <OverviewFiltersControl filters={filters} placement="desktop" />
-      }
-    >
+    <OverviewScrollShell filtersSlot={<OverviewDesktopFilterTrigger />}>
       <OverviewView
         data={data}
         aiBrief={

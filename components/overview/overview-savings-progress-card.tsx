@@ -89,10 +89,7 @@ export function OverviewSavingsProgressCard({
         </div>
       </div>
 
-      <OverviewActionLink
-        href={`${PLANS_ROUTE}?tab=savings`}
-        className="mt-4"
-      >
+      <OverviewActionLink href={`${PLANS_ROUTE}?tab=savings`} className="mt-4">
         Lihat {SAVINGS_PAGE_TITLE} →
       </OverviewActionLink>
     </section>

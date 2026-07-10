@@ -1,13 +1,15 @@
+"use client";
+
 import { CalendarBlankIcon } from "@/lib/icons";
 
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
+import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import {
   OVERVIEW_CARD,
   OVERVIEW_CARD_PADDING,
   OVERVIEW_SECTION_LABEL,
   OVERVIEW_SECTION_TITLE,
 } from "@/config/overview";
-import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import type { PlansUpcomingImpactItem } from "@/types/plan";
 
@@ -20,6 +22,8 @@ export function OverviewUpcomingCard({
   items,
   className,
 }: OverviewUpcomingCardProps) {
+  const { formatAmount } = useProtectedCurrency();
+
   return (
     <section className={cn(OVERVIEW_CARD, OVERVIEW_CARD_PADDING, className)}>
       <div className="flex items-start gap-2.5">
@@ -50,7 +54,7 @@ export function OverviewUpcomingCard({
                   {item.name}
                 </p>
                 <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
-                  {formatIdr(item.amount)}
+                  {formatAmount(item.amount)}
                 </p>
               </div>
               <div className="shrink-0 text-right">
