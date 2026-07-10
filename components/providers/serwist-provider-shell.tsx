@@ -3,7 +3,7 @@
 import { SerwistProvider, useSerwist } from "@serwist/next/react";
 import { useEffect } from "react";
 
-import { reloadForDeployment } from "@/lib/errors/reload-for-deployment";
+import { requestDeploymentRecovery } from "@/lib/deployment/request-deployment-recovery";
 
 interface SerwistProviderShellProps {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ function SerwistUpdateReloader() {
 
     const handleControlling = (event: { isUpdate?: boolean }) => {
       if (event.isUpdate) {
-        reloadForDeployment();
+        requestDeploymentRecovery();
       }
     };
 

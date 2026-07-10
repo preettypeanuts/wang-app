@@ -9,12 +9,11 @@ import {
   type ReactNode,
 } from "react";
 
+import { DEPLOYMENT_RECOVERY_EVENT } from "@/config/deployment-recovery";
 import { isPersistentMobileTabRoute } from "@/config/persistent-tabs";
 import { PersistentTabActiveProvider } from "@/components/shared/persistent-tab-active-context";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useSession } from "@/lib/auth/auth-client";
-import { hasDeploymentMismatch } from "@/lib/deployment/has-deployment-mismatch";
-import { reloadForDeployment } from "@/lib/errors/reload-for-deployment";
 
 interface PersistentTabLayoutProps {
   children: ReactNode;
@@ -37,27 +36,17 @@ export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
   }, [userId]);
 
   useEffect(() => {
-    const invalidateOnDeployment = async () => {
-      if (!(await hasDeploymentMismatch())) {
-        return;
-      }
-
+    const clearCacheOnRecovery = () => {
       setCache({});
-      reloadForDeployment();
     };
 
-    void invalidateOnDeployment();
-
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        void invalidateOnDeployment();
-      }
-    };
-
-    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener(DEPLOYMENT_RECOVERY_EVENT, clearCacheOnRecovery);
 
     return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener(
+        DEPLOYMENT_RECOVERY_EVENT,
+        clearCacheOnRecovery,
+      );
     };
   }, []);
 

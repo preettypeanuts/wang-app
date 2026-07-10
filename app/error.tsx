@@ -5,13 +5,10 @@ import { useEffect, useState } from "react";
 import { AuthErrorAlert } from "@/components/auth/auth-error-alert";
 import { Button } from "@/components/ui/button";
 import { hasDeploymentMismatch } from "@/lib/deployment/has-deployment-mismatch";
+import { requestDeploymentRecovery } from "@/lib/deployment/request-deployment-recovery";
 import { formatAppError } from "@/lib/errors/format-app-error";
 import { isStaleDeploymentError } from "@/lib/errors/is-stale-deployment-error";
-import {
-  forceHardReload,
-  getDeploymentReloadAttempts,
-  reloadForDeployment,
-} from "@/lib/errors/reload-for-deployment";
+import { reloadForDeployment } from "@/lib/errors/reload-for-deployment";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -22,7 +19,6 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   const [deploymentMismatch, setDeploymentMismatch] = useState(false);
   const isStaleDeployment = isStaleDeploymentError(error);
   const shouldRecoverDeployment = isStaleDeployment || deploymentMismatch;
-  const reloadExhausted = getDeploymentReloadAttempts() >= 3;
 
   useEffect(() => {
     console.error(error);
@@ -43,25 +39,18 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
   }, []);
 
   useEffect(() => {
-    if (!shouldRecoverDeployment || reloadExhausted) {
+    if (!shouldRecoverDeployment) {
       return;
     }
 
-    reloadForDeployment();
-  }, [shouldRecoverDeployment, reloadExhausted]);
+    requestDeploymentRecovery();
+  }, [shouldRecoverDeployment]);
 
-  const message = shouldRecoverDeployment
-    ? "Aplikasi baru saja diperbarui. Memuat versi terbaru…"
-    : formatAppError(error);
+  if (shouldRecoverDeployment) {
+    return null;
+  }
 
   const handleRetry = () => {
-    if (shouldRecoverDeployment) {
-      if (!reloadForDeployment()) {
-        forceHardReload();
-      }
-      return;
-    }
-
     if (!reloadForDeployment()) {
       reset();
     }
@@ -72,18 +61,14 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
       <div className="w-full max-w-sm space-y-4 text-center">
         <div className="space-y-2">
           <h1 className="text-lg font-semibold tracking-tight">
-            {shouldRecoverDeployment
-              ? "Memperbarui aplikasi"
-              : "Gagal memuat halaman"}
+            Gagal memuat halaman
           </h1>
-          <AuthErrorAlert message={message} />
+          <AuthErrorAlert message={formatAppError(error)} />
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Button type="button" onClick={handleRetry}>
-            {shouldRecoverDeployment
-              ? "Muat ulang sekarang"
-              : "Muat ulang halaman"}
+            Muat ulang halaman
           </Button>
           <Button
             type="button"

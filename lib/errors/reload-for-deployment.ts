@@ -1,5 +1,7 @@
+import { DEPLOYMENT_RECOVERY_MAX_ATTEMPTS } from "@/config/deployment-recovery";
+import { markRecoveryReloaded } from "@/lib/deployment/deployment-recovery-session";
+
 const RELOAD_ATTEMPTS_KEY = "monmon:deployment-reload-attempts";
-const MAX_RELOAD_ATTEMPTS = 3;
 
 function canReload(): boolean {
   if (typeof window === "undefined") {
@@ -7,7 +9,7 @@ function canReload(): boolean {
   }
 
   const attempts = Number(sessionStorage.getItem(RELOAD_ATTEMPTS_KEY) ?? 0);
-  return attempts < MAX_RELOAD_ATTEMPTS;
+  return attempts < DEPLOYMENT_RECOVERY_MAX_ATTEMPTS;
 }
 
 function recordReloadAttempt(): void {
@@ -38,6 +40,7 @@ export function reloadForDeployment(): boolean {
   }
 
   recordReloadAttempt();
+  markRecoveryReloaded();
 
   void clearRuntimeCaches();
 
@@ -50,6 +53,8 @@ export function reloadForDeployment(): boolean {
 
 /** Hard navigation fallback when the retry budget is exhausted. */
 export function forceHardReload(): void {
+  markRecoveryReloaded();
+
   const url = new URL(window.location.href);
   url.searchParams.set("_refresh", Date.now().toString());
   window.location.assign(url.toString());
