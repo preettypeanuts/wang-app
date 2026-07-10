@@ -82,7 +82,9 @@ export function OverviewBalanceHero({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className={OVERVIEW_SECTION_LABEL}>Saldo</p>
-          <h2 className={cn("mt-1", OVERVIEW_SECTION_TITLE)}>Balance Hero</h2>
+          <h2 className={cn("mt-1", OVERVIEW_SECTION_TITLE)}>
+            Ringkasan saldo
+          </h2>
         </div>
         <BalanceVisibilityToggle />
       </div>

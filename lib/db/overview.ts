@@ -1,10 +1,10 @@
 import { getCategoryLabel } from "@/config/categories";
 import { getAvailableBalance } from "@/lib/db/balance";
 import { listBudgetsForMonth } from "@/lib/db/budgets";
-import { getJournalFilteredSummary } from "@/lib/db/journal-summary";
 import {
-  listJournalTransactionPreview,
   countJournalTransactions,
+  getJournalFlowTotals,
+  listJournalTransactionPreview,
 } from "@/lib/db/journal";
 import { listPlans } from "@/lib/db/plans";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
@@ -20,18 +20,28 @@ import {
 import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
 import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
-import { addDays, getDayRange, toDayKey } from "@/lib/finance/day-range";
+import {
+  addDays,
+  getDayRange,
+  startOfDay,
+  toDayKey,
+} from "@/lib/finance/day-range";
 import { formatJournalTime } from "@/lib/finance/format-datetime";
 import { formatOverviewGreeting } from "@/lib/finance/format-overview-greeting";
+import type { DayFlowTotals } from "@/lib/finance/get-day-flow-totals";
 import { getDayFlowTotals } from "@/lib/finance/get-day-flow-totals";
 import { hasJournalTransactionFilters } from "@/lib/journal/build-transaction-where";
-import { isJournalDateRangeActive } from "@/lib/journal/journal-date-range";
+import {
+  formatJournalDateRangeLabel,
+  isJournalDateRangeActive,
+  resolveJournalDateRangeBounds,
+} from "@/lib/journal/journal-date-range";
+import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
 import {
   formatPlannerMonthLabel,
   getCurrentMonthKey,
   getMonthRange,
 } from "@/lib/planner/calendar";
-import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
 import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
 import type { JournalFilters } from "@/types/journal";
 import type {
@@ -39,6 +49,9 @@ import type {
   OverviewPageResult,
 } from "@/types/overview";
 import type { TodaySummary } from "@/types/summary";
+
+const OVERVIEW_ACTIVITY_LIMIT = 6;
+const OVERVIEW_AI_BRIEF_TRANSACTION_LIMIT = 30;
 
 function hasOverviewTypeCategoryFilters(filters: JournalFilters): boolean {
   return (
@@ -64,10 +77,34 @@ function buildOverviewActivityFilters(
   };
 }
 
+function buildPreviousPeriodFilters(
+  filters: JournalFilters,
+): JournalFilters | null {
+  const bounds = resolveJournalDateRangeBounds(filters);
+
+  if (!bounds) {
+    return null;
+  }
+
+  const rangeDays =
+    Math.round(
+      (startOfDay(bounds.end).getTime() - startOfDay(bounds.start).getTime()) /
+        86_400_000,
+    ) + 1;
+  const previousEnd = addDays(bounds.start, -1);
+  const previousStart = addDays(previousEnd, -(rangeDays - 1));
+
+  return {
+    ...filters,
+    dateFrom: toDayKey(previousStart),
+    dateTo: toDayKey(previousEnd),
+    page: 1,
+  };
+}
+
 function buildOverviewFilterContext(
   filters: JournalFilters,
   periodLabel: string | null,
-  periodDeltaLabel: string | null,
 ): OverviewFilterContext | undefined {
   const dateActive = isJournalDateRangeActive(filters);
   const typeCategoryActive = hasOverviewTypeCategoryFilters(filters);
@@ -84,7 +121,7 @@ function buildOverviewFilterContext(
       periodLabel,
       incomeLabel: "Pemasukan",
       expenseLabel: "Pengeluaran",
-      balanceDeltaLabel: periodDeltaLabel ?? "vs periode sebelumnya",
+      balanceDeltaLabel: "vs periode sebelumnya",
       activityTitle: "Aktivitas",
       activitySubtitle: period,
       activityEmptyMessage: typeCategoryActive
@@ -102,6 +139,18 @@ function buildOverviewFilterContext(
     activityTitle: "Aktivitas hari ini",
     activitySubtitle: null,
     activityEmptyMessage: "Tidak ada transaksi yang cocok dengan filter.",
+  };
+}
+
+function buildFilteredTodaySummary(
+  flow: DayFlowTotals,
+  balance: number,
+): TodaySummary {
+  return {
+    totalIncome: flow.totalIncome,
+    totalExpense: flow.totalExpense,
+    balance,
+    categories: [],
   };
 }
 
@@ -126,6 +175,29 @@ export async function getOverviewPageData(
   const dateRangeActive = isJournalDateRangeActive(filters);
   const filtersActive = hasJournalTransactionFilters(filters);
   const activityFilters = buildOverviewActivityFilters(filters, now);
+  const aggregateFilters = dateRangeActive
+    ? { ...filters, page: 1 }
+    : activityFilters;
+  const previousPeriodFilters = dateRangeActive
+    ? buildPreviousPeriodFilters(filters)
+    : null;
+  const yesterdayAggregateFilters = !dateRangeActive
+    ? {
+        ...activityFilters,
+        dateFrom: toDayKey(yesterday),
+        dateTo: toDayKey(yesterday),
+        page: 1,
+      }
+    : null;
+  const dateBounds = dateRangeActive
+    ? resolveJournalDateRangeBounds(filters)
+    : null;
+  const aiBriefFilters = dateRangeActive
+    ? { ...filters, page: 1 }
+    : activityFilters;
+  const periodLabel = dateRangeActive
+    ? formatJournalDateRangeLabel(filters)
+    : null;
 
   const [
     availableBalance,
@@ -138,9 +210,13 @@ export async function getOverviewPageData(
     todayTransactionRows,
     monthTransactions,
     budgets,
-    filteredSummary,
+    filteredFlow,
+    previousFilteredFlow,
+    periodEndBalance,
+    previousPeriodEndBalance,
     filteredActivityRows,
     filteredTransactionCount,
+    aiBriefTransactionRows,
   ] = await Promise.all([
     getAvailableBalance(userId, now),
     getAvailableBalance(userId, yesterday),
@@ -157,14 +233,36 @@ export async function getOverviewPageData(
       parsedMonth.end,
     ),
     listBudgetsForMonth(userId, monthKey),
-    dateRangeActive
-      ? getJournalFilteredSummary(userId, filters)
+    filtersActive
+      ? getJournalFlowTotals(userId, aggregateFilters)
+      : Promise.resolve(null),
+    filtersActive && previousPeriodFilters
+      ? getJournalFlowTotals(userId, previousPeriodFilters)
+      : filtersActive && yesterdayAggregateFilters
+        ? getJournalFlowTotals(userId, yesterdayAggregateFilters)
+        : Promise.resolve(null),
+    dateBounds
+      ? getAvailableBalance(userId, dateBounds.end)
+      : Promise.resolve(null),
+    dateBounds
+      ? getAvailableBalance(userId, addDays(dateBounds.start, -1))
       : Promise.resolve(null),
     filtersActive
-      ? listJournalTransactionPreview(userId, activityFilters)
+      ? listJournalTransactionPreview(
+          userId,
+          activityFilters,
+          OVERVIEW_ACTIVITY_LIMIT,
+        )
       : Promise.resolve(null),
     dateRangeActive
       ? countJournalTransactions(userId, filters)
+      : Promise.resolve(null),
+    filtersActive
+      ? listJournalTransactionPreview(
+          userId,
+          aiBriefFilters,
+          OVERVIEW_AI_BRIEF_TRANSACTION_LIMIT,
+        )
       : Promise.resolve(null),
   ]);
 
@@ -176,50 +274,54 @@ export async function getOverviewPageData(
             new Date(right.occurredAt).getTime() -
             new Date(left.occurredAt).getTime(),
         )
-        .slice(0, 6);
+        .slice(0, OVERVIEW_ACTIVITY_LIMIT);
 
-  const journalTransactions = (
-    filtersActive ? activityRows : todayTransactionRows
-  ).map((transaction) => ({
-    type: transaction.type,
-    amount: transaction.amount,
-    category: transaction.category,
-    description: transaction.description,
-  }));
-
-  const todaySummary: TodaySummary =
-    dateRangeActive && filteredSummary
-      ? {
-          totalIncome: filteredSummary.totalIncome,
-          totalExpense: filteredSummary.totalExpense,
-          balance: filteredSummary.cumulativeBalance,
-          categories: [],
-        }
-      : buildTodaySummary(journalTransactions);
+  const defaultTodaySummary = buildTodaySummary(
+    todayTransactionRows.map((transaction) => ({
+      type: transaction.type,
+      amount: transaction.amount,
+      category: transaction.category,
+      description: transaction.description,
+    })),
+  );
   const monthSummary = buildTodaySummary(monthTransactions);
 
-  const heroDeltas = dateRangeActive
-    ? {
-        incomeDelta: filteredSummary?.incomeDelta ?? 0,
-        expenseDelta: filteredSummary?.expenseDelta ?? 0,
-        balanceDelta: filteredSummary?.balanceDelta ?? 0,
-      }
-    : {
-        incomeDelta: todayFlow.totalIncome - yesterdayFlow.totalIncome,
-        expenseDelta: todayFlow.totalExpense - yesterdayFlow.totalExpense,
-        balanceDelta: availableBalance - yesterdayBalance,
-      };
+  const displayBalance = dateRangeActive
+    ? (periodEndBalance ?? availableBalance)
+    : availableBalance;
+
+  const todaySummary: TodaySummary =
+    filtersActive && filteredFlow
+      ? buildFilteredTodaySummary(filteredFlow, displayBalance)
+      : defaultTodaySummary;
+
+  const heroDeltas =
+    filtersActive && filteredFlow && previousFilteredFlow
+      ? {
+          incomeDelta:
+            filteredFlow.totalIncome - previousFilteredFlow.totalIncome,
+          expenseDelta:
+            filteredFlow.totalExpense - previousFilteredFlow.totalExpense,
+          balanceDelta: dateRangeActive
+            ? (periodEndBalance ?? availableBalance) -
+              (previousPeriodEndBalance ?? yesterdayBalance)
+            : availableBalance - yesterdayBalance,
+        }
+      : {
+          incomeDelta: todayFlow.totalIncome - yesterdayFlow.totalIncome,
+          expenseDelta: todayFlow.totalExpense - yesterdayFlow.totalExpense,
+          balanceDelta: availableBalance - yesterdayBalance,
+        };
 
   const monthlySnapshot = dateRangeActive
     ? {
-        monthLabel:
-          filteredSummary?.periodLabel ?? formatPlannerMonthLabel(monthKey),
-        totalIncome: filteredSummary?.totalIncome ?? 0,
-        totalExpense: filteredSummary?.totalExpense ?? 0,
+        monthLabel: periodLabel ?? formatPlannerMonthLabel(monthKey),
+        totalIncome: filteredFlow?.totalIncome ?? 0,
+        totalExpense: filteredFlow?.totalExpense ?? 0,
         netFlow:
-          (filteredSummary?.totalIncome ?? 0) -
-          (filteredSummary?.totalExpense ?? 0),
+          (filteredFlow?.totalIncome ?? 0) - (filteredFlow?.totalExpense ?? 0),
         transactionCount: filteredTransactionCount ?? 0,
+        isCustomPeriod: true,
       }
     : {
         monthLabel: formatPlannerMonthLabel(monthKey),
@@ -227,13 +329,19 @@ export async function getOverviewPageData(
         totalExpense: monthSummary.totalExpense,
         netFlow: monthSummary.totalIncome - monthSummary.totalExpense,
         transactionCount: monthTransactions.length,
+        isCustomPeriod: false,
       };
 
-  const filterContext = buildOverviewFilterContext(
-    filters,
-    filteredSummary?.periodLabel ?? null,
-    filteredSummary?.periodDeltaLabel ?? null,
-  );
+  const filterContext = buildOverviewFilterContext(filters, periodLabel);
+
+  const aiBriefJournalTransactions = (
+    filtersActive ? (aiBriefTransactionRows ?? []) : todayTransactionRows
+  ).map((transaction) => ({
+    type: transaction.type,
+    amount: transaction.amount,
+    category: transaction.category,
+    description: transaction.description,
+  }));
 
   const { upcomingPayPlanTotal, upcomingPayPlanCount } =
     sumUpcomingPayPlanThisMonth(upcomingImpact, now);
@@ -261,9 +369,7 @@ export async function getOverviewPageData(
   return {
     data: {
       greeting: formatOverviewGreeting(now, userName),
-      balance: dateRangeActive
-        ? (filteredSummary?.cumulativeBalance ?? availableBalance)
-        : availableBalance,
+      balance: displayBalance,
       dayDeltas: heroDeltas,
       alerts: buildOverviewAlerts({
         upcoming: upcomingImpact,
@@ -287,8 +393,8 @@ export async function getOverviewPageData(
     },
     aiBriefInputs: {
       userId,
-      journalTransactions,
-      availableBalance,
+      journalTransactions: aiBriefJournalTransactions,
+      availableBalance: displayBalance,
       todaySummary,
       plansOverview,
     },

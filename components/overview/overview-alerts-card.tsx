@@ -1,6 +1,9 @@
+"use client";
+
 import { ExclamationTriangleIcon } from "@/lib/icons";
 
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
+import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import {
   OVERVIEW_ALERT_TONE_STYLES,
   OVERVIEW_CARD,
@@ -16,6 +19,28 @@ interface OverviewAlertsCardProps {
   className?: string;
 }
 
+function OverviewAlertMessage({
+  segments,
+}: {
+  segments: OverviewAlert["segments"];
+}) {
+  const { formatAmount } = useProtectedCurrency();
+
+  return (
+    <p className="mt-0.5 text-[11px] leading-snug opacity-90">
+      {segments.map((segment, index) =>
+        segment.kind === "amount" ? (
+          <span key={index} className="font-medium tabular-nums">
+            {formatAmount(segment.value)}
+          </span>
+        ) : (
+          <span key={index}>{segment.value}</span>
+        ),
+      )}
+    </p>
+  );
+}
+
 export function OverviewAlertsCard({
   alerts,
   className,
@@ -28,7 +53,9 @@ export function OverviewAlertsCard({
         </OverviewIconShell>
         <div className="min-w-0">
           <p className={OVERVIEW_SECTION_LABEL}>Alerts</p>
-          <h2 className={cn("mt-0.5", OVERVIEW_SECTION_TITLE)}>Perlu perhatian</h2>
+          <h2 className={cn("mt-0.5", OVERVIEW_SECTION_TITLE)}>
+            Perlu perhatian
+          </h2>
         </div>
       </div>
 
@@ -47,9 +74,7 @@ export function OverviewAlertsCard({
               )}
             >
               <p className="text-xs font-semibold">{alert.title}</p>
-              <p className="mt-0.5 text-[11px] leading-snug opacity-90">
-                {alert.message}
-              </p>
+              <OverviewAlertMessage segments={alert.segments} />
             </li>
           ))}
         </ul>

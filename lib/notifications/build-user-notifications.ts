@@ -20,7 +20,10 @@ import {
 } from "@/lib/db/weekly-summary";
 import { buildDailySummaryTitle } from "@/lib/finance/build-daily-summary-message";
 import { buildFallbackJournalCondition } from "@/lib/finance/build-journal-condition";
-import { buildOverviewAlerts } from "@/lib/finance/build-overview-alerts";
+import {
+  buildOverviewAlerts,
+  formatOverviewAlertMessage,
+} from "@/lib/finance/build-overview-alerts";
 import { buildOverviewBrief } from "@/lib/finance/build-overview-brief";
 import {
   buildFallbackPlansInsight,
@@ -268,7 +271,7 @@ export async function buildUserNotificationDrafts(
     drafts.push({
       kind: "alert",
       title: alert.title,
-      body: alert.message,
+      body: formatOverviewAlertMessage(alert.segments),
       href: NOTIFICATION_ROUTES.overview,
       dedupeKey: `alert:${alert.id}:${dayKey}`,
     });

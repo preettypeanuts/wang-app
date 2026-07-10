@@ -1,8 +1,5 @@
 import { unstable_cache } from "next/cache";
-import {
-  normalizeCategory,
-  resolveCategoryForType,
-} from "@/config/categories";
+import { normalizeCategory, resolveCategoryForType } from "@/config/categories";
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
 import type { Prisma } from "@/generated/prisma/client";
 import { revalidateAfterTransactionMutation } from "@/lib/cache/revalidate-user-data";
@@ -16,6 +13,7 @@ import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insig
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
+import type { DayFlowTotals } from "@/lib/finance/get-day-flow-totals";
 import { buildJournalTransactionWhere } from "@/lib/journal/build-transaction-where";
 import type {
   JournalCategoryExpenseBreakdown,
@@ -134,6 +132,67 @@ export async function countJournalTransactions(
         where: buildJournalTransactionWhere(userId, filters),
       }),
     ["journal-transaction-count", userId, cacheKey],
+    { tags: [userDataTags.transactions(userId)] },
+  )();
+}
+
+async function queryJournalFlowTotals(
+  userId: string,
+  filters: JournalFilters,
+): Promise<DayFlowTotals> {
+  const where = buildJournalTransactionWhere(userId, filters);
+
+  if (filters.type === "income") {
+    const aggregate = await prisma.transaction.aggregate({
+      where,
+      _sum: { amount: true },
+    });
+
+    return {
+      totalIncome: aggregate._sum?.amount ?? 0,
+      totalExpense: 0,
+    };
+  }
+
+  if (filters.type === "expense") {
+    const aggregate = await prisma.transaction.aggregate({
+      where,
+      _sum: { amount: true },
+    });
+
+    return {
+      totalIncome: 0,
+      totalExpense: aggregate._sum?.amount ?? 0,
+    };
+  }
+
+  const [incomeAggregate, expenseAggregate] = await Promise.all([
+    prisma.transaction.aggregate({
+      where: { ...where, type: "income" },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: { ...where, type: "expense" },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  return {
+    totalIncome: incomeAggregate._sum?.amount ?? 0,
+    totalExpense: expenseAggregate._sum?.amount ?? 0,
+  };
+}
+
+/** Income/expense totals for active journal filters (respects date, type, category, q). */
+export async function getJournalFlowTotals(
+  userId: string,
+  filters: JournalFilters,
+): Promise<DayFlowTotals> {
+  const cacheKey = journalFiltersCacheKey({ ...filters, page: 1 });
+
+  return unstable_cache(
+    () => queryJournalFlowTotals(userId, filters),
+    ["journal-flow-totals", userId, cacheKey],
     { tags: [userDataTags.transactions(userId)] },
   )();
 }

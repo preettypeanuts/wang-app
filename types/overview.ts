@@ -4,11 +4,15 @@ import type { TodaySummary } from "@/types/summary";
 
 export type OverviewAlertTone = "warning" | "danger" | "info";
 
+export type OverviewAlertSegment =
+  | { kind: "text"; value: string }
+  | { kind: "amount"; value: number };
+
 export interface OverviewAlert {
   id: string;
   tone: OverviewAlertTone;
   title: string;
-  message: string;
+  segments: OverviewAlertSegment[];
 }
 
 export interface OverviewGreeting {
@@ -27,6 +31,7 @@ export interface OverviewMonthlySnapshot {
   totalExpense: number;
   netFlow: number;
   transactionCount: number;
+  isCustomPeriod?: boolean;
 }
 
 export interface OverviewActivityItem {
