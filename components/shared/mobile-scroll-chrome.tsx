@@ -5,6 +5,7 @@ import { Suspense } from "react";
 
 import { PlannerMobileTopBarTabs } from "@/components/planner/planner-mobile-top-bar-tabs";
 import { PlansMobileTopBarTabs } from "@/components/plans/plans-mobile-top-bar-tabs";
+import { OverviewMobileTopBarFilterButton } from "@/components/overview/overview-mobile-top-bar-filter-button";
 import { useMobileScrollChromeSnapshot } from "@/components/shared/mobile-scroll-chrome-provider";
 import { MobileTopBarBackButton } from "@/components/shared/mobile-top-bar-back-button";
 import { MobileTopBarDrawerButton } from "@/components/shared/mobile-top-bar-drawer-button";
@@ -17,6 +18,7 @@ import {
   shouldShowMobileTopBarBackButton,
 } from "@/config/mobile-chrome";
 import { PAYPLAN_ROUTE, PLANS_ROUTE } from "@/config/navigation";
+import { isOverviewRoute } from "@/config/overview-desktop";
 import { PAYPLAN_TOP_BAR_ACTIONS } from "@/config/payplan-mobile";
 import { cn } from "@/lib/utils";
 
@@ -25,14 +27,24 @@ export function MobileScrollChrome() {
   const snapshot = useMobileScrollChromeSnapshot();
   const showBack = shouldShowMobileTopBarBackButton(pathname);
   const showDrawer = shouldShowMobileDrawerButton(pathname);
-  const showPayplanTabs = pathname === PAYPLAN_ROUTE || pathname.startsWith(`${PAYPLAN_ROUTE}/`);
-  const showPlansTabs = pathname === PLANS_ROUTE || pathname.startsWith(`${PLANS_ROUTE}/`);
+  const showPayplanTabs =
+    pathname === PAYPLAN_ROUTE || pathname.startsWith(`${PAYPLAN_ROUTE}/`);
+  const showPlansTabs =
+    pathname === PLANS_ROUTE || pathname.startsWith(`${PLANS_ROUTE}/`);
+  const showOverviewFilter = isOverviewRoute(pathname);
 
   if (shouldHideMobileScrollChrome(pathname)) {
     return null;
   }
 
-  if (!snapshot && !showDrawer && !showPayplanTabs && !showPlansTabs && !showBack) {
+  if (
+    !snapshot &&
+    !showDrawer &&
+    !showPayplanTabs &&
+    !showPlansTabs &&
+    !showBack &&
+    !showOverviewFilter
+  ) {
     return null;
   }
 
@@ -41,12 +53,7 @@ export function MobileScrollChrome() {
   return (
     <>
       <header className={MOBILE_TOP_BAR_ROOT}>
-        <div
-          className={cn(
-            MOBILE_TOP_BAR_ROW,
-            showBack && "justify-between",
-          )}
-        >
+        <div className={cn(MOBILE_TOP_BAR_ROW, showBack && "justify-between")}>
           {showBack ? <MobileTopBarBackButton /> : null}
           {snapshot?.title ? (
             <p
@@ -59,7 +66,10 @@ export function MobileScrollChrome() {
               {snapshot.title}
             </p>
           ) : null}
-          {showPayplanTabs || showPlansTabs || showDrawer ? (
+          {showPayplanTabs ||
+          showPlansTabs ||
+          showOverviewFilter ||
+          showDrawer ? (
             <div className={PAYPLAN_TOP_BAR_ACTIONS}>
               {showPayplanTabs ? (
                 <Suspense fallback={null}>
@@ -69,6 +79,11 @@ export function MobileScrollChrome() {
               {showPlansTabs ? (
                 <Suspense fallback={null}>
                   <PlansMobileTopBarTabs />
+                </Suspense>
+              ) : null}
+              {showOverviewFilter ? (
+                <Suspense fallback={null}>
+                  <OverviewMobileTopBarFilterButton />
                 </Suspense>
               ) : null}
               {showDrawer ? <MobileTopBarDrawerButton /> : null}

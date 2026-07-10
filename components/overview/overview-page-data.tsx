@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 
-import { JournalFiltersBar } from "@/components/journal/journal-filters-bar";
+import { OverviewFiltersControl } from "@/components/overview/overview-filters-control";
 import { OverviewAiBrief } from "@/components/overview/overview-ai-brief";
 import { OverviewAiBriefSkeleton } from "@/components/overview/overview-ai-brief-skeleton";
 import { OverviewScrollShell } from "@/components/overview/overview-scroll-shell";
@@ -29,7 +29,11 @@ export async function OverviewPageData({
   );
 
   return (
-    <OverviewScrollShell filtersSlot={<JournalFiltersBar filters={filters} />}>
+    <OverviewScrollShell
+      filtersSlot={
+        <OverviewFiltersControl filters={filters} placement="desktop" />
+      }
+    >
       <OverviewView
         data={data}
         aiBrief={
