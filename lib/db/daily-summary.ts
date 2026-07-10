@@ -1,11 +1,12 @@
 import { generateDailySummaryInsight } from "@/lib/ai/generate-daily-summary-insight";
+import { prisma } from "@/lib/db/prisma";
+import { scopedByUser } from "@/lib/db/user-scope";
+import { buildFallbackDailySummaryCondition } from "@/lib/finance/build-daily-summary-insight";
 import {
   buildDailySummaryMessage,
   buildDailySummarySnapshot,
 } from "@/lib/finance/build-daily-summary-message";
-import {
-  buildFallbackDailySummaryCondition,
-} from "@/lib/finance/build-daily-summary-insight";
+import { buildDailySummaryReflectionContext } from "@/lib/finance/build-daily-summary-reflection-context";
 import {
   endOfDay,
   getDayRange,
@@ -18,8 +19,6 @@ import {
   parseStoredDailySummaryInsight,
   serializeDailySummaryInsight,
 } from "@/lib/finance/stored-daily-summary-insight";
-import { prisma } from "@/lib/db/prisma";
-import { scopedByUser } from "@/lib/db/user-scope";
 import type { DailySummarySnapshot } from "@/types/summary";
 
 async function getTransactionsForDay(userId: string, date: Date) {
@@ -77,10 +76,16 @@ async function createDailySummaryForDay(
   const summaryDate = startOfDay(date);
   const transactions = await getTransactionsForDay(userId, date);
   const cumulativeBalance = await getCumulativeBalance(userId, date);
-  const bundle = await generateDailySummaryInsight(
+  const reflectionContext = await buildDailySummaryReflectionContext(
+    userId,
     date,
     transactions,
     cumulativeBalance,
+  );
+  const bundle = await generateDailySummaryInsight(
+    date,
+    transactions,
+    reflectionContext,
   );
   const content = buildDailySummaryMessage(date, transactions, bundle.insight);
   const storedInsight = serializeDailySummaryInsight(
@@ -131,12 +136,22 @@ async function backfillMissingDailySummaryInsights(
     const date = message.summaryDate!;
     const transactions = await getTransactionsForDay(userId, date);
     const cumulativeBalance = await getCumulativeBalance(userId, date);
-    const bundle = await generateDailySummaryInsight(
+    const reflectionContext = await buildDailySummaryReflectionContext(
+      userId,
       date,
       transactions,
       cumulativeBalance,
     );
-    const content = buildDailySummaryMessage(date, transactions, bundle.insight);
+    const bundle = await generateDailySummaryInsight(
+      date,
+      transactions,
+      reflectionContext,
+    );
+    const content = buildDailySummaryMessage(
+      date,
+      transactions,
+      bundle.insight,
+    );
     const storedInsight = serializeDailySummaryInsight(
       bundle.insight,
       bundle.condition,
@@ -180,7 +195,10 @@ async function backfillLegacyDailySummaryInsights(
       continue;
     }
 
-    const transactions = await getTransactionsForDay(userId, message.summaryDate);
+    const transactions = await getTransactionsForDay(
+      userId,
+      message.summaryDate,
+    );
     const cumulativeBalance = await getCumulativeBalance(
       userId,
       message.summaryDate,

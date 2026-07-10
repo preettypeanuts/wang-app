@@ -9,6 +9,10 @@ import { GEMINI_WANG_APP_CONTEXT } from "@/config/gemini-locale";
 import { getGeminiClient } from "@/lib/ai/gemini-client";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
 import { formatIdr } from "@/lib/finance/format-currency";
+import {
+  type DailySummaryReflectionContext,
+  formatDailySummaryReflectionContextForPrompt,
+} from "@/lib/finance/format-daily-summary-reflection-context";
 import { formatJournalDate } from "@/lib/finance/format-datetime";
 import type { FinanceCondition } from "@/types/summary";
 
@@ -29,20 +33,26 @@ interface DailySummaryTransaction {
 
 const SYSTEM_INSTRUCTION = `${GEMINI_WANG_APP_CONTEXT}
 
-Kamu analis keuangan Wang. Berikan refleksi singkat (2-3 kalimat) tentang aktivitas keuangan user kemarin berdasarkan data transaksi.
-Bahasa Indonesia, nada ramah dan objektif, tanpa menghakimi.
-Sebut apakah pola pengeluaran/pemasukan terlihat wajar, boros, atau hemat RELATIF terhadap data yang diberikan.
-Berikan satu saran praktis spesifik jika relevan.
-Jangan mengarang transaksi atau nominal di luar data.
+Kamu analis keuangan Wang. Berikan refleksi harian yang JELAS dan mudah dipahami (3-4 kalimat) tentang kondisi keuangan user kemarin.
 
+Struktur refleksi:
+1. Ringkas kondisi hari itu — pemasukan vs pengeluaran, saldo hari, dan apakah arus kas hari itu sehat atau tidak.
+2. Jika ada data budget kategori (terutama budget harian seperti makan/minum): jelaskan secara eksplisit apakah pengeluaran hari itu masih oke, mendekati limit, atau sudah melebihi budget — sertakan angka konkret.
+3. Sorot kategori pengeluaran terbesar atau pola yang menonjol jika relevan.
+4. Satu saran praktis spesifik berdasarkan data (bukan saran umum).
+
+Bahasa Indonesia, nada ramah dan objektif, tanpa menghakimi.
+Gunakan data budget dan saldo kumulatif yang disediakan untuk menilai kondisi — jangan mengarang transaksi, nominal, atau budget di luar data.
 Jangan gunakan emoji dalam teks insight.
 
 Berikan juga penilaian kondisi keuangan (label saja) yang mencerminkan kesehatan keuangan hari itu.
+Pertimbangkan: rasio pengeluaran vs pemasukan, pelanggaran budget harian, dan saldo kumulatif.
 Label harus salah satu: Aman, Stabil, Waspada, Boros, atau Kritis.`;
 
 function buildPrompt(
   date: Date,
   transactions: DailySummaryTransaction[],
+  context: DailySummaryReflectionContext,
 ): string {
   const summary = buildTodaySummary(transactions);
   const dateLabel = formatJournalDate(date);
@@ -51,7 +61,7 @@ function buildPrompt(
     `Tanggal: ${dateLabel}`,
     `Pemasukan: ${formatIdr(summary.totalIncome)}`,
     `Pengeluaran: ${formatIdr(summary.totalExpense)}`,
-    `Saldo: ${formatIdr(summary.balance)}`,
+    `Saldo hari ini: ${formatIdr(summary.balance)}`,
     `Jumlah transaksi: ${transactions.length}`,
   ];
 
@@ -64,6 +74,8 @@ function buildPrompt(
       );
     }
   }
+
+  lines.push("", formatDailySummaryReflectionContextForPrompt(context));
 
   if (transactions.length > 0) {
     lines.push("", "Detail transaksi:");
@@ -85,12 +97,13 @@ function buildPrompt(
 export async function generateDailySummaryInsightWithGemini(
   date: Date,
   transactions: DailySummaryTransaction[],
+  context: DailySummaryReflectionContext,
 ): Promise<{ insight: string; condition: FinanceCondition }> {
   const ai = getGeminiClient();
 
   const response = await ai.models.generateContent({
     model: GEMINI_MODEL,
-    contents: buildPrompt(date, transactions),
+    contents: buildPrompt(date, transactions, context),
     config: {
       systemInstruction: SYSTEM_INSTRUCTION,
       maxOutputTokens: GEMINI_DAILY_INSIGHT_MAX_OUTPUT_TOKENS,

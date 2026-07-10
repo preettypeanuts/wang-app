@@ -19,4 +19,4 @@ export const GEMINI_RECEIPT_MAX_OUTPUT_TOKENS = 768;
 export const GEMINI_INBOX_REPLY_MAX_OUTPUT_TOKENS = 256;
 
 /** Token budget for daily summary insight generation. */
-export const GEMINI_DAILY_INSIGHT_MAX_OUTPUT_TOKENS = 256;
+export const GEMINI_DAILY_INSIGHT_MAX_OUTPUT_TOKENS = 512;

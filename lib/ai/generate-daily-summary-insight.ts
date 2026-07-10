@@ -1,6 +1,7 @@
 import { isGeminiConfigured } from "@/lib/ai/gemini-client";
 import { generateDailySummaryInsightWithGemini } from "@/lib/ai/generate-daily-summary-insight-gemini";
 import { buildFallbackDailySummaryInsightBundle } from "@/lib/finance/build-daily-summary-insight";
+import type { DailySummaryReflectionContext } from "@/lib/finance/format-daily-summary-reflection-context";
 import type { FinanceCondition } from "@/types/summary";
 
 interface DailySummaryTransaction {
@@ -18,21 +19,19 @@ export interface DailySummaryInsightBundle {
 export async function generateDailySummaryInsight(
   date: Date,
   transactions: DailySummaryTransaction[],
-  cumulativeBalance = 0,
+  context: DailySummaryReflectionContext,
 ): Promise<DailySummaryInsightBundle> {
   if (isGeminiConfigured()) {
     try {
-      return await generateDailySummaryInsightWithGemini(date, transactions);
-    } catch {
-      return buildFallbackDailySummaryInsightBundle(
+      return await generateDailySummaryInsightWithGemini(
+        date,
         transactions,
-        cumulativeBalance,
+        context,
       );
+    } catch {
+      return buildFallbackDailySummaryInsightBundle(transactions, context);
     }
   }
 
-  return buildFallbackDailySummaryInsightBundle(
-    transactions,
-    cumulativeBalance,
-  );
+  return buildFallbackDailySummaryInsightBundle(transactions, context);
 }
