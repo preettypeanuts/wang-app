@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { DeploymentRecoveryContext } from "@/components/shared/deployment-recovery-context";
 import { DeploymentUpdateOverlay } from "@/components/shared/deployment-update-overlay";
 import {
   DEPLOYMENT_RECOVERY_COOLDOWN_MS,
@@ -38,9 +40,21 @@ interface DeploymentRecoveryProviderProps {
   children: React.ReactNode;
 }
 
+function stripRecoveryQueryParam(): void {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("_refresh")) {
+    return;
+  }
+
+  url.searchParams.delete("_refresh");
+  const next = `${url.pathname}${url.search}${url.hash}`;
+  window.history.replaceState({}, "", next);
+}
+
 export function DeploymentRecoveryProvider({
   children,
 }: DeploymentRecoveryProviderProps) {
+  const router = useRouter();
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(0);
   const [secondsRemaining, setSecondsRemaining] = useState(
@@ -98,6 +112,12 @@ export function DeploymentRecoveryProvider({
     syncProgress(startedAt);
   }, [showExhausted, syncProgress]);
 
+  const handleManualReload = useCallback(() => {
+    if (!reloadForDeployment()) {
+      forceHardReload();
+    }
+  }, []);
+
   useEffect(() => {
     const startedAt = startedAtRef.current;
     if (!visible || exhausted || !startedAt) {
@@ -130,6 +150,7 @@ export function DeploymentRecoveryProvider({
   useEffect(() => {
     const boot = async () => {
       const mismatch = await hasDeploymentMismatch();
+
       if (!mismatch) {
         clearDeploymentReloadAttempts();
         clearRecoverySession();
@@ -137,6 +158,8 @@ export function DeploymentRecoveryProvider({
         startedAtRef.current = null;
         setVisible(false);
         setExhausted(false);
+        stripRecoveryQueryParam();
+        router.refresh();
         return;
       }
 
@@ -207,16 +230,31 @@ export function DeploymentRecoveryProvider({
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.clearInterval(intervalId);
     };
-  }, [startRecovery, syncProgress]);
+  }, [router, startRecovery, syncProgress]);
 
-  const handleManualReload = () => {
-    if (!reloadForDeployment()) {
-      forceHardReload();
-    }
-  };
+  const contextValue = useMemo(
+    () => ({
+      visible,
+      progress,
+      secondsRemaining,
+      stageLabel,
+      exhausted,
+      requestRecovery: startRecovery,
+      manualReload: handleManualReload,
+    }),
+    [
+      exhausted,
+      handleManualReload,
+      progress,
+      secondsRemaining,
+      stageLabel,
+      startRecovery,
+      visible,
+    ],
+  );
 
   return (
-    <>
+    <DeploymentRecoveryContext.Provider value={contextValue}>
       {children}
       {visible ? (
         <DeploymentUpdateOverlay
@@ -227,6 +265,6 @@ export function DeploymentRecoveryProvider({
           onManualReload={handleManualReload}
         />
       ) : null}
-    </>
+    </DeploymentRecoveryContext.Provider>
   );
 }

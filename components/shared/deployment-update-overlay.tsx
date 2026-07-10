@@ -1,12 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Progress,
-  ProgressIndicator,
-  ProgressTrack,
-} from "@/components/ui/progress";
+import { Progress } from "@/components/ui/progress";
 import { DEPLOYMENT_RECOVERY_ESTIMATED_SEC } from "@/config/deployment-recovery";
+import { cn } from "@/lib/utils";
 import { forceHardReload } from "@/lib/errors/reload-for-deployment";
 
 interface DeploymentUpdateOverlayProps {
@@ -15,6 +12,8 @@ interface DeploymentUpdateOverlayProps {
   stageLabel: string;
   exhausted: boolean;
   onManualReload: () => void;
+  /** Fills the route error slot instead of covering the whole viewport. */
+  embedded?: boolean;
 }
 
 export function DeploymentUpdateOverlay({
@@ -23,12 +22,16 @@ export function DeploymentUpdateOverlay({
   stageLabel,
   exhausted,
   onManualReload,
+  embedded = false,
 }: DeploymentUpdateOverlayProps) {
   const roundedProgress = Math.round(progress);
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-background px-4"
+      className={cn(
+        "flex items-center justify-center bg-background px-4",
+        embedded ? "min-h-svh w-full" : "fixed inset-0 z-[9999]",
+      )}
       role="alertdialog"
       aria-modal="true"
       aria-labelledby="deployment-update-title"
@@ -60,11 +63,10 @@ export function DeploymentUpdateOverlay({
             </span>
           </div>
 
-          <Progress value={exhausted ? 100 : roundedProgress}>
-            <ProgressTrack className="h-2.5">
-              <ProgressIndicator />
-            </ProgressTrack>
-          </Progress>
+          <Progress
+            value={exhausted ? 100 : roundedProgress}
+            className="block gap-0"
+          />
 
           <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
             <span>

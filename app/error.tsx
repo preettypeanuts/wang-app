@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 
 import { AuthErrorAlert } from "@/components/auth/auth-error-alert";
+import { useDeploymentRecovery } from "@/components/shared/deployment-recovery-context";
+import { DeploymentUpdateOverlay } from "@/components/shared/deployment-update-overlay";
 import { Button } from "@/components/ui/button";
 import { hasDeploymentMismatch } from "@/lib/deployment/has-deployment-mismatch";
-import { requestDeploymentRecovery } from "@/lib/deployment/request-deployment-recovery";
 import { formatAppError } from "@/lib/errors/format-app-error";
 import { isStaleDeploymentError } from "@/lib/errors/is-stale-deployment-error";
 import { reloadForDeployment } from "@/lib/errors/reload-for-deployment";
@@ -16,6 +17,7 @@ interface ErrorPageProps {
 }
 
 export default function ErrorPage({ error, reset }: ErrorPageProps) {
+  const recovery = useDeploymentRecovery();
   const [deploymentMismatch, setDeploymentMismatch] = useState(false);
   const isStaleDeployment = isStaleDeploymentError(error);
   const shouldRecoverDeployment = isStaleDeployment || deploymentMismatch;
@@ -43,11 +45,28 @@ export default function ErrorPage({ error, reset }: ErrorPageProps) {
       return;
     }
 
-    requestDeploymentRecovery();
-  }, [shouldRecoverDeployment]);
+    recovery.requestRecovery();
+  }, [recovery.requestRecovery, shouldRecoverDeployment]);
 
   if (shouldRecoverDeployment) {
-    return null;
+    return (
+      <DeploymentUpdateOverlay
+        progress={recovery.visible ? recovery.progress : 0}
+        secondsRemaining={
+          recovery.visible
+            ? recovery.secondsRemaining
+            : recovery.exhausted
+              ? 0
+              : 5
+        }
+        stageLabel={
+          recovery.visible ? recovery.stageLabel : "Menyiapkan pembaruan..."
+        }
+        exhausted={recovery.exhausted}
+        onManualReload={recovery.manualReload}
+        embedded
+      />
+    );
   }
 
   const handleRetry = () => {

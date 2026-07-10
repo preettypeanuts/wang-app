@@ -30,6 +30,7 @@ export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
   const userId = session?.user?.id ?? null;
   const tabPath = isPersistentMobileTabRoute(pathname) ? pathname : null;
   const [cache, setCache] = useState<Record<string, ReactNode>>({});
+  const [cacheVersion, setCacheVersion] = useState(0);
 
   useLayoutEffect(() => {
     setCache({});
@@ -38,6 +39,7 @@ export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
   useEffect(() => {
     const clearCacheOnRecovery = () => {
       setCache({});
+      setCacheVersion((current) => current + 1);
     };
 
     window.addEventListener(DEPLOYMENT_RECOVERY_EVENT, clearCacheOnRecovery);
@@ -77,7 +79,10 @@ export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
   }
 
   return (
-    <div className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+    <div
+      key={cacheVersion}
+      className="relative flex h-full min-h-0 flex-1 flex-col overflow-hidden"
+    >
       {(Object.entries(panels) as Array<[string, ReactNode]>).map(
         ([path, panel]) => (
           <div
