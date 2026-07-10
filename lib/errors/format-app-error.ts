@@ -15,6 +15,8 @@ const DB_UNAVAILABLE_PATTERNS = [
   "failed to connect",
 ] as const;
 
+import { isStaleDeploymentError } from "@/lib/errors/is-stale-deployment-error";
+
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   access_denied: "Login dibatalkan.",
   configuration: "Login belum dikonfigurasi dengan benar. Hubungi admin.",
@@ -43,7 +45,9 @@ function readErrorMessage(error: unknown): string {
   return "";
 }
 
-export function formatAuthErrorCode(code: string | null | undefined): string | null {
+export function formatAuthErrorCode(
+  code: string | null | undefined,
+): string | null {
   if (!code?.trim()) {
     return null;
   }
@@ -53,6 +57,10 @@ export function formatAuthErrorCode(code: string | null | undefined): string | n
 }
 
 export function formatAppError(error: unknown): string {
+  if (isStaleDeploymentError(error)) {
+    return "Aplikasi baru saja diperbarui. Memuat versi terbaru…";
+  }
+
   const message = readErrorMessage(error).toLowerCase();
 
   if (!message) {
