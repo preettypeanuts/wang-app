@@ -32,6 +32,7 @@ export function OverviewView({ data, aiBrief }: OverviewViewProps) {
         todayIncome={data.todaySummary.totalIncome}
         todayExpense={data.todaySummary.totalExpense}
         dayDeltas={data.dayDeltas}
+        filterContext={data.filterContext}
         className={OVERVIEW_SPAN_FULL}
       />
 
@@ -55,6 +56,7 @@ export function OverviewView({ data, aiBrief }: OverviewViewProps) {
       <OverviewTodayActivityCard
         className={OVERVIEW_SPAN_FULL}
         items={data.todayActivity}
+        filterContext={data.filterContext}
       />
     </div>
   );

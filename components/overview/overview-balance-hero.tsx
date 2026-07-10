@@ -15,13 +15,17 @@ import {
 } from "@/config/overview";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import { cn } from "@/lib/utils";
-import type { OverviewDayDeltas } from "@/types/overview";
+import type {
+  OverviewDayDeltas,
+  OverviewFilterContext,
+} from "@/types/overview";
 
 interface OverviewBalanceHeroProps {
   balance: number;
   todayIncome: number;
   todayExpense: number;
   dayDeltas: OverviewDayDeltas;
+  filterContext?: OverviewFilterContext;
   className?: string;
 }
 
@@ -59,11 +63,19 @@ export function OverviewBalanceHero({
   todayIncome,
   todayExpense,
   dayDeltas,
+  filterContext,
   className,
 }: OverviewBalanceHeroProps) {
-  const { formatAmount, formatSignedAmount, formatSignedDelta, formatExpenseAmount } =
-    useProtectedCurrency();
+  const {
+    formatAmount,
+    formatSignedAmount,
+    formatSignedDelta,
+    formatExpenseAmount,
+  } = useProtectedCurrency();
   const isNegative = balance < 0;
+  const incomeLabel = filterContext?.incomeLabel ?? "In hari ini";
+  const expenseLabel = filterContext?.expenseLabel ?? "Out hari ini";
+  const balanceDeltaLabel = filterContext?.balanceDeltaLabel ?? "vs kemarin";
 
   return (
     <section className={cn(OVERVIEW_CARD, OVERVIEW_CARD_PADDING, className)}>
@@ -97,7 +109,7 @@ export function OverviewBalanceHero({
             <BalanceMetricDelta
               delta={dayDeltas.balanceDelta}
               tone="balance"
-              label={`${formatSignedDelta(dayDeltas.balanceDelta)} vs kemarin`}
+              label={`${formatSignedDelta(dayDeltas.balanceDelta)} ${balanceDeltaLabel}`}
             />
           </div>
         </div>
@@ -108,7 +120,7 @@ export function OverviewBalanceHero({
               <ArrowDownIcon />
             </OverviewIconShell>
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              In hari ini
+              {incomeLabel}
             </p>
           </div>
           <div className="mt-auto pt-3">
@@ -118,7 +130,7 @@ export function OverviewBalanceHero({
             <BalanceMetricDelta
               delta={dayDeltas.incomeDelta}
               tone="income"
-              label={`${formatSignedDelta(dayDeltas.incomeDelta)} vs kemarin`}
+              label={`${formatSignedDelta(dayDeltas.incomeDelta)} ${balanceDeltaLabel}`}
             />
           </div>
         </div>
@@ -129,7 +141,7 @@ export function OverviewBalanceHero({
               <ArrowUpIcon />
             </OverviewIconShell>
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              Out hari ini
+              {expenseLabel}
             </p>
           </div>
           <div className="mt-auto pt-3">
@@ -139,14 +151,16 @@ export function OverviewBalanceHero({
             <BalanceMetricDelta
               delta={dayDeltas.expenseDelta}
               tone="expense"
-              label={`${formatSignedDelta(dayDeltas.expenseDelta)} vs kemarin`}
+              label={`${formatSignedDelta(dayDeltas.expenseDelta)} ${balanceDeltaLabel}`}
             />
           </div>
         </div>
       </div>
 
       <p className="mt-3 text-xs text-muted-foreground">
-        Saldo kumulatif dari semua transaksi hingga hari ini.
+        {filterContext?.isDateRangeActive
+          ? "Saldo kumulatif hingga akhir periode filter."
+          : "Saldo kumulatif dari semua transaksi hingga hari ini."}
       </p>
     </section>
   );

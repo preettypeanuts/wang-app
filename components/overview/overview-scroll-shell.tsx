@@ -12,9 +12,13 @@ import { cn } from "@/lib/utils";
 
 interface OverviewScrollShellProps {
   children: React.ReactNode;
+  filtersSlot?: React.ReactNode;
 }
 
-export function OverviewScrollShell({ children }: OverviewScrollShellProps) {
+export function OverviewScrollShell({
+  children,
+  filtersSlot,
+}: OverviewScrollShellProps) {
   return (
     <OverviewPageShell>
       <div className={OVERVIEW_PAGE_ROOT}>
@@ -31,6 +35,9 @@ export function OverviewScrollShell({ children }: OverviewScrollShellProps) {
               OVERVIEW_DESKTOP_SCROLL_INNER,
             )}
           >
+            {filtersSlot ? (
+              <div className="shrink-0 max-md:-mt-1">{filtersSlot}</div>
+            ) : null}
             {children}
           </div>
         </MobileScrollSurface>

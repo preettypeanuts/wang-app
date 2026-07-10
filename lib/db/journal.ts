@@ -2,7 +2,6 @@ import { unstable_cache } from "next/cache";
 import {
   normalizeCategory,
   resolveCategoryForType,
-  TRANSACTION_CATEGORIES,
 } from "@/config/categories";
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
 import type { Prisma } from "@/generated/prisma/client";
@@ -17,7 +16,7 @@ import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insig
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
-import { resolveJournalDateRangeBounds } from "@/lib/journal/journal-date-range";
+import { buildJournalTransactionWhere } from "@/lib/journal/build-transaction-where";
 import type {
   JournalCategoryExpenseBreakdown,
   JournalEntry,
@@ -37,56 +36,6 @@ const JOURNAL_ENTRY_SELECT = {
   occurredAt: true,
 } as const;
 
-function buildWhere(
-  userId: string,
-  filters: JournalFilters,
-): Prisma.TransactionWhereInput {
-  const where: Prisma.TransactionWhereInput = { userId };
-
-  if (filters.type !== "all") {
-    where.type = filters.type;
-  }
-
-  if (filters.category !== "all") {
-    where.category = filters.category;
-  }
-
-  if (filters.q) {
-    const query = filters.q.toLowerCase();
-    const matchingCategoryIds = TRANSACTION_CATEGORIES.filter(
-      (category) =>
-        category.id.includes(query) ||
-        category.label.toLowerCase().includes(query),
-    ).map((category) => category.id);
-
-    where.OR = [
-      { description: { contains: filters.q, mode: "insensitive" } },
-      { rawInput: { contains: filters.q, mode: "insensitive" } },
-      ...(matchingCategoryIds.length > 0
-        ? [{ category: { in: matchingCategoryIds } }]
-        : [
-            {
-              category: {
-                contains: filters.q,
-                mode: "insensitive" as const,
-              },
-            },
-          ]),
-    ];
-  }
-
-  const dateRange = resolveJournalDateRangeBounds(filters);
-
-  if (dateRange) {
-    where.occurredAt = {
-      gte: dateRange.start,
-      lte: dateRange.end,
-    };
-  }
-
-  return where;
-}
-
 function journalFiltersCacheKey(filters: JournalFilters): string {
   return [
     filters.q,
@@ -102,7 +51,7 @@ async function queryJournalTransactions(
   userId: string,
   filters: JournalFilters,
 ): Promise<SerializedJournalListResult> {
-  const where = buildWhere(userId, filters);
+  const where = buildJournalTransactionWhere(userId, filters);
   const page = filters.page;
   const skip = (page - 1) * JOURNAL_PAGE_SIZE;
 
@@ -142,6 +91,53 @@ export async function listJournalTransactions(
   return hydrateJournalListResult(cached);
 }
 
+const JOURNAL_PREVIEW_LIMIT = 6;
+
+async function queryJournalTransactionPreview(
+  userId: string,
+  filters: JournalFilters,
+  limit: number,
+): Promise<JournalEntry[]> {
+  const items = await prisma.transaction.findMany({
+    where: buildJournalTransactionWhere(userId, filters),
+    orderBy: [{ occurredAt: "desc" }, { createdAt: "desc" }],
+    take: limit,
+    select: JOURNAL_ENTRY_SELECT,
+  });
+
+  return items;
+}
+
+export async function listJournalTransactionPreview(
+  userId: string,
+  filters: JournalFilters,
+  limit = JOURNAL_PREVIEW_LIMIT,
+): Promise<JournalEntry[]> {
+  const cacheKey = journalFiltersCacheKey({ ...filters, page: 1 });
+
+  return unstable_cache(
+    () => queryJournalTransactionPreview(userId, filters, limit),
+    ["journal-transaction-preview", userId, cacheKey, String(limit)],
+    { tags: [userDataTags.transactions(userId)] },
+  )();
+}
+
+export async function countJournalTransactions(
+  userId: string,
+  filters: JournalFilters,
+): Promise<number> {
+  const cacheKey = journalFiltersCacheKey({ ...filters, page: 1 });
+
+  return unstable_cache(
+    () =>
+      prisma.transaction.count({
+        where: buildJournalTransactionWhere(userId, filters),
+      }),
+    ["journal-transaction-count", userId, cacheKey],
+    { tags: [userDataTags.transactions(userId)] },
+  )();
+}
+
 async function queryJournalCategoryExpenseBreakdown(
   userId: string,
   filters: JournalFilters,
@@ -153,7 +149,7 @@ async function queryJournalCategoryExpenseBreakdown(
   const grouped = await prisma.transaction.groupBy({
     by: ["category"],
     where: {
-      ...buildWhere(userId, filters),
+      ...buildJournalTransactionWhere(userId, filters),
       type: "expense",
     },
     _sum: { amount: true },

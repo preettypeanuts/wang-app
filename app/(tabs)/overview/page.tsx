@@ -1,15 +1,24 @@
 import { Suspense } from "react";
 
-import { OverviewPageContent } from "@/components/overview/overview-page-content";
+import { OverviewFiltersSkeleton } from "@/components/overview/overview-filters-skeleton";
+import { OverviewPageData } from "@/components/overview/overview-page-data";
 import { OverviewPageSkeleton } from "@/components/overview/overview-page-skeleton";
 import { OverviewScrollShell } from "@/components/overview/overview-scroll-shell";
 
-export default function OverviewPage() {
+interface OverviewPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default function OverviewPage({ searchParams }: OverviewPageProps) {
   return (
-    <OverviewScrollShell>
-      <Suspense fallback={<OverviewPageSkeleton />}>
-        <OverviewPageContent />
-      </Suspense>
-    </OverviewScrollShell>
+    <Suspense
+      fallback={
+        <OverviewScrollShell filtersSlot={<OverviewFiltersSkeleton />}>
+          <OverviewPageSkeleton />
+        </OverviewScrollShell>
+      }
+    >
+      <OverviewPageData searchParams={searchParams} />
+    </Suspense>
   );
 }

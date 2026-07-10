@@ -11,17 +11,28 @@ import {
 } from "@/config/overview";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
-import type { OverviewActivityItem } from "@/types/overview";
+import type {
+  OverviewActivityItem,
+  OverviewFilterContext,
+} from "@/types/overview";
 
 interface OverviewTodayActivityCardProps {
   items: OverviewActivityItem[];
+  filterContext?: OverviewFilterContext;
   className?: string;
 }
 
 export function OverviewTodayActivityCard({
   items,
+  filterContext,
   className,
 }: OverviewTodayActivityCardProps) {
+  const activityTitle = filterContext?.activityTitle ?? "Aktivitas hari ini";
+  const activitySubtitle = filterContext?.activitySubtitle;
+  const emptyMessage =
+    filterContext?.activityEmptyMessage ??
+    "Belum ada transaksi hari ini. Catat lewat Inbox.";
+
   return (
     <section className={cn(OVERVIEW_CARD, OVERVIEW_CARD_PADDING, className)}>
       <div className="flex items-start justify-between gap-2">
@@ -32,17 +43,20 @@ export function OverviewTodayActivityCard({
           <div className="min-w-0">
             <p className={OVERVIEW_SECTION_LABEL}>Today Activity</p>
             <h2 className={cn("mt-0.5", OVERVIEW_SECTION_TITLE)}>
-              Aktivitas hari ini
+              {activityTitle}
             </h2>
+            {activitySubtitle ? (
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {activitySubtitle}
+              </p>
+            ) : null}
           </div>
         </div>
         <OverviewActionLink href="/journal">Journal</OverviewActionLink>
       </div>
 
       {items.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">
-          Belum ada transaksi hari ini. Catat lewat Inbox.
-        </p>
+        <p className="mt-4 text-sm text-muted-foreground">{emptyMessage}</p>
       ) : (
         <ul className="mt-4 space-y-2">
           {items.map((item) => (

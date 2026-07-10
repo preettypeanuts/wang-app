@@ -44,6 +44,17 @@ export interface OverviewDayDeltas {
   balanceDelta: number;
 }
 
+export interface OverviewFilterContext {
+  isDateRangeActive: boolean;
+  periodLabel: string | null;
+  incomeLabel: string;
+  expenseLabel: string;
+  balanceDeltaLabel: string;
+  activityTitle: string;
+  activitySubtitle: string | null;
+  activityEmptyMessage: string;
+}
+
 export interface OverviewPageData {
   greeting: OverviewGreeting;
   balance: number;
@@ -55,6 +66,7 @@ export interface OverviewPageData {
   monthlySnapshot: OverviewMonthlySnapshot;
   todaySummary: TodaySummary;
   todayActivity: OverviewActivityItem[];
+  filterContext?: OverviewFilterContext;
 }
 
 /** Inputs for streamed AI brief — fetched with page data, rendered separately. */
