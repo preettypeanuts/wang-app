@@ -42,8 +42,8 @@ function PlansPagePanels({
   const isSavingsTab = tab === "savings";
   const pageTitle = isSavingsTab ? SAVINGS_PAGE_TITLE : WISH_PAGE_TITLE;
   const pageDescription = isSavingsTab
-    ? "Target tabungan dan saldo bebas setelah alokasi."
-    : "Wishlist belanja dan sisa saldo setelah wish.";
+    ? "Savings targets and free balance after allocations."
+    : "Shopping wishlist and remaining balance after wishes.";
 
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col")}>

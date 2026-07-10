@@ -23,6 +23,15 @@ import {
 import { JOURNAL_TYPE_OPTIONS } from "@/config/journal";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import {
+  UI_LABEL_APPLY,
+  UI_LABEL_CATEGORY,
+  UI_LABEL_DATE_RANGE,
+  UI_LABEL_FILTER,
+  UI_LABEL_FILTER_JOURNAL_DESCRIPTION,
+  UI_LABEL_RESET,
+  UI_LABEL_TYPE,
+} from "@/config/ui-labels";
+import {
   getJournalDateRangePresets,
   isValidJournalDateInput,
 } from "@/lib/journal/journal-date-range";
@@ -79,17 +88,17 @@ export function JournalFiltersDrawer({
     const nextTo = draftTo.trim();
 
     if (nextFrom && !isValidJournalDateInput(nextFrom)) {
-      setError("Tanggal mulai tidak valid.");
+      setError("Start date is invalid.");
       return;
     }
 
     if (nextTo && !isValidJournalDateInput(nextTo)) {
-      setError("Tanggal akhir tidak valid.");
+      setError("End date is invalid.");
       return;
     }
 
     if (nextFrom && nextTo && nextFrom > nextTo) {
-      setError("Tanggal mulai harus sebelum atau sama dengan tanggal akhir.");
+      setError("Start date must be on or before the end date.");
       return;
     }
 
@@ -128,21 +137,21 @@ export function JournalFiltersDrawer({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Filter"
+      title={UI_LABEL_FILTER}
       wide
     >
       <ResponsiveDialogHeader>
         <DialogTitle className="text-lg font-semibold tracking-tight">
-          Filter
+          {UI_LABEL_FILTER}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          Saring transaksi menurut tanggal, tipe, dan kategori.
+          {UI_LABEL_FILTER_JOURNAL_DESCRIPTION}
         </DialogDescription>
       </ResponsiveDialogHeader>
 
       <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
         <section className="flex flex-col gap-2">
-          <span className={FORM_FIELD_LABEL}>Rentang tanggal</span>
+          <span className={FORM_FIELD_LABEL}>{UI_LABEL_DATE_RANGE}</span>
           <div className="flex flex-wrap gap-2">
             {presets.map((preset) => (
               <Button
@@ -165,7 +174,7 @@ export function JournalFiltersDrawer({
         </section>
 
         <section className="flex flex-col gap-2">
-          <span className={FORM_FIELD_LABEL}>Tipe</span>
+          <span className={FORM_FIELD_LABEL}>{UI_LABEL_TYPE}</span>
           <div className={FORM_SEGMENTED}>
             {JOURNAL_TYPE_OPTIONS.map((option) => {
               const isActive = draftType === option.value;
@@ -189,7 +198,7 @@ export function JournalFiltersDrawer({
         </section>
 
         <section className="flex flex-col gap-2">
-          <span className={FORM_FIELD_LABEL}>Kategori</span>
+          <span className={FORM_FIELD_LABEL}>{UI_LABEL_CATEGORY}</span>
           <JournalFilterCategoryList
             value={draftCategory}
             onChange={setDraftCategory}
@@ -210,14 +219,14 @@ export function JournalFiltersDrawer({
           className={cn(SEPARATED_CONTROL, "flex-1")}
           onClick={handleReset}
         >
-          Reset
+          {UI_LABEL_RESET}
         </Button>
         <Button
           type="button"
           className={cn(SEPARATED_CONTROL, "flex-1")}
           onClick={handleApply}
         >
-          Terapkan
+          {UI_LABEL_APPLY}
         </Button>
       </ResponsiveDialogFooter>
     </ResponsiveDialog>

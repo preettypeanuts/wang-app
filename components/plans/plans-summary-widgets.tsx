@@ -4,6 +4,11 @@ import { PlanIcon } from "@/components/plans/plan-icon";
 import { useAppearance } from "@/components/shared/appearance-provider";
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
 import {
+  UI_LABEL_ACTIVE_WISHES,
+  UI_LABEL_HIDE,
+  UI_LABEL_SHOW,
+} from "@/config/ui-labels";
+import {
   PLAN_WIDGET_STYLES,
   PLANS_WIDGET_GRID,
   PLANS_WIDGET_SURFACE,
@@ -27,7 +32,7 @@ const WIDGETS: Array<{
 }> = [
   {
     id: "active",
-    label: "Wish aktif",
+    label: UI_LABEL_ACTIVE_WISHES,
     isMoney: false,
     getValue: (overview) => overview.activeCount,
   },
@@ -64,7 +69,7 @@ export function PlansSummaryWidgets({ overview }: PlansSummaryWidgetsProps) {
     <div className="space-y-2">
       <div className="flex items-center justify-between md:justify-end">
         <span className="text-xs font-medium text-muted-foreground md:hidden">
-          {balanceVisible ? "Sembunyikan" : "Tampilkan"}
+          {balanceVisible ? UI_LABEL_HIDE : UI_LABEL_SHOW}
         </span>
         <BalanceVisibilityToggle />
       </div>

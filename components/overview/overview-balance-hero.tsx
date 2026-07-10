@@ -2,6 +2,16 @@
 
 import { ArrowDownIcon, ArrowUpIcon, WalletIcon } from "@/lib/icons";
 
+import {
+  UI_LABEL_BALANCE,
+  UI_LABEL_OVERVIEW_BALANCE,
+  UI_LABEL_OVERVIEW_BALANCE_CUMULATIVE_FILTERED,
+  UI_LABEL_OVERVIEW_BALANCE_CUMULATIVE_TODAY,
+  UI_LABEL_OVERVIEW_BALANCE_SUMMARY,
+  UI_LABEL_OVERVIEW_IN_TODAY,
+  UI_LABEL_OVERVIEW_OUT_TODAY,
+  UI_LABEL_OVERVIEW_VS_YESTERDAY,
+} from "@/config/ui-labels";
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
 import {
@@ -73,17 +83,18 @@ export function OverviewBalanceHero({
     formatExpenseAmount,
   } = useProtectedCurrency();
   const isNegative = balance < 0;
-  const incomeLabel = filterContext?.incomeLabel ?? "In hari ini";
-  const expenseLabel = filterContext?.expenseLabel ?? "Out hari ini";
-  const balanceDeltaLabel = filterContext?.balanceDeltaLabel ?? "vs kemarin";
+  const incomeLabel = filterContext?.incomeLabel ?? UI_LABEL_OVERVIEW_IN_TODAY;
+  const expenseLabel = filterContext?.expenseLabel ?? UI_LABEL_OVERVIEW_OUT_TODAY;
+  const balanceDeltaLabel =
+    filterContext?.balanceDeltaLabel ?? UI_LABEL_OVERVIEW_VS_YESTERDAY;
 
   return (
     <section className={cn(OVERVIEW_CARD, OVERVIEW_CARD_PADDING, className)}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className={OVERVIEW_SECTION_LABEL}>Saldo</p>
+          <p className={OVERVIEW_SECTION_LABEL}>{UI_LABEL_OVERVIEW_BALANCE}</p>
           <h2 className={cn("mt-1", OVERVIEW_SECTION_TITLE)}>
-            Ringkasan saldo
+            {UI_LABEL_OVERVIEW_BALANCE_SUMMARY}
           </h2>
         </div>
         <BalanceVisibilityToggle />
@@ -96,7 +107,7 @@ export function OverviewBalanceHero({
               <WalletIcon />
             </OverviewIconShell>
             <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-              Saldo
+              {UI_LABEL_BALANCE}
             </p>
           </div>
           <div className="mt-auto pt-3">
@@ -161,8 +172,8 @@ export function OverviewBalanceHero({
 
       <p className="mt-3 text-xs text-muted-foreground">
         {filterContext?.isDateRangeActive
-          ? "Saldo kumulatif hingga akhir periode filter."
-          : "Saldo kumulatif dari semua transaksi hingga hari ini."}
+          ? UI_LABEL_OVERVIEW_BALANCE_CUMULATIVE_FILTERED
+          : UI_LABEL_OVERVIEW_BALANCE_CUMULATIVE_TODAY}
       </p>
     </section>
   );

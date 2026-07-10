@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  UI_LABEL_HIDE_BALANCE,
+  UI_LABEL_SHOW_BALANCE,
+} from "@/config/ui-labels";
 import { useAppearance } from "@/components/shared/appearance-provider";
 import { Button } from "@/components/ui/button";
 import { EyeIcon, EyeSlashIcon } from "@/lib/icons";
@@ -20,7 +24,7 @@ export function BalanceVisibilityToggle({
       variant="ghost"
       size="icon-sm"
       onClick={toggleBalanceVisibility}
-      aria-label={balanceVisible ? "Sembunyikan saldo" : "Tampilkan saldo"}
+      aria-label={balanceVisible ? UI_LABEL_HIDE_BALANCE : UI_LABEL_SHOW_BALANCE}
       aria-pressed={!balanceVisible}
       className={cn(
         "size-8 shrink-0 text-muted-foreground hover:text-foreground",

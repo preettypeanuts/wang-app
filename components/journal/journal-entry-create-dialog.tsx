@@ -24,6 +24,12 @@ import {
   FORM_DIALOG_BODY_SCROLL,
 } from "@/config/form-dialog";
 import { SEPARATED_CONTROL } from "@/config/shape";
+import {
+  UI_LABEL_ADD_TRANSACTION,
+  UI_LABEL_ADD_TRANSACTION_DESC,
+  UI_LABEL_CANCEL,
+  UI_LABEL_SAVE,
+} from "@/config/ui-labels";
 import { cn } from "@/lib/utils";
 import { todayDateInputValue } from "@/lib/validations/planned-item";
 import type { TransactionType } from "@/types/transaction";
@@ -83,15 +89,15 @@ export function JournalEntryCreateDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
-      title="Tambah transaksi"
+      title={UI_LABEL_ADD_TRANSACTION}
       wide
     >
       <ResponsiveDialogHeader>
         <DialogTitle className="text-lg font-semibold tracking-tight">
-          Tambah transaksi
+          {UI_LABEL_ADD_TRANSACTION}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          Catat transaksi manual — termasuk tanggal lampau.
+          {UI_LABEL_ADD_TRANSACTION_DESC}
         </DialogDescription>
       </ResponsiveDialogHeader>
 
@@ -124,14 +130,14 @@ export function JournalEntryCreateDialog({
             className={cn(SEPARATED_CONTROL, "flex-1")}
             onClick={() => onOpenChange(false)}
           >
-            Batal
+            {UI_LABEL_CANCEL}
           </Button>
           <Button
             type="submit"
             disabled={isPending}
             className={cn(SEPARATED_CONTROL, "flex-1")}
           >
-            Simpan
+            {UI_LABEL_SAVE}
           </Button>
         </ResponsiveDialogFooter>
       </form>

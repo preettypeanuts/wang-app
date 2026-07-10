@@ -8,6 +8,7 @@ import {
   PLANS_ROUTE,
   WISH_PAGE_TITLE,
 } from "@/config/navigation";
+import { NOTIFICATIONS_PAGE_TITLE } from "@/config/ui-labels";
 
 /** Content clears fixed top bar on mobile. */
 export const MOBILE_TOP_BAR_OFFSET = "var(--mobile-top-bar-offset)";
@@ -73,7 +74,7 @@ const MOBILE_PAGE_TITLES: Record<string, string> = {
   "/journal": "Journal",
   [PAYPLAN_ROUTE]: "PayPlan",
   [PLANS_ROUTE]: WISH_PAGE_TITLE,
-  [NOTIFICATIONS_ROUTE]: "Notifikasi",
+  [NOTIFICATIONS_ROUTE]: NOTIFICATIONS_PAGE_TITLE,
 };
 
 export function getMobilePageTitle(pathname: string): string | null {

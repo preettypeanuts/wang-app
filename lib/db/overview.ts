@@ -1,4 +1,17 @@
 import { getCategoryLabel } from "@/config/categories";
+import {
+  UI_LABEL_OVERVIEW_ACTIVITY,
+  UI_LABEL_OVERVIEW_ACTIVITY_EMPTY_FILTERED,
+  UI_LABEL_OVERVIEW_ACTIVITY_EMPTY_PERIOD,
+  UI_LABEL_OVERVIEW_ACTIVITY_TODAY,
+  UI_LABEL_OVERVIEW_EXPENSE,
+  UI_LABEL_OVERVIEW_INCOME,
+  UI_LABEL_OVERVIEW_IN_TODAY,
+  UI_LABEL_OVERVIEW_OUT_TODAY,
+  UI_LABEL_OVERVIEW_VS_YESTERDAY,
+  UI_LABEL_PERIOD_FALLBACK,
+  UI_LABEL_VS_PREVIOUS_PERIOD,
+} from "@/config/ui-labels";
 import { getAvailableBalance } from "@/lib/db/balance";
 import { listBudgetsForMonth } from "@/lib/db/budgets";
 import {
@@ -114,31 +127,31 @@ function buildOverviewFilterContext(
   }
 
   if (dateActive) {
-    const period = periodLabel ?? "periode";
+    const period = periodLabel ?? UI_LABEL_PERIOD_FALLBACK;
 
     return {
       isDateRangeActive: true,
       periodLabel,
-      incomeLabel: "Pemasukan",
-      expenseLabel: "Pengeluaran",
-      balanceDeltaLabel: "vs periode sebelumnya",
-      activityTitle: "Aktivitas",
+      incomeLabel: UI_LABEL_OVERVIEW_INCOME,
+      expenseLabel: UI_LABEL_OVERVIEW_EXPENSE,
+      balanceDeltaLabel: UI_LABEL_VS_PREVIOUS_PERIOD,
+      activityTitle: UI_LABEL_OVERVIEW_ACTIVITY,
       activitySubtitle: period,
       activityEmptyMessage: typeCategoryActive
-        ? "Tidak ada transaksi yang cocok dengan filter."
-        : "Belum ada transaksi di periode ini.",
+        ? UI_LABEL_OVERVIEW_ACTIVITY_EMPTY_FILTERED
+        : UI_LABEL_OVERVIEW_ACTIVITY_EMPTY_PERIOD,
     };
   }
 
   return {
     isDateRangeActive: false,
     periodLabel: null,
-    incomeLabel: "In hari ini",
-    expenseLabel: "Out hari ini",
-    balanceDeltaLabel: "vs kemarin",
-    activityTitle: "Aktivitas hari ini",
+    incomeLabel: UI_LABEL_OVERVIEW_IN_TODAY,
+    expenseLabel: UI_LABEL_OVERVIEW_OUT_TODAY,
+    balanceDeltaLabel: UI_LABEL_OVERVIEW_VS_YESTERDAY,
+    activityTitle: UI_LABEL_OVERVIEW_ACTIVITY_TODAY,
     activitySubtitle: null,
-    activityEmptyMessage: "Tidak ada transaksi yang cocok dengan filter.",
+    activityEmptyMessage: UI_LABEL_OVERVIEW_ACTIVITY_EMPTY_FILTERED,
   };
 }
 

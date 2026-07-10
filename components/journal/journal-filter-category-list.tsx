@@ -1,6 +1,7 @@
 "use client";
 
 import { JOURNAL_CATEGORY_OPTIONS } from "@/config/journal";
+import { UI_LABEL_SELECT_CATEGORY } from "@/config/ui-labels";
 import { CheckIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ export function JournalFilterCategoryList({
         className,
       )}
       role="listbox"
-      aria-label="Pilih kategori"
+      aria-label={UI_LABEL_SELECT_CATEGORY}
     >
       {JOURNAL_CATEGORY_OPTIONS.map((option) => {
         const isSelected = value === option.value;

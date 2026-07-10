@@ -7,6 +7,7 @@ import {
   PAYPLAN_ROUTE,
   PLANS_ROUTE,
 } from "@/config/navigation";
+import { NOTIFICATIONS_PAGE_TITLE } from "@/config/ui-labels";
 import { SIDEBAR_APP_ICON_GRADIENTS } from "@/config/sidebar";
 import { GRID_GAP } from "@/config/spacing";
 import type { Icon } from "@/lib/icons";
@@ -133,7 +134,7 @@ export interface MobileDrawerMenuItem {
 export const mobileDrawerMenuItems: MobileDrawerMenuItem[] = [
   {
     id: "notifications",
-    title: "Notifikasi",
+    title: NOTIFICATIONS_PAGE_TITLE,
     href: NOTIFICATIONS_ROUTE,
     icon: BellIcon,
     drawerTileClass: SIDEBAR_APP_ICON_GRADIENTS.notifications,

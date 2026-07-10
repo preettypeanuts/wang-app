@@ -2,6 +2,10 @@ import { unstable_cache } from "next/cache";
 
 import { userDataTags } from "@/lib/cache/user-data-tags";
 import {
+  UI_LABEL_VS_LAST_MONTH,
+  UI_LABEL_VS_PREVIOUS_PERIOD,
+} from "@/config/ui-labels";
+import {
   hydrateJournalDaySummary,
   serializeJournalDaySummary,
   type SerializedJournalDaySummary,
@@ -126,7 +130,7 @@ async function buildJournalRangeSummary(
     balanceDelta: cumulativeBalance - previousEndBalance,
     condition,
     periodLabel,
-    periodDeltaLabel: "vs periode sebelumnya",
+    periodDeltaLabel: UI_LABEL_VS_PREVIOUS_PERIOD,
   };
 }
 
@@ -184,7 +188,7 @@ async function buildJournalDaySummary(
     balanceDelta: cumulativeBalance - lastMonthEndBalance,
     condition,
     periodLabel: null,
-    periodDeltaLabel: "vs bulan lalu",
+    periodDeltaLabel: UI_LABEL_VS_LAST_MONTH,
   };
 }
 

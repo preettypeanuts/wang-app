@@ -1,4 +1,11 @@
 import {
+  UI_LABEL_DATE_FROM,
+  UI_LABEL_DATE_UNTIL,
+  UI_LABEL_LAST_30_DAYS,
+  UI_LABEL_LAST_7_DAYS,
+  UI_LABEL_THIS_MONTH,
+} from "@/config/ui-labels";
+import {
   addDays,
   dateInputFromCalendarDate,
   endOfDay,
@@ -64,10 +71,10 @@ export function formatJournalDateRangeLabel(
   }
 
   if (filters.dateFrom) {
-    return `Dari ${formatCompactDayMonth(filters.dateFrom)}`;
+    return `${UI_LABEL_DATE_FROM} ${formatCompactDayMonth(filters.dateFrom)}`;
   }
 
-  return `Sampai ${formatCompactDayMonth(filters.dateTo!)}`;
+  return `${UI_LABEL_DATE_UNTIL} ${formatCompactDayMonth(filters.dateTo!)}`;
 }
 
 export function getJournalDateRangePresets(): JournalDateRangePreset[] {
@@ -81,17 +88,17 @@ export function getJournalDateRangePresets(): JournalDateRangePreset[] {
 
   return [
     {
-      label: "7 hari terakhir",
+      label: UI_LABEL_LAST_7_DAYS,
       dateFrom: dateInputFromCalendarDate(addDays(todayDate, -6)),
       dateTo: today,
     },
     {
-      label: "30 hari terakhir",
+      label: UI_LABEL_LAST_30_DAYS,
       dateFrom: dateInputFromCalendarDate(addDays(todayDate, -29)),
       dateTo: today,
     },
     {
-      label: "Bulan ini",
+      label: UI_LABEL_THIS_MONTH,
       dateFrom: monthStart,
       dateTo: today,
     },

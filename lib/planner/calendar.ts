@@ -6,7 +6,7 @@ import {
   toDayKey,
 } from "@/lib/finance/day-range";
 
-const MONTH_YEAR_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const MONTH_YEAR_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "long",
   year: "numeric",
 });

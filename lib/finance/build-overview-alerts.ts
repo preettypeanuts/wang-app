@@ -1,4 +1,11 @@
 import { formatIdr } from "@/lib/finance/format-currency";
+import {
+  UI_LABEL_OVERVIEW_ALERT_DUE_TODAY,
+  UI_LABEL_OVERVIEW_ALERT_NEGATIVE_BALANCE,
+  UI_LABEL_OVERVIEW_ALERT_PAYMENT_OVERDUE,
+  UI_LABEL_OVERVIEW_ALERT_THIN_WISH_BUFFER,
+  UI_LABEL_OVERVIEW_ALERT_WISHES_EXCEED_BALANCE,
+} from "@/config/ui-labels";
 import type { PlansOverview, PlansUpcomingImpactItem } from "@/types/plan";
 import type { OverviewAlert, OverviewAlertSegment } from "@/types/overview";
 
@@ -37,11 +44,11 @@ export function buildOverviewAlerts({
     alerts.push({
       id: "negative-balance",
       tone: "danger",
-      title: "Saldo negatif",
+      title: UI_LABEL_OVERVIEW_ALERT_NEGATIVE_BALANCE,
       segments: [
-        text("Saldo kumulatif "),
+        text("Cumulative balance "),
         amount(availableBalance),
-        text(". Periksa pengeluaran terbaru."),
+        text(". Review recent spending."),
       ],
     });
   }
@@ -51,7 +58,7 @@ export function buildOverviewAlerts({
       alerts.push({
         id: `overdue-${item.id}`,
         tone: "danger",
-        title: "Terlambat bayar",
+        title: UI_LABEL_OVERVIEW_ALERT_PAYMENT_OVERDUE,
         segments: [
           text(`${item.name} · `),
           amount(item.amount),
@@ -65,7 +72,7 @@ export function buildOverviewAlerts({
       alerts.push({
         id: `due-today-${item.id}`,
         tone: "warning",
-        title: "Jatuh tempo hari ini",
+        title: UI_LABEL_OVERVIEW_ALERT_DUE_TODAY,
         segments: [text(`${item.name} · `), amount(item.amount)],
       });
     }
@@ -73,26 +80,26 @@ export function buildOverviewAlerts({
 
   if (plansOverview.insightMeta.tone === "unsafe") {
     const segments: OverviewAlertSegment[] = [
-      text("Estimasi wish "),
+      text("Estimated wishes "),
       amount(plansOverview.estimatedCost),
     ];
 
     if (plansOverview.upcomingPayPlanTotal > 0) {
       segments.push(
-        text(" + PayPlan bulan ini "),
+        text(" + PayPlan this month "),
         amount(plansOverview.upcomingPayPlanTotal),
       );
     }
 
     if (plansOverview.remainingBudgetTotal > 0) {
       segments.push(
-        text(" + sisa budget "),
+        text(" + remaining budget "),
         amount(plansOverview.remainingBudgetTotal),
       );
     }
 
     segments.push(
-      text(" vs saldo "),
+      text(" vs balance "),
       amount(plansOverview.availableBalance),
       text("."),
     );
@@ -100,16 +107,18 @@ export function buildOverviewAlerts({
     alerts.push({
       id: "plans-unsafe",
       tone: "danger",
-      title: "Wish melebihi saldo",
+      title: UI_LABEL_OVERVIEW_ALERT_WISHES_EXCEED_BALANCE,
       segments,
     });
   } else if (plansOverview.insightMeta.tone === "tight") {
     alerts.push({
       id: "plans-tight",
       tone: "warning",
-      title: "Sisa wish tipis",
+      title: UI_LABEL_OVERVIEW_ALERT_THIN_WISH_BUFFER,
       segments: [
-        text("Proyeksi sisa setelah wish, PayPlan, dan sisa budget bulan ini "),
+        text(
+          "Projected remaining after wishes, PayPlan, and remaining budget this month ",
+        ),
         amount(plansOverview.projectedBalance),
         text("."),
       ],

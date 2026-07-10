@@ -17,6 +17,15 @@ import {
   FORM_GROUP,
   FORM_NOTE,
 } from "@/config/form-dialog";
+import {
+  UI_LABEL_AMOUNT_IDR,
+  UI_LABEL_CATEGORY,
+  UI_LABEL_DATE,
+  UI_LABEL_DESCRIPTION_OPTIONAL,
+  UI_LABEL_DESCRIPTION_PLACEHOLDER,
+  UI_LABEL_INBOX_MESSAGE,
+  UI_LABEL_INBOX_MESSAGE_PLACEHOLDER,
+} from "@/config/ui-labels";
 import type { TransactionType } from "@/types/transaction";
 
 export function getDefaultCategoryForType(
@@ -82,7 +91,7 @@ export function JournalEntryFormFields({
 
         <div className={FORM_FIELD_GRID_ROW}>
           <FormDialogField
-            label="Nominal (Rp)"
+            label={UI_LABEL_AMOUNT_IDR}
             htmlFor="journal-amount"
             gridItem
           >
@@ -96,7 +105,7 @@ export function JournalEntryFormFields({
             />
           </FormDialogField>
 
-          <FormDialogField label="Tanggal" htmlFor="journal-date" gridItem>
+          <FormDialogField label={UI_LABEL_DATE} htmlFor="journal-date" gridItem>
             <FormDatePicker
               id="journal-date"
               name="occurredAt"
@@ -108,7 +117,7 @@ export function JournalEntryFormFields({
         </div>
 
         <FormDialogField
-          label="Deskripsi (opsional)"
+          label={UI_LABEL_DESCRIPTION_OPTIONAL}
           htmlFor="journal-description"
         >
           <Input
@@ -116,11 +125,11 @@ export function JournalEntryFormFields({
             name="description"
             defaultValue={descriptionDefault}
             className={FORM_FIELD_INPUT}
-            placeholder="Belanja harian, gaji, dll."
+            placeholder={UI_LABEL_DESCRIPTION_PLACEHOLDER}
           />
         </FormDialogField>
 
-        <FormDialogField label="Kategori" htmlFor="journal-category">
+        <FormDialogField label={UI_LABEL_CATEGORY} htmlFor="journal-category">
           <JournalCategoryCombobox
             id="journal-category"
             type={type}
@@ -132,13 +141,13 @@ export function JournalEntryFormFields({
 
       {showRawInput ? (
         <div className={FORM_GROUP}>
-          <FormDialogField label="Pesan inbox" htmlFor="journal-raw-input">
+          <FormDialogField label={UI_LABEL_INBOX_MESSAGE} htmlFor="journal-raw-input">
             <Textarea
               id="journal-raw-input"
               name="rawInput"
               rows={3}
               defaultValue={rawInputDefault}
-              placeholder="Pesan asli dari inbox"
+              placeholder={UI_LABEL_INBOX_MESSAGE_PLACEHOLDER}
               className={FORM_NOTE}
             />
           </FormDialogField>

@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  UI_LABEL_OVERVIEW_ALERTS_ATTENTION,
+  UI_LABEL_OVERVIEW_ALERTS_EMPTY,
+} from "@/config/ui-labels";
 import { ExclamationTriangleIcon } from "@/lib/icons";
 
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
@@ -54,14 +58,14 @@ export function OverviewAlertsCard({
         <div className="min-w-0">
           <p className={OVERVIEW_SECTION_LABEL}>Alerts</p>
           <h2 className={cn("mt-0.5", OVERVIEW_SECTION_TITLE)}>
-            Perlu perhatian
+            {UI_LABEL_OVERVIEW_ALERTS_ATTENTION}
           </h2>
         </div>
       </div>
 
       {alerts.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          Tidak ada alert saat ini. Semua terlihat aman.
+          {UI_LABEL_OVERVIEW_ALERTS_EMPTY}
         </p>
       ) : (
         <ul className="mt-4 space-y-2">

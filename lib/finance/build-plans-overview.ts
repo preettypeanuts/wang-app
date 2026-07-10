@@ -1,4 +1,10 @@
 import { formatIdr } from "@/lib/finance/format-currency";
+import {
+  UI_LABEL_PLANS_INSIGHT_EMPTY,
+  UI_LABEL_PLANS_INSIGHT_SAFE,
+  UI_LABEL_PLANS_INSIGHT_TIGHT,
+  UI_LABEL_PLANS_INSIGHT_UNSAFE,
+} from "@/config/ui-labels";
 import type {
   PlanBudgetImpact,
   PlanRecord,
@@ -52,7 +58,7 @@ export function resolvePlansInsightMeta(
     upcomingPayPlanTotal <= 0 &&
     remainingBudgetTotal <= 0
   ) {
-    return { tone: "empty", label: "Kosong" };
+    return { tone: "empty", label: UI_LABEL_PLANS_INSIGHT_EMPTY };
   }
 
   const projectedBalance = computePlansProjectedBalance(
@@ -68,14 +74,14 @@ export function resolvePlansInsightMeta(
   );
 
   if (projectedBalance >= safeThreshold) {
-    return { tone: "safe", label: "Aman" };
+    return { tone: "safe", label: UI_LABEL_PLANS_INSIGHT_SAFE };
   }
 
   if (projectedBalance >= 0) {
-    return { tone: "tight", label: "Waspada" };
+    return { tone: "tight", label: UI_LABEL_PLANS_INSIGHT_TIGHT };
   }
 
-  return { tone: "unsafe", label: "Risiko" };
+  return { tone: "unsafe", label: UI_LABEL_PLANS_INSIGHT_UNSAFE };
 }
 
 export function buildPlansOverview(

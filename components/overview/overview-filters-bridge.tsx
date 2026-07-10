@@ -12,6 +12,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { JournalFiltersDrawer } from "@/components/journal/journal-filters-drawer";
 import { Button } from "@/components/ui/button";
+import { UI_LABEL_OPEN_FILTER } from "@/config/ui-labels";
 import { MOBILE_TOP_BAR_ORB_BUTTON } from "@/config/mobile-chrome";
 import { JOURNAL_FILTER_TRIGGER_ACTIVE } from "@/config/journal-mobile";
 import { isOverviewRoute } from "@/config/overview-desktop";
@@ -154,7 +155,7 @@ export function OverviewMobileTopBarFilterButton() {
   return (
     <button
       type="button"
-      aria-label="Buka filter"
+      aria-label={UI_LABEL_OPEN_FILTER}
       className={cn(
         MOBILE_TOP_BAR_ORB_BUTTON,
         hasFilters && JOURNAL_FILTER_TRIGGER_ACTIVE,
@@ -178,7 +179,7 @@ export function OverviewDesktopFilterTrigger() {
       type="button"
       variant="outline"
       size="sm"
-      aria-label="Buka filter"
+      aria-label={UI_LABEL_OPEN_FILTER}
       className={cn(
         SEPARATED_CONTROL,
         "h-9 gap-1.5",

@@ -16,6 +16,14 @@ import {
   JOURNAL_FILTERS_MOBILE_ROW,
 } from "@/config/journal-mobile";
 import { SEPARATED_CONTROL } from "@/config/shape";
+import {
+  UI_LABEL_DATE_AND_MORE,
+  UI_LABEL_FILTER,
+  UI_LABEL_OPEN_FILTER,
+  UI_LABEL_SEARCH,
+  UI_LABEL_SEARCH_INBOX_PLACEHOLDER,
+  UI_LABEL_SEARCH_TRANSACTIONS,
+} from "@/config/ui-labels";
 import { FunnelIcon } from "@/lib/icons";
 import { isJournalDateRangeActive } from "@/lib/journal/journal-date-range";
 import { cn } from "@/lib/utils";
@@ -102,15 +110,15 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
               applyFilters();
             }
           }}
-          placeholder="Cari transaksi..."
-          aria-label="Cari transaksi"
+          placeholder={UI_LABEL_SEARCH_TRANSACTIONS}
+          aria-label={UI_LABEL_SEARCH_TRANSACTIONS}
           className={cn(SEPARATED_CONTROL, JOURNAL_FILTER_SEARCH_INPUT)}
         />
         <Button
           type="button"
           variant="outline"
           size="icon"
-          aria-label="Buka filter"
+          aria-label={UI_LABEL_OPEN_FILTER}
           aria-expanded={filtersOpen}
           className={cn(
             SEPARATED_CONTROL,
@@ -148,7 +156,7 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
             htmlFor="journal-search-desktop"
             className="text-xs font-medium"
           >
-            Cari
+            {UI_LABEL_SEARCH}
           </label>
           <Input
             id="journal-search-desktop"
@@ -159,13 +167,13 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
                 applyFilters();
               }
             }}
-            placeholder="Deskripsi, pesan inbox..."
+            placeholder={UI_LABEL_SEARCH_INBOX_PLACEHOLDER}
             className={cn(SEPARATED_CONTROL, "h-9 w-full")}
           />
         </div>
 
         <div className="grid gap-1.5">
-          <span className="text-xs font-medium">Filter</span>
+          <span className="text-xs font-medium">{UI_LABEL_FILTER}</span>
           <Button
             type="button"
             variant="outline"
@@ -178,7 +186,7 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
             onClick={() => setFiltersOpen(true)}
           >
             <FunnelIcon aria-hidden className="size-4" />
-            Tanggal & lainnya
+            {UI_LABEL_DATE_AND_MORE}
           </Button>
         </div>
 

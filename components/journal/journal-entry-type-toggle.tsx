@@ -1,4 +1,5 @@
 import { FORM_SEGMENT, FORM_SEGMENTED } from "@/config/form-dialog";
+import { UI_LABEL_EXPENSE, UI_LABEL_INCOME } from "@/config/ui-labels";
 import { ArrowDownIcon, ArrowUpIcon, type Icon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type { TransactionType } from "@/types/transaction";
@@ -14,7 +15,7 @@ const TYPE_OPTIONS: Array<{
 }> = [
   {
     type: "expense",
-    label: "Keluar",
+    label: UI_LABEL_EXPENSE,
     icon: ArrowUpIcon,
     activeClassName:
       "border border-[#FF6B6B]/25 bg-[#FF6B6B]/12 text-[#E85555] shadow-sm dark:text-[#FF6B6B]",
@@ -25,7 +26,7 @@ const TYPE_OPTIONS: Array<{
   },
   {
     type: "income",
-    label: "Masuk",
+    label: UI_LABEL_INCOME,
     icon: ArrowDownIcon,
     activeClassName:
       "border border-[#34C759]/25 bg-[#34C759]/12 text-[#2FAE52] shadow-sm dark:text-[#34C759]",
@@ -47,7 +48,7 @@ export function JournalEntryTypeToggle({
 }: JournalEntryTypeToggleProps) {
   return (
     <fieldset className="border-0 px-4 py-3">
-      <legend className="sr-only">Jenis transaksi</legend>
+      <legend className="sr-only">Transaction type</legend>
       <div className={FORM_SEGMENTED}>
         {TYPE_OPTIONS.map((option) => {
           const isActive = value === option.type;

@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 
 import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
 import { userDataTags } from "@/lib/cache/user-data-tags";
+import { formatDaysUntilLabel } from "@/config/ui-labels";
 import { addDays, parseDayKey, startOfDay, toDayKey } from "@/lib/finance/day-range";
 import { formatCompactDayMonth } from "@/lib/finance/format-datetime";
 import { listUpcomingUnpaidPayPlanEntries } from "@/lib/planner/list-upcoming-unpaid-payplan";
@@ -9,18 +10,6 @@ import type { PlansUpcomingImpactItem } from "@/types/plan";
 
 const DEFAULT_HORIZON_DAYS = 60;
 const MAX_ITEMS = 8;
-
-function formatDaysUntilLabel(daysUntil: number): string {
-  if (daysUntil > 0) {
-    return `${daysUntil} hari lagi`;
-  }
-
-  if (daysUntil === 0) {
-    return "hari ini";
-  }
-
-  return `${Math.abs(daysUntil)} hari lalu`;
-}
 
 export async function getPlansUpcomingImpact(
   userId: string,

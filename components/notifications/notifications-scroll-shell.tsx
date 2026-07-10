@@ -5,6 +5,7 @@ import {
   NOTIFICATIONS_PAGE_ROOT,
   NOTIFICATIONS_PAGE_SCROLL,
 } from "@/config/notifications-page";
+import { NOTIFICATIONS_PAGE_TITLE } from "@/config/ui-labels";
 import { STACK_GAP } from "@/config/spacing";
 import { cn } from "@/lib/utils";
 import { GLASS_SURFACE } from "@/config/glass";
@@ -15,12 +16,12 @@ export function NotificationsScrollShell() {
       <NotificationsPageShell className="min-h-0 flex-1">
         <MobileScrollSurface
           className={cn("py-3", NOTIFICATIONS_PAGE_SCROLL, STACK_GAP)}
-          title="Notifikasi"
+          title={NOTIFICATIONS_PAGE_TITLE}
         >
           <header className={cn("shrink-0 max-md:hidden md:pt-3 rounded-3xl px-3 mb-3 pb-1", GLASS_SURFACE)}>
-            <h1 className="text-lg font-semibold tracking-tight">Notifikasi</h1>
+            <h1 className="text-lg font-semibold tracking-tight">{NOTIFICATIONS_PAGE_TITLE}</h1>
             <p className="mt-1 text-xs pb-3">
-              Riwayat alert, ringkasan, dan pengingat keuangan.
+              Alerts, summaries, and financial reminders.
             </p>
           </header>
 

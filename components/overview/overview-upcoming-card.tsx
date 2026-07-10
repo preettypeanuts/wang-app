@@ -2,6 +2,11 @@
 
 import { CalendarBlankIcon } from "@/lib/icons";
 
+import {
+  UI_LABEL_OVERVIEW_UPCOMING_BILLS,
+  UI_LABEL_OVERVIEW_UPCOMING_EMPTY,
+} from "@/config/ui-labels";
+
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import {
@@ -33,14 +38,14 @@ export function OverviewUpcomingCard({
         <div className="min-w-0">
           <p className={OVERVIEW_SECTION_LABEL}>Upcoming</p>
           <h2 className={cn("mt-0.5", OVERVIEW_SECTION_TITLE)}>
-            Tagihan mendatang
+            {UI_LABEL_OVERVIEW_UPCOMING_BILLS}
           </h2>
         </div>
       </div>
 
       {items.length === 0 ? (
         <p className="mt-4 text-sm text-muted-foreground">
-          Tidak ada tagihan PayPlan yang belum dibayar dalam 60 hari ke depan.
+          {UI_LABEL_OVERVIEW_UPCOMING_EMPTY}
         </p>
       ) : (
         <ul className="mt-4 space-y-2.5">

@@ -12,6 +12,7 @@ import {
   SIDEBAR_APP_ICON_GRADIENTS,
   type SidebarAppIconGradient,
 } from "@/config/sidebar";
+import { NOTIFICATIONS_PAGE_TITLE } from "@/config/ui-labels";
 
 export const OVERVIEW_ROUTE = "/overview";
 export const PAYPLAN_ROUTE = "/payplan";
@@ -20,7 +21,7 @@ export const NOTIFICATIONS_ROUTE = "/notifications";
 
 /** User-facing page title for `/plans` — internal route unchanged. */
 export const WISH_PAGE_TITLE = "Wish";
-export const SAVINGS_PAGE_TITLE = "Tabungan";
+export const SAVINGS_PAGE_TITLE = "Savings";
 
 export interface NavItem {
   title: string;
@@ -64,7 +65,7 @@ export const mainNavItems: NavItem[] = [
 
 export const utilityNavItems: NavItem[] = [
   {
-    title: "Notifikasi",
+    title: NOTIFICATIONS_PAGE_TITLE,
     href: NOTIFICATIONS_ROUTE,
     icon: BellIcon,
     gradient: SIDEBAR_APP_ICON_GRADIENTS.notifications,

@@ -1,31 +1,31 @@
 import { addDays, parseDayKey, toDayKey } from "@/lib/finance/day-range";
 import { APP_TIMEZONE } from "@/config/timezone";
 
-const WEEKDAY_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const WEEKDAY_FORMAT = new Intl.DateTimeFormat("en-US", {
   weekday: "long",
   timeZone: APP_TIMEZONE,
 });
 
-const DAY_MONTH_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const DAY_MONTH_FORMAT = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "long",
   timeZone: APP_TIMEZONE,
 });
 
-const DATE_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const DATE_FORMAT = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "short",
   year: "numeric",
   timeZone: APP_TIMEZONE,
 });
 
-const TIME_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const TIME_FORMAT = new Intl.DateTimeFormat("en-US", {
   hour: "2-digit",
   minute: "2-digit",
   timeZone: APP_TIMEZONE,
 });
 
-const DATE_TIME_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const DATE_TIME_FORMAT = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "short",
   year: "numeric",
@@ -85,7 +85,7 @@ export function formatFullPayoffDate(
   return FULL_PAYOFF_DATE_FORMAT.format(date);
 }
 
-const COMPACT_DAY_MONTH_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const COMPACT_DAY_MONTH_FORMAT = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   month: "short",
   timeZone: APP_TIMEZONE,

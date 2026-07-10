@@ -6,6 +6,11 @@ import {
   WalletIcon,
 } from "@/lib/icons";
 
+import {
+  UI_LABEL_BALANCE,
+  UI_LABEL_EXPENSE,
+  UI_LABEL_INCOME,
+} from "@/config/ui-labels";
 import { SOLID_WIDGET_TILE_STYLES } from "@/config/solid-widget-tiles";
 import { SEPARATED_SURFACE } from "@/config/shape";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
@@ -25,19 +30,19 @@ interface DailySummaryStatsProps {
 
 const STATS = [
   {
-    label: "Keluar",
+    label: UI_LABEL_EXPENSE,
     valueKey: "totalExpense" as const,
     styleKey: "expense" as const,
     icon: "arrow-up" as const,
   },
   {
-    label: "Masuk",
+    label: UI_LABEL_INCOME,
     valueKey: "totalIncome" as const,
     styleKey: "income" as const,
     icon: "arrow-down" as const,
   },
   {
-    label: "Saldo",
+    label: UI_LABEL_BALANCE,
     valueKey: "balance" as const,
     styleKey: "balance" as const,
     icon: "wallet" as const,

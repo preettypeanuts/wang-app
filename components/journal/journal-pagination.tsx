@@ -9,6 +9,13 @@ import {
   JOURNAL_PAGINATION_PAGE_MOBILE,
 } from "@/config/journal-mobile";
 import { SEPARATED_CONTROL } from "@/config/shape";
+import {
+  formatJournalPageLabel,
+  formatJournalPaginationCount,
+  UI_LABEL_ENTRIES_ZERO,
+  UI_LABEL_NEXT,
+  UI_LABEL_PREVIOUS,
+} from "@/config/ui-labels";
 import { buildJournalSearchParams } from "@/lib/validations/journal";
 import { cn } from "@/lib/utils";
 import type { JournalFilters } from "@/types/journal";
@@ -40,9 +47,9 @@ export function JournalPagination({
   const hasNext = page < totalPages;
   const countLabel =
     total === 0
-      ? "0 entri"
-      : `Menampilkan ${start}–${end} dari ${total} entri`;
-  const pageLabel = `Halaman ${page} / ${totalPages}`;
+      ? UI_LABEL_ENTRIES_ZERO
+      : formatJournalPaginationCount(start, end, total);
+  const pageLabel = formatJournalPageLabel(page, totalPages);
 
   return (
       <div
@@ -64,7 +71,7 @@ export function JournalPagination({
               className={cn(SEPARATED_CONTROL, JOURNAL_PAGINATION_BUTTON_MOBILE)}
               render={<Link href={buildPageHref(filters, page - 1)} />}
             >
-              Sebelumnya
+              {UI_LABEL_PREVIOUS}
             </Button>
           ) : (
             <Button
@@ -72,7 +79,7 @@ export function JournalPagination({
               className={cn(SEPARATED_CONTROL, JOURNAL_PAGINATION_BUTTON_MOBILE)}
               disabled
             >
-              Sebelumnya
+              {UI_LABEL_PREVIOUS}
             </Button>
           )}
 
@@ -83,7 +90,7 @@ export function JournalPagination({
               className={cn(SEPARATED_CONTROL, JOURNAL_PAGINATION_BUTTON_MOBILE)}
               render={<Link href={buildPageHref(filters, page + 1)} />}
             >
-              Berikutnya
+              {UI_LABEL_NEXT}
             </Button>
           ) : (
             <Button
@@ -91,7 +98,7 @@ export function JournalPagination({
               className={cn(SEPARATED_CONTROL, JOURNAL_PAGINATION_BUTTON_MOBILE)}
               disabled
             >
-              Berikutnya
+              {UI_LABEL_NEXT}
             </Button>
           )}
         </div>
@@ -110,11 +117,11 @@ export function JournalPagination({
             className={SEPARATED_CONTROL}
             render={<Link href={buildPageHref(filters, page - 1)} />}
           >
-            Sebelumnya
+            {UI_LABEL_PREVIOUS}
           </Button>
         ) : (
           <Button variant="outline" size="sm" className={SEPARATED_CONTROL} disabled>
-            Sebelumnya
+            {UI_LABEL_PREVIOUS}
           </Button>
         )}
         <span className="min-w-20 text-center text-xs tabular-nums text-muted-foreground">
@@ -128,11 +135,11 @@ export function JournalPagination({
             className={SEPARATED_CONTROL}
             render={<Link href={buildPageHref(filters, page + 1)} />}
           >
-            Berikutnya
+            {UI_LABEL_NEXT}
           </Button>
         ) : (
           <Button variant="outline" size="sm" className={SEPARATED_CONTROL} disabled>
-            Berikutnya
+            {UI_LABEL_NEXT}
           </Button>
         )}
       </div>

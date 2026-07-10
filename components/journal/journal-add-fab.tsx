@@ -2,6 +2,7 @@
 
 import { MOBILE_ADD_FAB_ICON } from "@/config/mobile-nav";
 import { JOURNAL_ADD_FAB } from "@/config/journal-mobile";
+import { UI_LABEL_ADD_TRANSACTION } from "@/config/ui-labels";
 import { PlusIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +15,7 @@ export function JournalAddFab({ onClick, className }: JournalAddFabProps) {
   return (
     <button
       type="button"
-      aria-label="Tambah transaksi"
+      aria-label={UI_LABEL_ADD_TRANSACTION}
       onClick={onClick}
       className={cn(JOURNAL_ADD_FAB, className)}
     >

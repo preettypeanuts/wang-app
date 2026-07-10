@@ -2,6 +2,14 @@
 
 import { WalletIcon } from "@/lib/icons";
 
+import {
+  UI_LABEL_FREE_BALANCE,
+  UI_LABEL_OVERVIEW_ACTIVE_SAVINGS_COUNT,
+  UI_LABEL_OVERVIEW_SAVINGS_TARGET,
+  UI_LABEL_TOTAL_SAVED,
+  formatViewPageLink,
+} from "@/config/ui-labels";
+
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
 import { OverviewActionLink } from "@/components/overview/overview-action-link";
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
@@ -44,7 +52,7 @@ export function OverviewSavingsProgressCard({
           <div className="min-w-0">
             <p className={OVERVIEW_SECTION_LABEL}>{SAVINGS_PAGE_TITLE}</p>
             <h2 className={cn("mt-0.5", OVERVIEW_SECTION_TITLE)}>
-              Target tabungan
+              {UI_LABEL_OVERVIEW_SAVINGS_TARGET}
             </h2>
           </div>
         </div>
@@ -56,7 +64,9 @@ export function OverviewSavingsProgressCard({
           <p className="text-2xl font-semibold tabular-nums tracking-tight">
             {overview.activeCount}
           </p>
-          <p className="text-[11px] text-muted-foreground">tabungan aktif</p>
+          <p className="text-[11px] text-muted-foreground">
+            {UI_LABEL_OVERVIEW_ACTIVE_SAVINGS_COUNT}
+          </p>
         </div>
 
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/8 dark:bg-white/10">
@@ -68,13 +78,13 @@ export function OverviewSavingsProgressCard({
 
         <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
           <div>
-            <p className="text-muted-foreground">Terkumpul</p>
+            <p className="text-muted-foreground">{UI_LABEL_TOTAL_SAVED}</p>
             <p className="mt-0.5 font-semibold tabular-nums">
               {formatAmount(overview.totalSaved)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-muted-foreground">Saldo bebas</p>
+            <p className="text-muted-foreground">{UI_LABEL_FREE_BALANCE}</p>
             <p
               className={cn(
                 "mt-0.5 font-semibold tabular-nums",
@@ -90,7 +100,7 @@ export function OverviewSavingsProgressCard({
       </div>
 
       <OverviewActionLink href={`${PLANS_ROUTE}?tab=savings`} className="mt-4">
-        Lihat {SAVINGS_PAGE_TITLE} →
+        {formatViewPageLink(SAVINGS_PAGE_TITLE)}
       </OverviewActionLink>
     </section>
   );

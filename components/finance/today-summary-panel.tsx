@@ -3,6 +3,13 @@
 import { DailySummarySection } from "@/components/finance/daily-summary-section";
 import { SummaryTile } from "@/components/finance/summary-tile";
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
+import {
+  UI_LABEL_BALANCE,
+  UI_LABEL_EXPENSE,
+  UI_LABEL_INCOME,
+  UI_LABEL_SUMMARY,
+  UI_LABEL_TODAY,
+} from "@/config/ui-labels";
 import { GLASS_SURFACE } from "@/config/glass";
 import {
   getCategoryTileStyle,
@@ -51,12 +58,12 @@ export function TodaySummaryPanel({
       >
         <div>
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-            Hari ini
+            {UI_LABEL_TODAY}
           </p>
           <div className="flex flex-row items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-1">
               <h2 className="mt-1 text-lg font-semibold tracking-tight">
-                Ringkasan
+                {UI_LABEL_SUMMARY}
               </h2>
               <BalanceVisibilityToggle className="mt-1" />
             </div>
@@ -68,7 +75,7 @@ export function TodaySummaryPanel({
 
         <section className={cn("grid grid-cols-2", GRID_GAP)}>
           <SummaryTile
-            label="Pemasukan"
+            label={UI_LABEL_INCOME}
             value={formatAmount(summary.totalIncome)}
             icon={TOTAL_TILE_STYLES.income.icon}
             surfaceClassName={income.surface}
@@ -77,7 +84,7 @@ export function TodaySummaryPanel({
             valueClassName={income.valueColor}
           />
           <SummaryTile
-            label="Pengeluaran"
+            label={UI_LABEL_EXPENSE}
             value={formatAmount(summary.totalExpense)}
             icon={TOTAL_TILE_STYLES.expense.icon}
             surfaceClassName={expense.surface}
@@ -86,7 +93,7 @@ export function TodaySummaryPanel({
             valueClassName={expense.valueColor}
           />
           <SummaryTile
-            label="Saldo"
+            label={UI_LABEL_BALANCE}
             value={formatAmount(summary.balance)}
             icon={TOTAL_TILE_STYLES.balance.icon}
             surfaceClassName={balance.surface}

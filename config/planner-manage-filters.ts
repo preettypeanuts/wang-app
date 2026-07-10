@@ -2,6 +2,7 @@ import {
   PLANNED_ITEM_KINDS,
   PLANNED_REPEAT_INTERVALS,
 } from "@/config/planner-items";
+import { UI_LABEL_EXPENSE, UI_LABEL_INCOME } from "@/config/ui-labels";
 import type {
   PlannedEndMode,
   PlannedItemKind,
@@ -25,8 +26,8 @@ export const PLANNED_ITEMS_PAYMENT_OPTIONS = [
 
 export const PLANNED_ITEMS_FLOW_OPTIONS = [
   { value: "all", label: "Semua arus" },
-  { value: "expense", label: "Keluar" },
-  { value: "income", label: "Masuk" },
+  { value: "expense", label: UI_LABEL_EXPENSE },
+  { value: "income", label: UI_LABEL_INCOME },
 ] as const;
 
 export const PLANNED_ITEMS_END_MODE_OPTIONS: {

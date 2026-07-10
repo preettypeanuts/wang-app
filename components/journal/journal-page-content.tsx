@@ -14,6 +14,7 @@ import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
 import { Button } from "@/components/ui/button";
 import { JOURNAL_DESKTOP_SCROLL_SURFACE } from "@/config/journal-desktop";
 import { JOURNAL_DESKTOP_SCROLL_TRAIL } from "@/config/journal-desktop";
+import { UI_LABEL_ADD } from "@/config/ui-labels";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { STACK_GAP } from "@/config/spacing";
 import { useRefreshOnTabActive } from "@/hooks/use-refresh-on-tab-active";
@@ -73,7 +74,7 @@ export function JournalPageContent({
                   Journal
                 </h1>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Semua transaksi — dari inbox atau input manual.
+                  All transactions — from inbox or manual entry.
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
@@ -86,7 +87,7 @@ export function JournalPageContent({
                   onClick={() => setCreateOpen(true)}
                 >
                   <PlusIcon aria-hidden className="size-4" />
-                  Tambah
+                  {UI_LABEL_ADD}
                 </Button>
               </div>
             </div>
@@ -94,7 +95,7 @@ export function JournalPageContent({
 
           <div className="flex items-center justify-between gap-3 max-md:-mt-1 md:hidden">
             <p className="text-[11px] text-muted-foreground">
-              Semua transaksi — dari inbox atau input manual.
+              All transactions — from inbox or manual entry.
             </p>
             <p className="shrink-0 text-[11px] font-semibold text-foreground/90">
               {getJournalPeriodHeading(daySummary)}

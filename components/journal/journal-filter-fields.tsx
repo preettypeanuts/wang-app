@@ -14,6 +14,12 @@ import {
 } from "@/config/journal";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { CONTROL_GAP } from "@/config/spacing";
+import {
+  UI_LABEL_APPLY,
+  UI_LABEL_CATEGORY,
+  UI_LABEL_RESET,
+  UI_LABEL_TYPE,
+} from "@/config/ui-labels";
 import { cn } from "@/lib/utils";
 import type { JournalFilters } from "@/types/journal";
 
@@ -49,7 +55,7 @@ export function JournalFilterFields({
       )}
     >
       <div className={cn("grid gap-1.5", !isStack && "sm:w-40")}>
-        <span className="text-xs font-medium">Tipe</span>
+        <span className="text-xs font-medium">{UI_LABEL_TYPE}</span>
         <Select
           value={type}
           onValueChange={(value) =>
@@ -72,7 +78,7 @@ export function JournalFilterFields({
       </div>
 
       <div className={cn("grid gap-1.5", !isStack && "sm:w-44")}>
-        <span className="text-xs font-medium">Kategori</span>
+        <span className="text-xs font-medium">{UI_LABEL_CATEGORY}</span>
         <Select
           value={category}
           onValueChange={(value) => onCategoryChange(value ?? "all")}
@@ -105,7 +111,7 @@ export function JournalFilterFields({
           className={cn(SEPARATED_CONTROL, isStack && "flex-1")}
           onClick={onApply}
         >
-          Terapkan
+          {UI_LABEL_APPLY}
         </Button>
         <Button
           type="button"
@@ -114,7 +120,7 @@ export function JournalFilterFields({
           className={cn(SEPARATED_CONTROL, isStack && "flex-1")}
           onClick={onReset}
         >
-          Reset
+          {UI_LABEL_RESET}
         </Button>
       </div>
     </div>

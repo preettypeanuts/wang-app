@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  UI_LABEL_ESTIMATE,
+  UI_LABEL_OVERVIEW_ACTIVE_WISHLIST,
+  UI_LABEL_OVERVIEW_ACTIVE_WISHES_COUNT,
+  UI_LABEL_PROJECTED_REMAINING,
+  formatViewPageLink,
+} from "@/config/ui-labels";
 import { HeartIcon } from "@/lib/icons";
 
 import { PlansInsightBadgeIcon } from "@/components/shared/ai-summary-badge-icon";
@@ -50,7 +57,7 @@ export function OverviewPlansProgressCard({
           <div className="min-w-0">
             <p className={OVERVIEW_SECTION_LABEL}>{WISH_PAGE_TITLE} Progress</p>
             <h2 className={cn("mt-0.5", OVERVIEW_SECTION_TITLE)}>
-              Wishlist aktif
+              {UI_LABEL_OVERVIEW_ACTIVE_WISHLIST}
             </h2>
           </div>
         </div>
@@ -68,7 +75,9 @@ export function OverviewPlansProgressCard({
           <p className="text-2xl font-semibold tabular-nums tracking-tight">
             {overview.activeCount}
           </p>
-          <p className="text-[11px] text-muted-foreground">wish aktif</p>
+          <p className="text-[11px] text-muted-foreground">
+            {UI_LABEL_OVERVIEW_ACTIVE_WISHES_COUNT}
+          </p>
         </div>
 
         <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/8 dark:bg-white/10">
@@ -87,13 +96,13 @@ export function OverviewPlansProgressCard({
 
         <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
           <div>
-            <p className="text-muted-foreground">Estimasi</p>
+            <p className="text-muted-foreground">{UI_LABEL_ESTIMATE}</p>
             <p className="mt-0.5 font-semibold tabular-nums">
               {formatAmount(overview.estimatedCost)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-muted-foreground">Proyeksi sisa</p>
+            <p className="text-muted-foreground">{UI_LABEL_PROJECTED_REMAINING}</p>
             <p
               className={cn(
                 "mt-0.5 font-semibold tabular-nums",
@@ -109,7 +118,7 @@ export function OverviewPlansProgressCard({
       </div>
 
       <OverviewActionLink href={PLANS_ROUTE} className="mt-4">
-        Lihat {WISH_PAGE_TITLE} →
+        {formatViewPageLink(WISH_PAGE_TITLE)}
       </OverviewActionLink>
     </section>
   );

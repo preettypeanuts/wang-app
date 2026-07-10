@@ -82,10 +82,10 @@ export const NOTIFICATIONS_EMPTY_STATE = [
 export const NOTIFICATIONS_LOAD_MORE_SENTINEL = "h-8 w-full shrink-0";
 
 export const NOTIFICATION_KIND_LABELS = {
-  bill_reminder: "Tagihan",
-  daily_summary: "Ringkasan",
-  weekly_summary: "Rekap minggu",
+  bill_reminder: "Bills",
+  daily_summary: "Daily summary",
+  weekly_summary: "Weekly recap",
   ai_brief: "AI Brief",
-  alert: "Peringatan",
-  savings: "Tabungan",
+  alert: "Alert",
+  savings: "Savings",
 } as const;

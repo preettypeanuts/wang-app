@@ -75,7 +75,7 @@ export function PlansMobileTopBarTabs() {
         <TabsTrigger
           value="savings"
           className={cn(PAYPLAN_TOP_BAR_TABS_TRIGGER)}
-          aria-label="Tabungan"
+          aria-label="Savings"
         >
           <WalletIcon aria-hidden />
         </TabsTrigger>

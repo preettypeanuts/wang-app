@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  UI_LABEL_EXPENSE,
+  UI_LABEL_INCOME,
+  UI_LABEL_OVERVIEW_TRANSACTIONS,
+} from "@/config/ui-labels";
 import { TableIcon } from "@/lib/icons";
 
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
@@ -50,7 +55,7 @@ export function OverviewMonthlySnapshotCard({
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div className={OVERVIEW_STAT_TILE}>
           <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Masuk
+            {UI_LABEL_INCOME}
           </p>
           <p className="mt-1 text-sm font-semibold tabular-nums text-[#34C759]">
             {formatAmount(snapshot.totalIncome)}
@@ -58,7 +63,7 @@ export function OverviewMonthlySnapshotCard({
         </div>
         <div className={OVERVIEW_STAT_TILE}>
           <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Keluar
+            {UI_LABEL_EXPENSE}
           </p>
           <p className="mt-1 text-sm font-semibold tabular-nums text-foreground/90">
             {formatAmount(snapshot.totalExpense)}
@@ -79,7 +84,7 @@ export function OverviewMonthlySnapshotCard({
         </div>
         <div className={OVERVIEW_STAT_TILE}>
           <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-            Transaksi
+            {UI_LABEL_OVERVIEW_TRANSACTIONS}
           </p>
           <p className="mt-1 text-sm font-semibold tabular-nums">
             {snapshot.transactionCount}

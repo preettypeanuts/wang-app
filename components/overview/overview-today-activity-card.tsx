@@ -2,6 +2,11 @@
 
 import { ReceiptIcon } from "@/lib/icons";
 
+import {
+  UI_LABEL_OVERVIEW_ACTIVITY_EMPTY_TODAY,
+  UI_LABEL_OVERVIEW_ACTIVITY_TODAY,
+} from "@/config/ui-labels";
+
 import { OverviewActionLink } from "@/components/overview/overview-action-link";
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
@@ -31,11 +36,12 @@ export function OverviewTodayActivityCard({
 }: OverviewTodayActivityCardProps) {
   const { formatAmount, formatSignedAmount, formatExpenseAmount } =
     useProtectedCurrency();
-  const activityTitle = filterContext?.activityTitle ?? "Aktivitas hari ini";
+  const activityTitle =
+    filterContext?.activityTitle ?? UI_LABEL_OVERVIEW_ACTIVITY_TODAY;
   const activitySubtitle = filterContext?.activitySubtitle;
   const emptyMessage =
     filterContext?.activityEmptyMessage ??
-    "Belum ada transaksi hari ini. Catat lewat Inbox.";
+    UI_LABEL_OVERVIEW_ACTIVITY_EMPTY_TODAY;
 
   return (
     <section className={cn(OVERVIEW_CARD, OVERVIEW_CARD_PADDING, className)}>

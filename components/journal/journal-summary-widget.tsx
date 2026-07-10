@@ -11,6 +11,18 @@ import { JournalStatTile } from "@/components/journal/journal-stat-tile";
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
 import { useAppearance } from "@/components/shared/appearance-provider";
 import { JOURNAL_WIDGET_TILE_STYLES } from "@/config/journal-widget";
+import {
+  UI_LABEL_BALANCE,
+  UI_LABEL_CONDITION,
+  UI_LABEL_EXPENSE,
+  UI_LABEL_GEMINI_ANALYTICS,
+  UI_LABEL_HIDE,
+  UI_LABEL_INCOME,
+  UI_LABEL_SHOW,
+  UI_LABEL_VS_LAST_MONTH,
+  UI_LABEL_VS_LAST_MONTH_END,
+  UI_LABEL_VS_PREVIOUS_PERIOD_END,
+} from "@/config/ui-labels";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import { cn } from "@/lib/utils";
 import type { JournalDaySummary } from "@/types/journal";
@@ -31,23 +43,23 @@ export function JournalSummaryWidget({
   const balance = JOURNAL_WIDGET_TILE_STYLES.balance;
   const condition = JOURNAL_WIDGET_TILE_STYLES.condition;
 
-  const deltaLabel = summary.periodDeltaLabel ?? "vs bulan lalu";
+  const deltaLabel = summary.periodDeltaLabel ?? UI_LABEL_VS_LAST_MONTH;
   const balanceDeltaLabel = summary.periodLabel
-    ? "vs akhir periode sebelumnya"
-    : "vs akhir bulan lalu";
+    ? UI_LABEL_VS_PREVIOUS_PERIOD_END
+    : UI_LABEL_VS_LAST_MONTH_END;
 
   return (
     <div className={cn("flex flex-col gap-2", className)}>
       <div className="flex items-center justify-between md:justify-end">
         <span className="text-xs font-medium text-muted-foreground md:hidden">
-          {balanceVisible ? "Sembunyikan" : "Tampilkan"}
+          {balanceVisible ? UI_LABEL_HIDE : UI_LABEL_SHOW}
         </span>
         <BalanceVisibilityToggle />
       </div>
-      <div className="grid grid-cols-2 md:flex gap-2 md:gap-4 overflow-x-auto">
+      <div className="grid grid-cols-2 md:flex gap-2 md:gap-2 overflow-x-auto">
         <JournalStatTile
           icon={ArrowUpIcon}
-          label="Keluar"
+          label={UI_LABEL_EXPENSE}
           value={formatAmount(summary.totalExpense)}
           delta={formatSignedDelta(summary.expenseDelta)}
           deltaLabel={deltaLabel}
@@ -59,7 +71,7 @@ export function JournalSummaryWidget({
         />
         <JournalStatTile
           icon={ArrowDownIcon}
-          label="Masuk"
+          label={UI_LABEL_INCOME}
           value={formatAmount(summary.totalIncome)}
           delta={formatSignedDelta(summary.incomeDelta)}
           deltaLabel={deltaLabel}
@@ -71,7 +83,7 @@ export function JournalSummaryWidget({
         />
         <JournalStatTile
           icon={WalletIcon}
-          label="Saldo"
+          label={UI_LABEL_BALANCE}
           value={formatAmount(summary.cumulativeBalance)}
           delta={formatSignedDelta(summary.balanceDelta)}
           deltaLabel={balanceDeltaLabel}
@@ -83,8 +95,8 @@ export function JournalSummaryWidget({
         />
         <JournalStatTile
           icon={SparkleIcon}
-          label="Kondisi"
-          subtitle="Gemini analytics"
+          label={UI_LABEL_CONDITION}
+          subtitle={UI_LABEL_GEMINI_ANALYTICS}
           value={summary.condition.label}
           surfaceClassName={condition.surface}
           iconClassName={condition.iconColor}

@@ -3,6 +3,13 @@
 import { useAppearance } from "@/components/shared/appearance-provider";
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
 import {
+  UI_LABEL_ACTIVE_SAVINGS,
+  UI_LABEL_FREE_BALANCE,
+  UI_LABEL_HIDE,
+  UI_LABEL_SHOW,
+  UI_LABEL_TOTAL_SAVED,
+} from "@/config/ui-labels";
+import {
   SAVINGS_WIDGET_GRID,
   SAVINGS_WIDGET_SURFACE,
   SAVINGS_WIDGET_TILE_LAYOUT,
@@ -26,19 +33,19 @@ const WIDGETS: Array<{
 }> = [
   {
     id: "active",
-    label: "Tabungan aktif",
+    label: UI_LABEL_ACTIVE_SAVINGS,
     isMoney: false,
     getValue: (overview) => overview.activeCount,
   },
   {
     id: "saved",
-    label: "Total terkumpul",
+    label: UI_LABEL_TOTAL_SAVED,
     isMoney: true,
     getValue: (overview) => overview.totalSaved,
   },
   {
     id: "free",
-    label: "Saldo bebas",
+    label: UI_LABEL_FREE_BALANCE,
     isMoney: true,
     getValue: (overview) => overview.freeBalance,
   },
@@ -65,7 +72,7 @@ export function SavingsGoalsSummaryWidgets({
     <div className="space-y-2">
       <div className="flex items-center justify-between md:justify-end">
         <span className="text-xs font-medium text-muted-foreground md:hidden">
-          {balanceVisible ? "Sembunyikan" : "Tampilkan"}
+          {balanceVisible ? UI_LABEL_HIDE : UI_LABEL_SHOW}
         </span>
         <BalanceVisibilityToggle />
       </div>
