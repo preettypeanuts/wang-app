@@ -1,3 +1,14 @@
+import {
+  PLANS_AI_BUDGET_IMPACT,
+  PLANS_AI_BUDGET_OVER_BY,
+  PLANS_AI_BUDGET_REMAINING,
+  PLANS_AI_METRIC_BALANCE_PREFIX,
+  PLANS_AI_PAYPLAN_THIS_MONTH,
+  PLANS_AI_PROJECTED_REMAINING,
+  PLANS_AI_REMAINING_BUDGET_THIS_MONTH,
+  PLANS_RELATED_UPCOMING_DESC,
+} from "@/config/plans-labels";
+import { UI_LABEL_OVERVIEW_UPCOMING_EMPTY } from "@/config/ui-labels";
 import { CalendarBlankIcon } from "@/lib/icons";
 
 import {
@@ -37,7 +48,7 @@ export function PlansRelatedUpcoming({
               Planner Impact
             </h3>
             <p className="mt-1 text-[11px] text-muted-foreground">
-              Tagihan PayPlan yang belum dibayar dan estimasi hari jatuh tempo.
+              {PLANS_RELATED_UPCOMING_DESC}
             </p>
           </div>
         </div>
@@ -45,7 +56,7 @@ export function PlansRelatedUpcoming({
 
       {items.length === 0 ? (
         <p className={PLANS_RELATED_UPCOMING_EMPTY}>
-          Tidak ada tagihan PayPlan yang belum dibayar dalam 60 hari ke depan.
+          {UI_LABEL_OVERVIEW_UPCOMING_EMPTY}
         </p>
       ) : (
         <div className={PLANS_RELATED_UPCOMING_LIST}>

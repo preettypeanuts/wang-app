@@ -5,6 +5,19 @@ import { useState } from "react";
 import { PasswordInput } from "@/components/auth/password-input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import {
+  PROFILE_CHANGE_PASSWORD,
+  PROFILE_CHANGE_PASSWORD_DESC,
+  PROFILE_CONFIRM_PASSWORD,
+  PROFILE_CURRENT_PASSWORD,
+  PROFILE_NEW_PASSWORD,
+  PROFILE_PASSWORD_CHANGE_FAILED,
+  PROFILE_PASSWORD_MIN_LENGTH,
+  PROFILE_PASSWORD_MISMATCH,
+  PROFILE_PASSWORD_UPDATED,
+  PROFILE_SAVE_PASSWORD,
+  PROFILE_SAVING_PASSWORD,
+} from "@/config/settings-labels";
 import { changePassword } from "@/lib/auth/auth-client";
 
 export function ChangePasswordForm() {
@@ -21,12 +34,12 @@ export function ChangePasswordForm() {
     setSuccess(null);
 
     if (newPassword.length < 8) {
-      setError("Password baru minimal 8 karakter.");
+      setError(PROFILE_PASSWORD_MIN_LENGTH);
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("Konfirmasi password tidak cocok.");
+      setError(PROFILE_PASSWORD_MISMATCH);
       return;
     }
 
@@ -41,31 +54,31 @@ export function ChangePasswordForm() {
     setPending(false);
 
     if (result.error) {
-      setError(result.error.message ?? "Gagal mengganti password.");
+      setError(result.error.message ?? PROFILE_PASSWORD_CHANGE_FAILED);
       return;
     }
 
     setCurrentPassword("");
     setNewPassword("");
     setConfirmPassword("");
-    setSuccess("Password berhasil diperbarui.");
+    setSuccess(PROFILE_PASSWORD_UPDATED);
   }
 
   return (
     <section className="space-y-3">
       <div className="space-y-0.5">
         <h2 className="text-[13px] font-medium text-muted-foreground">
-          Ganti password
+          {PROFILE_CHANGE_PASSWORD}
         </h2>
         <p className="text-[11px] leading-snug text-muted-foreground">
-          Masukkan password lama dan password baru kamu.
+          {PROFILE_CHANGE_PASSWORD_DESC}
         </p>
       </div>
 
       <form className="space-y-3" onSubmit={handleSubmit}>
         <div className="space-y-4 rounded-xl bg-neutral-100 p-4 dark:bg-neutral-900">
           <div className="space-y-2">
-            <Label htmlFor="current-password">Password saat ini</Label>
+            <Label htmlFor="current-password">{PROFILE_CURRENT_PASSWORD}</Label>
             <PasswordInput
               autoComplete="current-password"
               id="current-password"
@@ -76,7 +89,7 @@ export function ChangePasswordForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="new-password">Password baru</Label>
+            <Label htmlFor="new-password">{PROFILE_NEW_PASSWORD}</Label>
             <PasswordInput
               autoComplete="new-password"
               id="new-password"
@@ -88,7 +101,7 @@ export function ChangePasswordForm() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Konfirmasi password baru</Label>
+            <Label htmlFor="confirm-password">{PROFILE_CONFIRM_PASSWORD}</Label>
             <PasswordInput
               autoComplete="new-password"
               id="confirm-password"
@@ -113,7 +126,7 @@ export function ChangePasswordForm() {
         </div>
 
         <Button className="w-full shrink-0" disabled={pending} type="submit">
-          {pending ? "Menyimpan..." : "Simpan password"}
+          {pending ? PROFILE_SAVING_PASSWORD : PROFILE_SAVE_PASSWORD}
         </Button>
       </form>
     </section>

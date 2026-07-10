@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useLayoutEffect,
+  useMemo,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -34,10 +35,12 @@ export function PlansPageTabProvider({
   initialTab,
   children,
 }: PlansPageTabProviderProps) {
+  const serverSnapshot = useMemo(() => ({ tab: initialTab }), [initialTab]);
+
   const snapshot = useSyncExternalStore(
     subscribePlansTabState,
     getPlansTabState,
-    () => ({ tab: initialTab }),
+    () => serverSnapshot,
   );
 
   useLayoutEffect(() => {

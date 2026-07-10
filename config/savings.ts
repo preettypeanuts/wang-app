@@ -27,9 +27,9 @@ export const SAVINGS_WIDGET_TILE = PLANS_WIDGET_TILE;
 export const SAVINGS_WIDGET_TILE_LAYOUT = PLANS_WIDGET_TILE_LAYOUT;
 
 export const SAVINGS_STATUS_LABEL: Record<SavingsGoalStatus, string> = {
-  active: "Aktif",
-  completed: "Selesai",
-  paused: "Dijeda",
+  active: "Active",
+  completed: "Completed",
+  paused: "Paused",
 };
 
 export const SAVINGS_STATUS_ACCENT: Record<

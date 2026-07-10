@@ -1,3 +1,4 @@
+import { PLANS_LOADING_AI_SUMMARY } from "@/config/plans-labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PLANS_AI_SUMMARY_SHELL } from "@/config/plans";
 import { cn } from "@/lib/utils";
@@ -16,7 +17,7 @@ export function PlansAiInsightSkeleton({
   return (
     <div
       aria-busy="true"
-      aria-label="Memuat AI summary"
+      aria-label={PLANS_LOADING_AI_SUMMARY}
       className={PLANS_AI_SUMMARY_SHELL}
     >
       <div className="relative flex h-full flex-col p-4 sm:p-5">

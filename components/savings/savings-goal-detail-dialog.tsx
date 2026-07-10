@@ -26,6 +26,28 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { SAVINGS_STATUS_LABEL } from "@/config/savings";
 import {
+  PLANS_LABEL_NAME,
+  PLANS_LABEL_NOTE_OPTIONAL,
+  SAVINGS_DETAIL_FALLBACK,
+  SAVINGS_EDIT_TITLE,
+  SAVINGS_FORM_DESC,
+  SAVINGS_LABEL_DEPOSIT,
+  SAVINGS_LABEL_STATUS,
+  SAVINGS_LABEL_TARGET,
+  SAVINGS_LABEL_WITHDRAW,
+  SAVINGS_NAME_PLACEHOLDER,
+  SAVINGS_NEW_TITLE,
+  SAVINGS_VIEW_DESC,
+  UI_LABEL_ADD,
+  UI_LABEL_CANCEL,
+  UI_LABEL_CLOSE,
+  UI_LABEL_DELETE,
+  UI_LABEL_EDIT,
+  UI_LABEL_NOTE,
+  UI_LABEL_SAVE,
+} from "@/config/plans-labels";
+import { UI_LABEL_TOTAL_SAVED } from "@/config/ui-labels";
+import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_FIELD_INPUT,
   FORM_FIELD_SELECT,
@@ -80,10 +102,10 @@ export function SavingsGoalDetailDialog({
   const isForm = mode === "edit" || mode === "create";
   const title =
     mode === "create"
-      ? "Tabungan baru"
+      ? SAVINGS_NEW_TITLE
       : mode === "edit"
-        ? "Edit tabungan"
-        : (goal?.name ?? "Detail tabungan");
+        ? SAVINGS_EDIT_TITLE
+        : (goal?.name ?? SAVINGS_DETAIL_FALLBACK);
 
   useEffect(() => {
     if (!open) {
@@ -163,9 +185,7 @@ export function SavingsGoalDetailDialog({
           {title}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          {isForm
-            ? "Target tabungan untuk mengalokasikan saldo bebas."
-            : "Detail tabungan, setor, atau tarik dana."}
+          {isForm ? SAVINGS_FORM_DESC : SAVINGS_VIEW_DESC}
         </DialogDescription>
       </ResponsiveDialogHeader>
 
@@ -180,18 +200,18 @@ export function SavingsGoalDetailDialog({
               ) : null}
 
               <div className={FORM_GROUP}>
-                <FormDialogField label="Nama" htmlFor="savings-name">
+                <FormDialogField label={PLANS_LABEL_NAME} htmlFor="savings-name">
                   <Input
                     id="savings-name"
                     name="name"
                     required
                     defaultValue={mode === "edit" ? (goal?.name ?? "") : ""}
-                    placeholder="Contoh: Liburan"
+                    placeholder={SAVINGS_NAME_PLACEHOLDER}
                     className={FORM_FIELD_INPUT}
                   />
                 </FormDialogField>
 
-                <FormDialogField label="Target" htmlFor="savings-target">
+                <FormDialogField label={SAVINGS_LABEL_TARGET} htmlFor="savings-target">
                   <AmountTextInput
                     id="savings-target"
                     name="targetAmount"
@@ -205,7 +225,7 @@ export function SavingsGoalDetailDialog({
 
                 {mode === "edit" && goal ? (
                   <FormDialogField
-                    label="Terkumpul"
+                    label={UI_LABEL_TOTAL_SAVED}
                     htmlFor="savings-saved"
                   >
                     <AmountTextInput
@@ -220,7 +240,7 @@ export function SavingsGoalDetailDialog({
                 )}
 
                 {mode === "edit" ? (
-                  <FormDialogField label="Status" htmlFor="savings-status">
+                  <FormDialogField label={SAVINGS_LABEL_STATUS} htmlFor="savings-status">
                     <Select
                       value={status}
                       onValueChange={(value) => {
@@ -258,13 +278,13 @@ export function SavingsGoalDetailDialog({
               </div>
 
               <div className={FORM_GROUP}>
-                <FormDialogField label="Catatan" htmlFor="savings-note">
+                <FormDialogField label={UI_LABEL_NOTE} htmlFor="savings-note">
                   <Textarea
                     id="savings-note"
                     name="note"
                     rows={3}
                     defaultValue={mode === "edit" ? (goal?.note ?? "") : ""}
-                    placeholder="Opsional"
+                    placeholder={PLANS_LABEL_NOTE_OPTIONAL}
                     className={FORM_NOTE}
                   />
                 </FormDialogField>
@@ -286,14 +306,14 @@ export function SavingsGoalDetailDialog({
                 onOpenChange(false);
               }}
             >
-              Batal
+              {UI_LABEL_CANCEL}
             </Button>
             <Button
               type="submit"
               disabled={isPending}
               className={cn(SEPARATED_CONTROL, "flex-1")}
             >
-              {mode === "create" ? "Tambah" : "Simpan"}
+              {mode === "create" ? UI_LABEL_ADD : UI_LABEL_SAVE}
             </Button>
           </ResponsiveDialogFooter>
         </form>
@@ -303,7 +323,7 @@ export function SavingsGoalDetailDialog({
               <div className={FORM_PREVIEW_COMPACT}>
                 <div className="min-w-0">
                   <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                    Terkumpul
+                    {UI_LABEL_TOTAL_SAVED}
                   </p>
                   <p className={cn("mt-0.5", FORM_PREVIEW_COMPACT_AMOUNT)}>
                     {formatIdr(goal.savedAmount)}
@@ -321,7 +341,7 @@ export function SavingsGoalDetailDialog({
               {goal.status === "active" ? (
                 <div className={FORM_GROUP}>
                   <div className="space-y-3 px-4 py-2">
-                    <FormDialogField label="Setor" htmlFor="savings-deposit">
+                    <FormDialogField label={SAVINGS_LABEL_DEPOSIT} htmlFor="savings-deposit">
                       <div className="flex gap-2">
                         <AmountTextInput
                           id="savings-deposit"
@@ -338,12 +358,12 @@ export function SavingsGoalDetailDialog({
                           className={cn(SEPARATED_CONTROL, "shrink-0")}
                           onClick={handleDeposit}
                         >
-                          Setor
+                          {SAVINGS_LABEL_DEPOSIT}
                         </Button>
                       </div>
                     </FormDialogField>
 
-                    <FormDialogField label="Tarik" htmlFor="savings-withdraw">
+                    <FormDialogField label={SAVINGS_LABEL_WITHDRAW} htmlFor="savings-withdraw">
                       <div className="flex gap-2">
                         <AmountTextInput
                           id="savings-withdraw"
@@ -361,7 +381,7 @@ export function SavingsGoalDetailDialog({
                           className={cn(SEPARATED_CONTROL, "shrink-0")}
                           onClick={handleWithdraw}
                         >
-                          Tarik
+                          {SAVINGS_LABEL_WITHDRAW}
                         </Button>
                       </div>
                     </FormDialogField>
@@ -373,7 +393,7 @@ export function SavingsGoalDetailDialog({
                 <div className={FORM_GROUP}>
                   <div className="px-4 py-3">
                     <p className="text-xs font-medium text-muted-foreground">
-                      Catatan
+                      {UI_LABEL_NOTE}
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-foreground/90">
                       {goal.note}
@@ -391,9 +411,9 @@ export function SavingsGoalDetailDialog({
               disabled={isPending}
               className={cn(SEPARATED_CONTROL, "shrink-0")}
               onClick={handleDelete}
-              aria-label="Hapus"
+              aria-label={UI_LABEL_DELETE}
             >
-              <span className="sr-only">Hapus</span>
+              <span className="sr-only">{UI_LABEL_DELETE}</span>
               <TrashIcon className="size-4" />
             </Button>
             <div className="flex min-w-0 flex-1 gap-2">
@@ -404,9 +424,9 @@ export function SavingsGoalDetailDialog({
                 disabled={isPending}
                 className={cn(SEPARATED_CONTROL, "shrink-0")}
                 onClick={() => onModeChange("edit")}
-                aria-label="Edit"
+                aria-label={UI_LABEL_EDIT}
               >
-                <span className="sr-only">Edit</span>
+                <span className="sr-only">{UI_LABEL_EDIT}</span>
                 <PencilSimpleIcon className="size-4" />
               </Button>
 
@@ -416,7 +436,7 @@ export function SavingsGoalDetailDialog({
                 className={cn(SEPARATED_CONTROL, "flex-1")}
                 onClick={() => onOpenChange(false)}
               >
-                Tutup
+                {UI_LABEL_CLOSE}
               </Button>
             </div>
           </ResponsiveDialogFooter>

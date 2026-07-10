@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  formatPayPlanPriorPaymentSummary,
+  PAYPLAN_LABEL_ALREADY_PAID_BEFORE_HINT,
+  PAYPLAN_LABEL_ALREADY_PAID_COUNT,
+  PAYPLAN_LABEL_NEW_INSTALLMENT_FROM_START,
+  PAYPLAN_LABEL_NEW_INSTALLMENT_HINT,
+} from "@/config/payplan-labels";
 import { AppleCheckbox } from "@/components/shared/apple-checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,11 +45,10 @@ export function PlannedItemPriorPaymentFields({
           />
           <span className="min-w-0 text-sm leading-snug">
             <span className="font-medium text-foreground">
-              Cicilan baru dari tanggal mulai
+              {PAYPLAN_LABEL_NEW_INSTALLMENT_FROM_START}
             </span>
             <span className="mt-0.5 block text-xs text-muted-foreground">
-              Centang jika baru mulai cicilan. Lepas centang jika sudah berjalan
-              sebelum pakai app.
+              {PAYPLAN_LABEL_NEW_INSTALLMENT_HINT}
             </span>
           </span>
         </label>
@@ -57,7 +63,7 @@ export function PlannedItemPriorPaymentFields({
                 htmlFor="planned-paid-prior"
                 className="text-xs font-medium text-muted-foreground"
               >
-                Sudah dibayar (kali)
+                {PAYPLAN_LABEL_ALREADY_PAID_COUNT}
               </Label>
               <Input
                 id="planned-paid-prior"
@@ -72,27 +78,17 @@ export function PlannedItemPriorPaymentFields({
                 className={cn(FORM_FIELD_INPUT, "tabular-nums")}
               />
               <p className="text-[11px] text-muted-foreground">
-                Misal mulai Februari, sekarang Juni — isi berapa kali sudah
-                dibayar sebelum tracking di app.
+                {PAYPLAN_LABEL_ALREADY_PAID_BEFORE_HINT}
               </p>
             </div>
 
             {remaining !== null && maxInstallments !== null ? (
               <p className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">
-                  {paidValid ? paidCount : "—"}
-                </span>
-                {" / "}
-                {maxInstallments} dibayar
-                {paidValid ? (
-                  <>
-                    {" · "}
-                    <span className="font-medium text-foreground">
-                      {remaining}
-                    </span>{" "}
-                    sisa
-                  </>
-                ) : null}
+                {formatPayPlanPriorPaymentSummary(
+                  paidValid ? paidCount : "—",
+                  maxInstallments,
+                  paidValid ? remaining : undefined,
+                )}
               </p>
             ) : null}
           </div>

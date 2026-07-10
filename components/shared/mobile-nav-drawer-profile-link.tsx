@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { APP_TAGLINE } from "@/config/app";
+import { SETTINGS_DEFAULT_USER } from "@/config/settings-labels";
 import { MOBILE_DRAWER_ROW } from "@/config/mobile-nav";
 import { useSession } from "@/lib/auth/auth-client";
 import { CaretRightIcon } from "@/lib/icons";
@@ -16,7 +17,7 @@ export function MobileNavDrawerProfileLink({
   onNavigate,
 }: MobileNavDrawerProfileLinkProps) {
   const { data: session } = useSession();
-  const name = session?.user?.name?.trim() || "Pengguna";
+  const name = session?.user?.name?.trim() || SETTINGS_DEFAULT_USER;
   const email = session?.user?.email?.trim();
   const initial = name.charAt(0).toUpperCase() || "W";
 

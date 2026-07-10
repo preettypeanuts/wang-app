@@ -8,6 +8,7 @@ import {
   normalizeStoredWallpaperId,
   slotForCustomWallpaperId,
 } from "@/lib/wallpaper/custom-wallpaper";
+import { formatCustomWallpaperLabel } from "@/config/settings-labels";
 import type { Wallpaper, WallpaperId } from "@/types/wallpaper";
 
 export function resolveWallpaper(id: WallpaperId): Wallpaper {
@@ -20,7 +21,7 @@ export function resolveCustomWallpaper(
 ): Wallpaper {
   return {
     id: customWallpaperIdForSlot(slot),
-    label: `Kustom ${slot + 1}`,
+    label: formatCustomWallpaperLabel(slot),
     preview: imageUrl,
     background: imageUrl,
     kind: "image",

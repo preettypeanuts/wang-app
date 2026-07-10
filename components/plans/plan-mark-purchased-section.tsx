@@ -2,8 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { PLAN_MARK_PURCHASED_SHELL } from "@/config/plans";
+import {
+  formatPlansMarkPurchasedDesc,
+  PLANS_MARK_PURCHASED_BUTTON,
+} from "@/config/plans-labels";
 import { SEPARATED_CONTROL } from "@/config/shape";
-import { formatIdr } from "@/lib/finance/format-currency";
 import { CheckCircleIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
@@ -23,11 +26,7 @@ export function PlanMarkPurchasedSection({
   return (
     <section className={cn(PLAN_MARK_PURCHASED_SHELL, className)}>
       <p className="text-[11px] leading-relaxed text-muted-foreground">
-        Tandai sudah dibeli akan mencatat pengeluaran{" "}
-        <span className="font-semibold text-foreground/90">
-          {formatIdr(amount)}
-        </span>{" "}
-        ke Journal dan mengurangi saldo.
+        {formatPlansMarkPurchasedDesc(amount)}
       </p>
       <Button
         type="button"
@@ -36,7 +35,7 @@ export function PlanMarkPurchasedSection({
         onClick={onMarkPurchased}
       >
         <CheckCircleIcon aria-hidden className="size-4" />
-        Sudah dibeli
+        {PLANS_MARK_PURCHASED_BUTTON}
       </Button>
     </section>
   );

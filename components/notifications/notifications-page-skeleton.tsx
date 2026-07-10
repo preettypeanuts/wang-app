@@ -1,3 +1,4 @@
+import { NOTIFICATIONS_LOADING } from "@/config/ui-labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   NOTIFICATIONS_LIST_ITEM,
@@ -32,7 +33,7 @@ export function NotificationsPageSkeleton() {
   return (
     <div
       aria-busy="true"
-      aria-label="Memuat notifikasi"
+      aria-label={NOTIFICATIONS_LOADING}
       className={NOTIFICATIONS_PAGE_SCROLL_INNER}
     >
       <header

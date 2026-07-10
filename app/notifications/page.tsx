@@ -8,6 +8,7 @@ import {
   NOTIFICATIONS_PAGE_ROOT,
   NOTIFICATIONS_PAGE_SCROLL,
 } from "@/config/notifications-page";
+import { NOTIFICATIONS_PAGE_TITLE } from "@/config/ui-labels";
 import { STACK_GAP } from "@/config/spacing";
 import { cn } from "@/lib/utils";
 
@@ -18,7 +19,7 @@ function NotificationsPageFallback() {
         <NotificationsPageShell className="min-h-0 flex-1">
           <MobileScrollSurface
             className={cn("py-3", NOTIFICATIONS_PAGE_SCROLL, STACK_GAP)}
-            title="Notifikasi"
+            title={NOTIFICATIONS_PAGE_TITLE}
           >
             <NotificationsPageSkeleton />
           </MobileScrollSurface>

@@ -9,6 +9,10 @@ import {
   INBOX_MOBILE_TOP_BAR_ROW,
   INBOX_MOBILE_TOP_BAR_TITLE,
 } from "@/config/inbox-mobile";
+import {
+  UI_LABEL_SEARCH_MESSAGES,
+  UI_LABEL_TODAY_SUMMARY,
+} from "@/config/ui-labels";
 import { ChartBarIcon, MagnifyingGlassIcon } from "@/lib/icons";
 
 interface InboxMobileTopBarProps {
@@ -34,7 +38,7 @@ export function InboxMobileTopBar({
         <div className={INBOX_MOBILE_TOP_BAR_ACTIONS}>
           <button
             type="button"
-            aria-label="Cari pesan"
+            aria-label={UI_LABEL_SEARCH_MESSAGES}
             className={INBOX_MOBILE_TOP_BAR_ORB}
             onClick={onOpenSearch}
           >
@@ -46,7 +50,7 @@ export function InboxMobileTopBar({
           />
           <button
             type="button"
-            aria-label="Ringkasan hari ini"
+            aria-label={UI_LABEL_TODAY_SUMMARY}
             className={INBOX_MOBILE_TOP_BAR_ORB}
             onClick={onOpenSummary}
           >

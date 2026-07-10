@@ -14,8 +14,19 @@ import { PlansAddFab } from "@/components/plans/plans-add-fab";
 import { PlansRelatedUpcoming } from "@/components/plans/plans-related-upcoming";
 import { PlansSummaryWidgets } from "@/components/plans/plans-summary-widgets";
 import { Button } from "@/components/ui/button";
-import { PLANS_CARD_LIST, PLANS_MOBILE_SOLID_CARD, PLANS_WIDGET_TILE } from "@/config/plans";
+import {
+  PLANS_WISH_EMPTY_DESC,
+  PLANS_WISH_EMPTY_TITLE,
+  PLANS_WISH_NEW,
+  PLANS_WISH_SECTION_DESC,
+  UI_LABEL_ADD,
+} from "@/config/plans-labels";
 import { WISH_PAGE_TITLE } from "@/config/navigation";
+import {
+  PLANS_CARD_LIST,
+  PLANS_MOBILE_SOLID_CARD,
+  PLANS_WIDGET_TILE,
+} from "@/config/plans";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { STACK_GAP } from "@/config/spacing";
 import {
@@ -167,7 +178,7 @@ export function PlansView({
         <div>
           <h2 className="text-sm font-semibold">{WISH_PAGE_TITLE}</h2>
           <p className="text-xs text-muted-foreground">
-            Wishlist belanja dan estimasi biaya.
+            {PLANS_WISH_SECTION_DESC}
           </p>
         </div>
         <Button
@@ -177,7 +188,7 @@ export function PlansView({
           onClick={openCreate}
         >
           <PlusIcon className="size-4" />
-          Tambah
+          {UI_LABEL_ADD}
         </Button>
       </div>
 
@@ -189,9 +200,9 @@ export function PlansView({
             "flex flex-col items-center justify-center px-4 py-12 text-center",
           )}
         >
-          <p className="text-sm font-medium">Belum ada wish</p>
+          <p className="text-sm font-medium">{PLANS_WISH_EMPTY_TITLE}</p>
           <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-            Tambahkan barang wishlist untuk menghitung estimasi sisa saldo.
+            {PLANS_WISH_EMPTY_DESC}
           </p>
           <Button
             type="button"
@@ -200,7 +211,7 @@ export function PlansView({
             onClick={openCreate}
           >
             <PlusIcon className="size-4" />
-            Wish baru
+            {PLANS_WISH_NEW}
           </Button>
         </div>
       ) : (

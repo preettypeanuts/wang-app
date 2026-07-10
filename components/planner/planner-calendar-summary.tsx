@@ -4,6 +4,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { PlannerCalendarSummaryTile } from "@/components/planner/planner-calendar-summary-tile";
 import { PLANNED_ITEMS_DEFAULT_FILTERS } from "@/config/planner-manage-filters";
+import {
+  formatPayPlanBillCount,
+  PAYPLAN_LABEL_NO_BILLS,
+  PAYPLAN_LABEL_NO_PAYMENTS_YET,
+  PAYPLAN_LABEL_PAID,
+  PAYPLAN_LABEL_UNPAID,
+} from "@/config/payplan-labels";
 import { SOLID_WIDGET_TILE_STYLES } from "@/config/solid-widget-tiles";
 import { GRID_GAP } from "@/config/spacing";
 import { formatIdr } from "@/lib/finance/format-currency";
@@ -51,12 +58,12 @@ export function PlannerCalendarSummary({
   return (
     <section className={cn("grid grid-cols-2", GRID_GAP, className)}>
       <PlannerCalendarSummaryTile
-        label="Belum dibayar"
+        label={PAYPLAN_LABEL_UNPAID}
         amount={formatIdr(summary.unpaidAmount)}
         subtitle={
           summary.unpaidCount > 0
-            ? `${summary.unpaidCount} tagihan`
-            : "Tidak ada tagihan"
+            ? formatPayPlanBillCount(summary.unpaidCount)
+            : PAYPLAN_LABEL_NO_BILLS
         }
         icon="receipt"
         surfaceClassName={unpaid.surface}
@@ -67,12 +74,12 @@ export function PlannerCalendarSummary({
         onClick={() => openManagePaymentFilter("unpaid")}
       />
       <PlannerCalendarSummaryTile
-        label="Sudah dibayar"
+        label={PAYPLAN_LABEL_PAID}
         amount={formatIdr(summary.paidAmount)}
         subtitle={
           summary.paidCount > 0
-            ? `${summary.paidCount} tagihan`
-            : "Belum ada pembayaran"
+            ? formatPayPlanBillCount(summary.paidCount)
+            : PAYPLAN_LABEL_NO_PAYMENTS_YET
         }
         icon="wallet"
         surfaceClassName={paid.surface}

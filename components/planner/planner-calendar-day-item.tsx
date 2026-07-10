@@ -7,6 +7,10 @@ import { markInstallmentPaidAction } from "@/app/actions/planner";
 import { Button } from "@/components/ui/button";
 import { getCategoryLabel } from "@/config/categories";
 import {
+  PAYPLAN_LABEL_ALREADY_PAID,
+  PAYPLAN_LABEL_SAVING,
+} from "@/config/payplan-labels";
+import {
   PLANNER_CALENDAR_DAY_DIALOG_ITEM,
   PLANNER_CALENDAR_DAY_DIALOG_PAID,
   PLANNER_CALENDAR_DAY_DIALOG_PENDING,
@@ -122,7 +126,7 @@ export function PlannerCalendarDayItem({
           disabled={isPending}
           onClick={handleMarkPaid}
         >
-          {isPending ? "Menyimpan..." : "Sudah Dibayarkan"}
+          {isPending ? PAYPLAN_LABEL_SAVING : PAYPLAN_LABEL_ALREADY_PAID}
         </Button>
       ) : null}
     </article>

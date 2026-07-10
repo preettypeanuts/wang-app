@@ -10,10 +10,10 @@ export const WALLPAPER_MASK_COLORS: {
   label: string;
   swatchClassName: string;
 }[] = [
-  { id: "black", label: "Hitam", swatchClassName: "bg-black" },
+  { id: "black", label: "Black", swatchClassName: "bg-black" },
   {
     id: "white",
-    label: "Putih",
+    label: "White",
     swatchClassName: "bg-white ring-1 ring-inset ring-black/10",
   },
 ];

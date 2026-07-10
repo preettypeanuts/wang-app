@@ -1,3 +1,4 @@
+import { PAYPLAN_LABEL_MARK_PAID } from "@/config/payplan-labels";
 import {
   getPlannedItemPaymentStatus,
   isPlannedItemInfinite,
@@ -38,5 +39,5 @@ export function getPlannedItemPaymentIndex(item: PlannedItemRecord): number {
 }
 
 export function getMarkPlannedItemPaidLabel(): string {
-  return "Paid";
+  return PAYPLAN_LABEL_MARK_PAID;
 }

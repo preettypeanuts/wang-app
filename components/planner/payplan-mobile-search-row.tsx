@@ -6,6 +6,7 @@ import { FunnelIcon } from "@/lib/icons";
 import { PlannedItemsFilterDialog } from "@/components/planner/planned-items-filter-dialog";
 import { PlannedItemsSearchInput } from "@/components/planner/planned-items-search-input";
 import { Button } from "@/components/ui/button";
+import { UI_LABEL_OPEN_FILTER } from "@/config/payplan-labels";
 import {
   PAYPLAN_FILTER_SEARCH_INPUT,
   PAYPLAN_FILTER_TRIGGER,
@@ -43,7 +44,7 @@ export function PayplanMobileSearchRow({
           type="button"
           variant="outline"
           size="icon"
-          aria-label="Buka filter"
+          aria-label={UI_LABEL_OPEN_FILTER}
           aria-expanded={filterDialogOpen}
           className={cn(
             SEPARATED_CONTROL,

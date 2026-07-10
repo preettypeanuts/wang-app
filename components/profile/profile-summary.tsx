@@ -1,4 +1,8 @@
 import {
+  SETTINGS_DEFAULT_USER,
+  SETTINGS_EMAIL_UNAVAILABLE,
+} from "@/config/settings-labels";
+import {
   SETTINGS_IOS_GROUP,
   SETTINGS_IOS_PROFILE_NAME,
   SETTINGS_IOS_PROFILE_SUBTITLE,
@@ -11,7 +15,7 @@ interface ProfileSummaryProps {
 }
 
 export function ProfileSummary({ name, email }: ProfileSummaryProps) {
-  const displayName = name?.trim() || "Pengguna";
+  const displayName = name?.trim() || SETTINGS_DEFAULT_USER;
   const initial = displayName.charAt(0).toUpperCase() || "W";
 
   return (
@@ -23,7 +27,7 @@ export function ProfileSummary({ name, email }: ProfileSummaryProps) {
         <div className="min-w-0 flex-1">
           <p className={SETTINGS_IOS_PROFILE_NAME}>{displayName}</p>
           <p className={SETTINGS_IOS_PROFILE_SUBTITLE}>
-            {email?.trim() || "Email tidak tersedia"}
+            {email?.trim() || SETTINGS_EMAIL_UNAVAILABLE}
           </p>
         </div>
       </div>

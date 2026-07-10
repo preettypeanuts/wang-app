@@ -16,6 +16,15 @@ import {
 } from "@/components/shared/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  formatPayPlanDeleteConfirm,
+  PAYPLAN_LABEL_ADD_PAY_PLAN,
+  PAYPLAN_LABEL_INFLOW,
+  PAYPLAN_LABEL_NO_BILLS,
+  PAYPLAN_LABEL_NO_BILLS_ON_DATE,
+  PAYPLAN_LABEL_NO_SCHEDULED_ON_DATE,
+  PAYPLAN_LABEL_OUTFLOW,
+} from "@/config/payplan-labels";
 import { FORM_DIALOG_BODY_SCROLL, FORM_GROUP } from "@/config/form-dialog";
 import { GRID_GAP } from "@/config/spacing";
 import { dateInputFromCalendarDate } from "@/lib/finance/day-range";
@@ -105,7 +114,7 @@ export function PlannerCalendarDayDialog({
   }
 
   async function handleDelete(item: PlannedItemRecord) {
-    const confirmed = window.confirm(`Hapus "${item.name}" dari PayPlan?`);
+    const confirmed = window.confirm(formatPayPlanDeleteConfirm(item.name));
 
     if (!confirmed) {
       return;
@@ -156,14 +165,14 @@ export function PlannerCalendarDayDialog({
                 <span className="font-medium text-foreground/85">
                   {formatIdr(Math.abs(totalAmount))}
                   {totalAmount > 0
-                    ? " keluar"
+                    ? ` ${PAYPLAN_LABEL_OUTFLOW}`
                     : totalAmount < 0
-                      ? " masuk"
+                      ? ` ${PAYPLAN_LABEL_INFLOW}`
                       : ""}
                 </span>
               </>
             ) : (
-              "Tidak ada tagihan di tanggal ini."
+              PAYPLAN_LABEL_NO_BILLS_ON_DATE
             )}
           </DialogDescription>
         </ResponsiveDialogHeader>
@@ -203,9 +212,9 @@ export function PlannerCalendarDayDialog({
                 "flex flex-col items-center justify-center px-3 py-8 text-center",
               )}
             >
-              <p className="text-sm font-medium">Tidak ada tagihan</p>
+              <p className="text-sm font-medium">{PAYPLAN_LABEL_NO_BILLS}</p>
               <p className="mt-1 max-w-xs text-xs text-muted-foreground">
-                Belum ada transaksi terjadwal di tanggal ini.
+                {PAYPLAN_LABEL_NO_SCHEDULED_ON_DATE}
               </p>
               <Button
                 type="button"
@@ -214,7 +223,7 @@ export function PlannerCalendarDayDialog({
                 onClick={openCreateForm}
               >
                 <PlusIcon />
-                Tambah Pay Plan
+                {PAYPLAN_LABEL_ADD_PAY_PLAN}
               </Button>
             </div>
           )}

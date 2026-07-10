@@ -1,4 +1,10 @@
 import {
+  formatNotificationCount,
+  formatUnreadNotificationCount,
+  NOTIFICATIONS_ALL_READ,
+  NOTIFICATIONS_MARK_ALL_READ,
+} from "@/config/ui-labels";
+import {
   NOTIFICATIONS_MARK_ALL_BUTTON,
   NOTIFICATIONS_SUMMARY_BAR,
   NOTIFICATIONS_SUMMARY_TOTAL,
@@ -19,12 +25,12 @@ export function NotificationsSummaryBar({
     <div className={NOTIFICATIONS_SUMMARY_BAR}>
       <div className="min-w-0">
         <p className={NOTIFICATIONS_SUMMARY_TOTAL}>
-          {counts.total} notifikasi
+          {formatNotificationCount(counts.total)}
         </p>
         <p className={NOTIFICATIONS_SUMMARY_UNREAD}>
           {counts.unread > 0
-            ? `${counts.unread} belum dibaca`
-            : "Semua sudah dibaca"}
+            ? formatUnreadNotificationCount(counts.unread)
+            : NOTIFICATIONS_ALL_READ}
         </p>
       </div>
       {counts.unread > 0 && onMarkAllRead ? (
@@ -33,7 +39,7 @@ export function NotificationsSummaryBar({
           className={NOTIFICATIONS_MARK_ALL_BUTTON}
           onClick={onMarkAllRead}
         >
-          Tandai dibaca
+          {NOTIFICATIONS_MARK_ALL_READ}
         </button>
       ) : null}
     </div>

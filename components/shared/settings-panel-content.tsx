@@ -24,6 +24,16 @@ import {
   SETTINGS_IOS_LARGE_TITLE,
   SETTINGS_IOS_SCROLL,
 } from "@/config/settings-ios";
+import {
+  SETTINGS_ACCOUNT,
+  SETTINGS_APPEARANCE,
+  SETTINGS_DISPLAY_MODE,
+  SETTINGS_ACCENT_COLOR,
+  SETTINGS_GLASS_BLUR,
+  SETTINGS_TITLE,
+  SETTINGS_WALLPAPER,
+  SETTINGS_WALLPAPER_FOOTER,
+} from "@/config/settings-labels";
 import { THEME_MODES } from "@/config/theme-modes";
 import {
   DesktopIcon,
@@ -56,9 +66,9 @@ export function SettingsPanelContent({
   }, [open]);
 
   const themeLabel =
-    THEME_MODES.find((mode) => mode.id === themeMode)?.label ?? "Sistem";
+    THEME_MODES.find((mode) => mode.id === themeMode)?.label ?? "System";
   const accentLabel =
-    ACCENT_COLORS.find((accent) => accent.id === accentId)?.label ?? "Biru";
+    ACCENT_COLORS.find((accent) => accent.id === accentId)?.label ?? "Blue";
   const glassLabel =
     GLASS_BLUR_LEVELS.find((level) => level.id === glassBlurLevel)?.label ??
     "Normal";
@@ -90,7 +100,7 @@ export function SettingsPanelContent({
           mobileDrawer ? SETTINGS_IOS_DRAWER_LARGE_TITLE : SETTINGS_IOS_LARGE_TITLE
         }
       >
-        Pengaturan
+        {SETTINGS_TITLE}
       </h2>
 
       <div className="shrink-0">
@@ -99,44 +109,44 @@ export function SettingsPanelContent({
 
       <SettingsPushNotificationSection />
 
-      <SettingsIosSection label="Tampilan">
+      <SettingsIosSection label={SETTINGS_APPEARANCE}>
         <SettingsIosRow
           icon={<DesktopIcon aria-hidden />}
           iconClassName={SETTINGS_IOS_ICON_THEME}
-          label="Mode tampilan"
+          label={SETTINGS_DISPLAY_MODE}
           value={themeLabel}
           onClick={() => setPanel("appearance")}
         />
         <SettingsIosRow
           icon={<HeartIcon aria-hidden />}
           iconClassName={SETTINGS_IOS_ICON_ACCENT}
-          label="Warna aksen"
+          label={SETTINGS_ACCENT_COLOR}
           value={accentLabel}
           onClick={() => setPanel("accent")}
         />
         <SettingsIosRow
           icon={<SparkleIcon aria-hidden />}
           iconClassName={SETTINGS_IOS_ICON_GLASS}
-          label="Blur glass"
+          label={SETTINGS_GLASS_BLUR}
           value={glassLabel}
           onClick={() => setPanel("glass")}
         />
       </SettingsIosSection>
 
       <SettingsIosSection
-        label="Wallpaper"
-        footer="Pilih preset atau upload foto. Mask membantu keterbacaan teks di atas wallpaper."
+        label={SETTINGS_WALLPAPER}
+        footer={SETTINGS_WALLPAPER_FOOTER}
       >
         <SettingsIosRow
           icon={<SquaresFourIcon aria-hidden />}
           iconClassName={SETTINGS_IOS_ICON_WALLPAPER}
-          label="Wallpaper"
+          label={SETTINGS_WALLPAPER}
           value={wallpaperLabel}
           onClick={() => setPanel("wallpaper")}
         />
       </SettingsIosSection>
 
-      <SettingsIosSection label="Akun">
+      <SettingsIosSection label={SETTINGS_ACCOUNT}>
         <SettingsSignOutRow />
       </SettingsIosSection>
     </section>

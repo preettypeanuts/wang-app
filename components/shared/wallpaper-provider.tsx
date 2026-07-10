@@ -10,6 +10,11 @@ import {
 } from "react";
 import { DEFAULT_WALLPAPER_MASK } from "@/config/wallpaper-mask";
 import {
+  formatMaxCustomWallpapers,
+  WALLPAPER_IMPORT_FAILED,
+  WALLPAPER_UPLOAD_FAILED,
+} from "@/config/settings-labels";
+import {
   DEFAULT_WALLPAPER_ID,
   MAX_CUSTOM_WALLPAPERS,
 } from "@/config/wallpapers";
@@ -164,7 +169,7 @@ export function WallpaperProvider({ children }: WallpaperProviderProps) {
 
     if (emptySlot === null) {
       throw new WallpaperUploadError(
-        `Maksimal ${MAX_CUSTOM_WALLPAPERS} wallpaper kustom.`,
+        formatMaxCustomWallpapers(MAX_CUSTOM_WALLPAPERS),
       );
     }
 
@@ -188,7 +193,7 @@ export function WallpaperProvider({ children }: WallpaperProviderProps) {
         const message =
           error instanceof WallpaperUploadError
             ? error.message
-            : "Gagal mengunggah wallpaper.";
+            : WALLPAPER_UPLOAD_FAILED;
         setUploadError(message);
       } finally {
         setIsUploading(false);
@@ -209,7 +214,7 @@ export function WallpaperProvider({ children }: WallpaperProviderProps) {
         const message =
           error instanceof WallpaperUploadError
             ? error.message
-            : "Gagal mengimpor wallpaper dari link.";
+            : WALLPAPER_IMPORT_FAILED;
         setUploadError(message);
       } finally {
         setIsUploading(false);

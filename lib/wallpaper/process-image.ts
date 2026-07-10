@@ -1,3 +1,17 @@
+import {
+  WALLPAPER_BROWSER_UNSUPPORTED,
+  WALLPAPER_DOWNLOAD_FAILED,
+  WALLPAPER_FILE_SIZE_MAX,
+  WALLPAPER_FORMAT_INVALID,
+  WALLPAPER_LINK_EMPTY,
+  WALLPAPER_LINK_INVALID,
+  WALLPAPER_LINK_NOT_IMAGE,
+  WALLPAPER_LINK_PROTOCOL,
+  WALLPAPER_LOAD_URL_FAILED,
+  WALLPAPER_PROCESS_FAILED,
+  WALLPAPER_READ_IMAGE_FAILED,
+} from "@/config/settings-labels";
+
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const MAX_EDGE_PX = 1920;
 const OUTPUT_QUALITY = 0.85;
@@ -17,7 +31,7 @@ function loadImageFromObjectUrl(objectUrl: string): Promise<HTMLImageElement> {
 
     image.onload = () => resolve(image);
     image.onerror = () =>
-      reject(new WallpaperUploadError("Gagal membaca gambar."));
+      reject(new WallpaperUploadError(WALLPAPER_READ_IMAGE_FAILED));
 
     image.src = objectUrl;
   });
@@ -40,11 +54,7 @@ function loadImageFromUrlWithCrossOrigin(
 
     image.onload = () => resolve(image);
     image.onerror = () =>
-      reject(
-        new WallpaperUploadError(
-          "Gagal memuat gambar dari link. Pastikan link publik (JPG/PNG/WebP).",
-        ),
-      );
+      reject(new WallpaperUploadError(WALLPAPER_LOAD_URL_FAILED));
 
     image.src = url;
   });
@@ -81,16 +91,14 @@ function encodeImageElement(image: HTMLImageElement): string {
 
   const context = canvas.getContext("2d");
   if (!context) {
-    throw new WallpaperUploadError(
-      "Browser tidak mendukung pemrosesan gambar.",
-    );
+    throw new WallpaperUploadError(WALLPAPER_BROWSER_UNSUPPORTED);
   }
 
   context.drawImage(image, 0, 0, width, height);
 
   const dataUrl = canvas.toDataURL("image/jpeg", OUTPUT_QUALITY);
   if (!dataUrl.startsWith("data:image/jpeg")) {
-    throw new WallpaperUploadError("Gagal memproses wallpaper.");
+    throw new WallpaperUploadError(WALLPAPER_PROCESS_FAILED);
   }
 
   return dataUrl;
@@ -98,11 +106,11 @@ function encodeImageElement(image: HTMLImageElement): string {
 
 function assertAcceptedImageMime(mime: string): void {
   if (mime && !mime.startsWith("image/")) {
-    throw new WallpaperUploadError("Link harus menuju ke file gambar.");
+    throw new WallpaperUploadError(WALLPAPER_LINK_NOT_IMAGE);
   }
 
   if (mime && !ACCEPTED_MIME_TYPES.has(mime)) {
-    throw new WallpaperUploadError("Format harus JPG, PNG, atau WebP.");
+    throw new WallpaperUploadError(WALLPAPER_FORMAT_INVALID);
   }
 }
 
@@ -110,7 +118,7 @@ export function normalizeWallpaperUrl(input: string): string {
   const trimmed = input.trim();
 
   if (!trimmed) {
-    throw new WallpaperUploadError("Link tidak boleh kosong.");
+    throw new WallpaperUploadError(WALLPAPER_LINK_EMPTY);
   }
 
   let url: URL;
@@ -118,11 +126,11 @@ export function normalizeWallpaperUrl(input: string): string {
   try {
     url = new URL(trimmed);
   } catch {
-    throw new WallpaperUploadError("Link tidak valid.");
+    throw new WallpaperUploadError(WALLPAPER_LINK_INVALID);
   }
 
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new WallpaperUploadError("Link harus diawali http:// atau https://");
+    throw new WallpaperUploadError(WALLPAPER_LINK_PROTOCOL);
   }
 
   return url.toString();
@@ -133,13 +141,13 @@ async function loadImageFromRemoteUrl(url: string): Promise<HTMLImageElement> {
     const response = await fetch(url, { mode: "cors" });
 
     if (!response.ok) {
-      throw new WallpaperUploadError("Gagal mengunduh gambar dari link.");
+      throw new WallpaperUploadError(WALLPAPER_DOWNLOAD_FAILED);
     }
 
     const blob = await response.blob();
 
     if (blob.size > MAX_FILE_SIZE_BYTES) {
-      throw new WallpaperUploadError("Ukuran gambar maksimal 8 MB.");
+      throw new WallpaperUploadError(WALLPAPER_FILE_SIZE_MAX);
     }
 
     assertAcceptedImageMime(blob.type);
@@ -160,11 +168,11 @@ async function loadImageFromRemoteUrl(url: string): Promise<HTMLImageElement> {
 
 export async function processWallpaperFile(file: File): Promise<string> {
   if (!ACCEPTED_MIME_TYPES.has(file.type)) {
-    throw new WallpaperUploadError("Format harus JPG, PNG, atau WebP.");
+    throw new WallpaperUploadError(WALLPAPER_FORMAT_INVALID);
   }
 
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    throw new WallpaperUploadError("Ukuran file maksimal 8 MB.");
+    throw new WallpaperUploadError(WALLPAPER_FILE_SIZE_MAX);
   }
 
   const image = await loadImageFromFile(file);

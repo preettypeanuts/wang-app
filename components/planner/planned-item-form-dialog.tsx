@@ -24,6 +24,41 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  formatPayPlanPaidFraction,
+  PAYPLAN_LABEL_ADD_PAY_PLAN,
+  PAYPLAN_LABEL_AMOUNT,
+  PAYPLAN_LABEL_AUTO_PAID_OFF,
+  PAYPLAN_LABEL_DATE,
+  PAYPLAN_LABEL_EDIT_PAY_PLAN,
+  PAYPLAN_LABEL_END_MODE_ARIA,
+  PAYPLAN_LABEL_ENDS,
+  PAYPLAN_LABEL_ESTIMATED_PAYOFF,
+  PAYPLAN_LABEL_FILL_TOTAL_INSTALLMENT,
+  PAYPLAN_LABEL_FOREVER,
+  PAYPLAN_LABEL_INSTALLMENT_COUNT,
+  PAYPLAN_LABEL_INSTALLMENT_PER_MONTH,
+  PAYPLAN_LABEL_KIND,
+  PAYPLAN_LABEL_LIMITED,
+  PAYPLAN_LABEL_MANUAL_DATE,
+  PAYPLAN_LABEL_NAME,
+  PAYPLAN_LABEL_NEW_PAY_PLAN,
+  PAYPLAN_LABEL_NOTE,
+  PAYPLAN_LABEL_NOTE_OPTIONAL,
+  PAYPLAN_LABEL_OCCURRENCE_COUNT,
+  PAYPLAN_LABEL_PAY_PLAN_FORM_DESC,
+  PAYPLAN_LABEL_PAYOFF_DATE,
+  PAYPLAN_LABEL_PAYOFF_DATE_MODE_ARIA,
+  PAYPLAN_LABEL_REPEAT,
+  PAYPLAN_LABEL_SAVING,
+  PAYPLAN_LABEL_START,
+  PAYPLAN_LABEL_START_PAYING,
+  PAYPLAN_LABEL_TOTAL_INSTALLMENT,
+  PAYPLAN_LABEL_TOTAL_LOAN,
+  UI_LABEL_CANCEL,
+  UI_LABEL_CATEGORY,
+  UI_LABEL_SAVE,
+} from "@/config/payplan-labels";
 import type { TransactionCategoryId } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
@@ -310,7 +345,7 @@ export function PlannedItemFormDialog({
   const nameDefaultValue = item?.name ?? "";
   const noteDefaultValue = item?.note ?? "";
 
-  const dialogTitle = item ? "Edit Pay Plan" : "Pay Plan baru";
+  const dialogTitle = item ? PAYPLAN_LABEL_EDIT_PAY_PLAN : PAYPLAN_LABEL_NEW_PAY_PLAN;
 
   return (
     <ResponsiveDialog
@@ -324,7 +359,7 @@ export function PlannedItemFormDialog({
           {dialogTitle}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          Tagihan, langganan, atau cicilan di kalender PayPlan.
+          {PAYPLAN_LABEL_PAY_PLAN_FORM_DESC}
         </DialogDescription>
       </ResponsiveDialogHeader>
 
@@ -338,7 +373,9 @@ export function PlannedItemFormDialog({
           <div className={FORM_PREVIEW_COMPACT}>
             <div className="min-w-0">
               <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                {isInstallmentKind ? "Total cicilan" : "Nominal"}
+                {isInstallmentKind
+                  ? PAYPLAN_LABEL_TOTAL_INSTALLMENT
+                  : PAYPLAN_LABEL_AMOUNT}
               </p>
               <p className={cn("mt-0.5", FORM_PREVIEW_COMPACT_AMOUNT)}>
                 {formatIdr(previewAmount)}
@@ -357,8 +394,10 @@ export function PlannedItemFormDialog({
               !isNewInstallment &&
               Number.isFinite(Number.parseInt(paidPriorCount, 10)) ? (
                 <p className="mt-1 font-medium text-foreground">
-                  {Number.parseInt(paidPriorCount, 10)}/
-                  {installmentSchedule.installmentCount} dibayar
+                  {formatPayPlanPaidFraction(
+                    Number.parseInt(paidPriorCount, 10),
+                    installmentSchedule.installmentCount,
+                  )}
                 </p>
               ) : null}
               {installmentEndLabel ? (
@@ -370,7 +409,7 @@ export function PlannedItemFormDialog({
           </div>
 
           <div className={FORM_GROUP}>
-            <FormDialogField label="Nama" htmlFor="planned-name">
+            <FormDialogField label={PAYPLAN_LABEL_NAME} htmlFor="planned-name">
               <Input
                 key={`name-${formSession}`}
                 id="planned-name"
@@ -382,7 +421,7 @@ export function PlannedItemFormDialog({
               />
             </FormDialogField>
 
-            <FormDialogField label="Kategori" htmlFor="planned-category">
+            <FormDialogField label={UI_LABEL_CATEGORY} htmlFor="planned-category">
               <JournalCategoryCombobox
                 id="planned-category"
                 type={flowType}
@@ -393,7 +432,7 @@ export function PlannedItemFormDialog({
 
             {!isInstallmentKind ? (
               <div className={FORM_FIELD_GRID_ROW}>
-                <FormDialogField label="Jenis" htmlFor="planned-kind" gridItem>
+                <FormDialogField label={PAYPLAN_LABEL_KIND} htmlFor="planned-kind" gridItem>
                   <Select
                     value={kind}
                     onValueChange={(value) => {
@@ -438,7 +477,7 @@ export function PlannedItemFormDialog({
                 </FormDialogField>
 
                 <FormDialogField
-                  label="Ulang"
+                  label={PAYPLAN_LABEL_REPEAT}
                   htmlFor="planned-repeat"
                   gridItem
                 >
@@ -475,7 +514,7 @@ export function PlannedItemFormDialog({
                 </FormDialogField>
               </div>
             ) : (
-              <FormDialogField label="Jenis" htmlFor="planned-kind-installment">
+              <FormDialogField label={PAYPLAN_LABEL_KIND} htmlFor="planned-kind-installment">
                 <Select
                   value={kind}
                   onValueChange={(value) => {
@@ -524,7 +563,7 @@ export function PlannedItemFormDialog({
               <>
                 <div className={FORM_FIELD_GRID_ROW}>
                   <FormDialogField
-                    label="Total pinjaman"
+                    label={PAYPLAN_LABEL_TOTAL_LOAN}
                     htmlFor="planned-total"
                     gridItem
                   >
@@ -543,7 +582,7 @@ export function PlannedItemFormDialog({
                   </FormDialogField>
 
                   <FormDialogField
-                    label="Cicilan / bulan"
+                    label={PAYPLAN_LABEL_INSTALLMENT_PER_MONTH}
                     htmlFor="planned-amount"
                     gridItem
                   >
@@ -564,7 +603,7 @@ export function PlannedItemFormDialog({
 
                 <div className={FORM_FIELD_GRID_ROW}>
                   <FormDialogField
-                    label="Mulai bayar"
+                    label={PAYPLAN_LABEL_START_PAYING}
                     htmlFor="planned-start"
                     gridItem
                   >
@@ -580,7 +619,7 @@ export function PlannedItemFormDialog({
                     />
                   </FormDialogField>
 
-                  <FormDialogField label="Jumlah cicilan" gridItem>
+                  <FormDialogField label={PAYPLAN_LABEL_INSTALLMENT_COUNT} gridItem>
                     <p className="flex h-10 items-center text-sm font-semibold tabular-nums">
                       {installmentSchedule
                         ? `${installmentSchedule.installmentCount}x`
@@ -602,7 +641,7 @@ export function PlannedItemFormDialog({
             ) : (
               <div className={FORM_FIELD_GRID_ROW}>
                 <FormDialogField
-                  label="Nominal"
+                  label={PAYPLAN_LABEL_AMOUNT}
                   htmlFor="planned-amount-other"
                   gridItem
                 >
@@ -620,7 +659,7 @@ export function PlannedItemFormDialog({
                 </FormDialogField>
 
                 <FormDialogField
-                  label="Mulai"
+                  label={PAYPLAN_LABEL_START}
                   htmlFor="planned-start-other"
                   gridItem
                 >
@@ -641,7 +680,7 @@ export function PlannedItemFormDialog({
               <div
                 className={FORM_SEGMENTED}
                 role="tablist"
-                aria-label="Mode tanggal lunas"
+                aria-label={PAYPLAN_LABEL_PAYOFF_DATE_MODE_ARIA}
               >
                 <button
                   type="button"
@@ -655,7 +694,7 @@ export function PlannedItemFormDialog({
                       : FORM_SEGMENT_INACTIVE,
                   )}
                 >
-                  Lunas otomatis
+                  {PAYPLAN_LABEL_AUTO_PAID_OFF}
                 </button>
                 <button
                   type="button"
@@ -674,7 +713,7 @@ export function PlannedItemFormDialog({
                       : FORM_SEGMENT_INACTIVE,
                   )}
                 >
-                  Tanggal manual
+                  {PAYPLAN_LABEL_MANUAL_DATE}
                 </button>
               </div>
 
@@ -682,7 +721,7 @@ export function PlannedItemFormDialog({
                 {endDateMode === "auto" ? (
                   <div className="px-4 py-3">
                     <p className="text-xs font-medium text-muted-foreground">
-                      Estimasi lunas
+                      {PAYPLAN_LABEL_ESTIMATED_PAYOFF}
                     </p>
                     {installmentEndLabel ? (
                       <>
@@ -697,13 +736,13 @@ export function PlannedItemFormDialog({
                       </>
                     ) : (
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Isi total & cicilan per bulan
+                        {PAYPLAN_LABEL_FILL_TOTAL_INSTALLMENT}
                       </p>
                     )}
                   </div>
                 ) : (
                   <FormDialogField
-                    label="Tanggal lunas"
+                    label={PAYPLAN_LABEL_PAYOFF_DATE}
                     htmlFor="planned-end-date"
                   >
                     <FormDatePicker
@@ -727,7 +766,7 @@ export function PlannedItemFormDialog({
               <div
                 className={FORM_SEGMENTED}
                 role="tablist"
-                aria-label="Mode berakhir"
+                aria-label={PAYPLAN_LABEL_END_MODE_ARIA}
               >
                 <button
                   type="button"
@@ -741,7 +780,7 @@ export function PlannedItemFormDialog({
                       : FORM_SEGMENT_INACTIVE,
                   )}
                 >
-                  Selamanya
+                  {PAYPLAN_LABEL_FOREVER}
                 </button>
                 <button
                   type="button"
@@ -755,7 +794,7 @@ export function PlannedItemFormDialog({
                       : FORM_SEGMENT_INACTIVE,
                   )}
                 >
-                  Terbatas
+                  {PAYPLAN_LABEL_LIMITED}
                 </button>
                 <button
                   type="button"
@@ -769,14 +808,14 @@ export function PlannedItemFormDialog({
                       : FORM_SEGMENT_INACTIVE,
                   )}
                 >
-                  Tanggal
+                  {PAYPLAN_LABEL_DATE}
                 </button>
               </div>
 
               {endMode === "installments" ? (
                 <div className={FORM_GROUP}>
                   <FormDialogField
-                    label="Jumlah kali"
+                    label={PAYPLAN_LABEL_OCCURRENCE_COUNT}
                     htmlFor="planned-installments"
                   >
                     <Input
@@ -796,7 +835,7 @@ export function PlannedItemFormDialog({
               {endMode === "date" ? (
                 <div className={FORM_GROUP}>
                   <FormDialogField
-                    label="Berakhir"
+                    label={PAYPLAN_LABEL_ENDS}
                     htmlFor="planned-end-date-other"
                   >
                     <FormDatePicker
@@ -813,14 +852,14 @@ export function PlannedItemFormDialog({
           ) : null}
 
           <div className={FORM_GROUP}>
-            <FormDialogField label="Catatan" htmlFor="planned-note">
+            <FormDialogField label={PAYPLAN_LABEL_NOTE} htmlFor="planned-note">
               <Textarea
                 key={`note-${formSession}`}
                 id="planned-note"
                 name="note"
                 defaultValue={noteDefaultValue}
                 rows={2}
-                placeholder="Opsional"
+                placeholder={PAYPLAN_LABEL_NOTE_OPTIONAL}
                 className={FORM_NOTE}
               />
             </FormDialogField>
@@ -835,7 +874,7 @@ export function PlannedItemFormDialog({
             className={cn(SEPARATED_CONTROL, "flex-1")}
             onClick={() => onOpenChange(false)}
           >
-            Batal
+            {UI_LABEL_CANCEL}
           </Button>
           <Button
             type="submit"
@@ -848,7 +887,11 @@ export function PlannedItemFormDialog({
             }
             className={cn(SEPARATED_CONTROL, "flex-1")}
           >
-            {isPending ? "Menyimpan..." : item ? "Simpan" : "Tambah Pay Plan"}
+            {isPending
+              ? PAYPLAN_LABEL_SAVING
+              : item
+                ? UI_LABEL_SAVE
+                : PAYPLAN_LABEL_ADD_PAY_PLAN}
           </Button>
         </ResponsiveDialogFooter>
       </form>

@@ -5,6 +5,7 @@ import { ProfilePageSkeleton } from "@/components/profile/profile-page-skeleton"
 import { ProfileMobileLayout } from "@/components/profile/profile-mobile-layout";
 import { ProfileShell } from "@/components/profile/profile-shell";
 import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
+import { PROFILE_TITLE } from "@/config/settings-labels";
 import { cn } from "@/lib/utils";
 
 function ProfilePageFallback() {
@@ -19,7 +20,7 @@ function ProfilePageFallback() {
               "md:overflow-hidden md:pb-20",
             )}
             fixedMobileTopBar
-            title="Profil"
+            title={PROFILE_TITLE}
           >
             <ProfilePageSkeleton />
           </MobileScrollSurface>

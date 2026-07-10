@@ -1,5 +1,8 @@
 import { PLAN_PURCHASED_NOTICE_SHELL } from "@/config/plans";
-import { formatIdr } from "@/lib/finance/format-currency";
+import {
+  formatPlansPurchasedDesc,
+  PLANS_PURCHASED_TITLE,
+} from "@/config/plans-labels";
 import { CheckCircleIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
@@ -26,13 +29,11 @@ export function PlanPurchasedNotice({
         className="mt-0.5 size-4 shrink-0 text-[#34C759]"
       />
       <div className="min-w-0">
-        <p className="text-xs font-semibold text-foreground/90">Sudah dibeli</p>
+        <p className="text-xs font-semibold text-foreground/90">
+          {PLANS_PURCHASED_TITLE}
+        </p>
         <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          Pengeluaran{" "}
-          <span className="font-semibold text-foreground/90">
-            {formatIdr(amount)}
-          </span>{" "}
-          sudah mengurangi saldo dan tercatat di Journal.
+          {formatPlansPurchasedDesc(amount)}
         </p>
       </div>
     </div>

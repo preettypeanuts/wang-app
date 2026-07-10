@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { SETTINGS_TITLE } from "@/config/settings-labels";
 import {
   SEPARATED_MENU_ITEM,
   SIDEBAR_APP_ICON_GRADIENTS,
@@ -20,7 +21,7 @@ export function SidebarSettingsButton() {
       <SettingsSheet
         trigger={
           <SidebarMenuButton
-            tooltip="Pengaturan"
+            tooltip={SETTINGS_TITLE}
             className={cn(
               SEPARATED_MENU_ITEM,
               "group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:rounded-[0.7rem]! group-data-[collapsible=icon]:bg-transparent! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:hover:bg-transparent!",
@@ -30,7 +31,7 @@ export function SidebarSettingsButton() {
               icon={GearSixIcon}
               gradient={SIDEBAR_APP_ICON_GRADIENTS.settings}
             />
-            <span>Pengaturan</span>
+            <span>{SETTINGS_TITLE}</span>
           </SidebarMenuButton>
         }
       />

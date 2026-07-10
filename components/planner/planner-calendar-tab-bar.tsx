@@ -7,6 +7,7 @@ import {
   PLANNER_CALENDAR_TAB_LIST,
   PLANNER_CALENDAR_TAB_TRIGGER,
 } from "@/config/planner-calendar";
+import { PAYPLAN_LABEL_CALENDAR, PAYPLAN_LABEL_MONTHLY_CALENDAR } from "@/config/payplan-labels";
 import { PAYPLAN_CALENDAR_TAB_LIST_MOBILE } from "@/config/payplan-mobile";
 import {
   CalendarBlankIcon,
@@ -58,11 +59,11 @@ export function PlannerCalendarTabBar({
         <TabsTrigger
           value="month"
           className={PLANNER_CALENDAR_TAB_TRIGGER}
-          aria-label="Kalender bulan"
+          aria-label={PAYPLAN_LABEL_MONTHLY_CALENDAR}
         >
           <CalendarBlankIcon className="size-3.5" />
-          <span className="inline md:hidden">Kalender</span>
-          <span className="hidden sm:inline md:inline">Kalender</span>
+          <span className="inline md:hidden">{PAYPLAN_LABEL_CALENDAR}</span>
+          <span className="hidden sm:inline md:inline">{PAYPLAN_LABEL_CALENDAR}</span>
         </TabsTrigger>
         <TabsTrigger
           value="cards"

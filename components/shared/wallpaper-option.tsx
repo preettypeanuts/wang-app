@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  formatRemoveWallpaperLabel,
+  formatWallpaperAriaLabel,
+} from "@/config/settings-labels";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { CheckIcon, TrashIcon } from "@/lib/icons";
@@ -34,7 +38,7 @@ export function WallpaperOption({
         type="button"
         onClick={() => onSelect(wallpaper.id)}
         aria-pressed={selected}
-        aria-label={`Wallpaper ${wallpaper.label}`}
+        aria-label={formatWallpaperAriaLabel(wallpaper.label)}
         className="w-full text-left"
       >
         <div
@@ -54,7 +58,7 @@ export function WallpaperOption({
       {onRemove ? (
         <button
           type="button"
-          aria-label={`Hapus ${wallpaper.label}`}
+          aria-label={formatRemoveWallpaperLabel(wallpaper.label)}
           onClick={() => void onRemove()}
           className={cn(
             "absolute top-2 right-2 z-10 flex size-7 items-center justify-center rounded-full",

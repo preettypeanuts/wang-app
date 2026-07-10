@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { usePayplanPageTab } from "@/components/planner/payplan-page-tab-context";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PAYPLAN_ROUTE } from "@/config/navigation";
+import { PAYPLAN_LABEL_BUDGET, PAYPLAN_LABEL_CALENDAR } from "@/config/payplan-labels";
 import {
   getPayplanTabState,
   setPayplanTabState,
@@ -71,18 +72,18 @@ export function PlannerTabBar({
         <TabsTrigger
           value="calendar"
           className="gap-1.5 px-2.5 text-xs"
-          aria-label="Kalender"
+          aria-label={PAYPLAN_LABEL_CALENDAR}
         >
           <CalendarBlankIcon className="size-3.5" />
-          <span className="hidden sm:inline">Kalender</span>
+          <span className="hidden sm:inline">{PAYPLAN_LABEL_CALENDAR}</span>
         </TabsTrigger>
         <TabsTrigger
           value="budget"
           className="gap-1.5 px-2.5 text-xs"
-          aria-label="Budget"
+          aria-label={PAYPLAN_LABEL_BUDGET}
         >
           <ChartBarIcon className="size-3.5" />
-          <span className="hidden sm:inline">Budget</span>
+          <span className="hidden sm:inline">{PAYPLAN_LABEL_BUDGET}</span>
         </TabsTrigger>
       </TabsList>
     </Tabs>

@@ -17,6 +17,11 @@ import {
   PAYPLAN_MOBILE_COMBINED_LIST,
   PAYPLAN_MOBILE_PAGE_INSET_X,
 } from "@/config/payplan-mobile";
+import {
+  PAYPLAN_LABEL_BUDGET,
+  PAYPLAN_PAGE_SUBTITLE_BUDGET,
+  PAYPLAN_PAGE_SUBTITLE_CALENDAR,
+} from "@/config/payplan-labels";
 import { STACK_GAP } from "@/config/spacing";
 import { cn } from "@/lib/utils";
 import type { BudgetStatus } from "@/types/budget";
@@ -75,9 +80,9 @@ function PayplanPagePanels({
   const isCalendarTab = tab === "calendar";
   const isManage = isCalendarTab && isPlannerManageLayout(calendarLayout);
   const subtitle = isCalendarTab
-    ? "Tagihan, pemasukan terjadwal, dan budget."
-    : "Atur budget kategori — terhubung dengan Inbox.";
-  const pageTitle = isCalendarTab ? "PayPlan" : "Budget";
+    ? PAYPLAN_PAGE_SUBTITLE_CALENDAR
+    : PAYPLAN_PAGE_SUBTITLE_BUDGET;
+  const pageTitle = isCalendarTab ? "PayPlan" : PAYPLAN_LABEL_BUDGET;
 
   return (
     <div className={cn("flex min-h-0 flex-1 flex-col")}>

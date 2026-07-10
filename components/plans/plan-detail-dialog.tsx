@@ -28,6 +28,26 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { TRANSACTION_CATEGORIES, getCategoryLabel } from "@/config/categories";
 import {
+  PLANS_LABEL_NAME,
+  PLANS_LABEL_NOTE_OPTIONAL,
+  PLANS_WISH_DETAIL_FALLBACK,
+  PLANS_WISH_EDIT_TITLE,
+  PLANS_WISH_FORM_DESC,
+  PLANS_WISH_NAME_PLACEHOLDER,
+  PLANS_WISH_NEW_TITLE,
+  PLANS_WISH_PRICE_ESTIMATE,
+  PLANS_WISH_VIEW_DESC,
+  UI_LABEL_ADD,
+  UI_LABEL_CANCEL,
+  UI_LABEL_CATEGORY,
+  UI_LABEL_CLOSE,
+  UI_LABEL_DELETE,
+  UI_LABEL_EDIT,
+  UI_LABEL_NOTE,
+  UI_LABEL_SAVE,
+} from "@/config/plans-labels";
+import { UI_LABEL_ESTIMATE } from "@/config/ui-labels";
+import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_FIELD_INPUT,
   FORM_FIELD_SELECT,
@@ -83,10 +103,10 @@ export function PlanDetailDialog({
   const isForm = mode === "edit" || mode === "create";
   const title =
     mode === "create"
-      ? "Wish baru"
+      ? PLANS_WISH_NEW_TITLE
       : mode === "edit"
-        ? "Edit wish"
-        : (plan?.name ?? "Detail wish");
+        ? PLANS_WISH_EDIT_TITLE
+        : (plan?.name ?? PLANS_WISH_DETAIL_FALLBACK);
 
   useEffect(() => {
     if (!open) {
@@ -143,9 +163,7 @@ export function PlanDetailDialog({
           {title}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          {isForm
-            ? "Wishlist belanja untuk menghitung estimasi sisa saldo."
-            : "Detail wish dan opsi kelola."}
+          {isForm ? PLANS_WISH_FORM_DESC : PLANS_WISH_VIEW_DESC}
         </DialogDescription>
       </ResponsiveDialogHeader>
 
@@ -160,18 +178,18 @@ export function PlanDetailDialog({
               ) : null}
 
               <div className={FORM_GROUP}>
-                <FormDialogField label="Nama" htmlFor="plan-name">
+                <FormDialogField label={PLANS_LABEL_NAME} htmlFor="plan-name">
                   <Input
                     id="plan-name"
                     name="name"
                     required
                     defaultValue={mode === "edit" ? (plan?.name ?? "") : ""}
-                    placeholder="Contoh: iPhone 16"
+                    placeholder={PLANS_WISH_NAME_PLACEHOLDER}
                     className={FORM_FIELD_INPUT}
                   />
                 </FormDialogField>
 
-                <FormDialogField label="Estimasi harga" htmlFor="plan-amount">
+                <FormDialogField label={PLANS_WISH_PRICE_ESTIMATE} htmlFor="plan-amount">
                   <AmountTextInput
                     id="plan-amount"
                     name="amount"
@@ -183,7 +201,7 @@ export function PlanDetailDialog({
                   />
                 </FormDialogField>
 
-                <FormDialogField label="Kategori" htmlFor="plan-category">
+                <FormDialogField label={UI_LABEL_CATEGORY} htmlFor="plan-category">
                   <Select
                     value={category}
                     onValueChange={(value) => {
@@ -224,13 +242,13 @@ export function PlanDetailDialog({
               </div>
 
               <div className={FORM_GROUP}>
-                <FormDialogField label="Catatan" htmlFor="plan-note">
+                <FormDialogField label={UI_LABEL_NOTE} htmlFor="plan-note">
                   <Textarea
                     id="plan-note"
                     name="note"
                     rows={3}
                     defaultValue={mode === "edit" ? (plan?.note ?? "") : ""}
-                    placeholder="Opsional"
+                    placeholder={PLANS_LABEL_NOTE_OPTIONAL}
                     className={FORM_NOTE}
                   />
                 </FormDialogField>
@@ -252,14 +270,14 @@ export function PlanDetailDialog({
                 onOpenChange(false);
               }}
             >
-              Batal
+              {UI_LABEL_CANCEL}
             </Button>
             <Button
               type="submit"
               disabled={isPending}
               className={cn(SEPARATED_CONTROL, "flex-1")}
             >
-              {mode === "create" ? "Tambah" : "Simpan"}
+              {mode === "create" ? UI_LABEL_ADD : UI_LABEL_SAVE}
             </Button>
           </ResponsiveDialogFooter>
         </form>
@@ -269,7 +287,7 @@ export function PlanDetailDialog({
               <div className={FORM_PREVIEW_COMPACT}>
                 <div className="min-w-0">
                   <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                    Estimasi
+                    {UI_LABEL_ESTIMATE}
                   </p>
                   <p className={cn("mt-0.5", FORM_PREVIEW_COMPACT_AMOUNT)}>
                     {formatIdr(plan.amount)}
@@ -301,7 +319,7 @@ export function PlanDetailDialog({
                 <div className={FORM_GROUP}>
                   <div className="px-4 py-3">
                     <p className="text-xs font-medium text-muted-foreground">
-                      Catatan
+                      {UI_LABEL_NOTE}
                     </p>
                     <p className="mt-1 text-sm leading-relaxed text-foreground/90">
                       {plan.note}
@@ -319,9 +337,9 @@ export function PlanDetailDialog({
               disabled={isPending}
               className={cn(SEPARATED_CONTROL, "shrink-0")}
               onClick={handleDelete}
-              aria-label="Hapus"
+              aria-label={UI_LABEL_DELETE}
             >
-              <span className="sr-only">Hapus</span>
+              <span className="sr-only">{UI_LABEL_DELETE}</span>
               <TrashIcon className="size-4" />
             </Button>
             <div className="flex min-w-0 flex-1 gap-2">
@@ -332,9 +350,9 @@ export function PlanDetailDialog({
                 disabled={isPending}
                 className={cn(SEPARATED_CONTROL, "shrink-0")}
                 onClick={() => onModeChange("edit")}
-                aria-label="Edit"
+                aria-label={UI_LABEL_EDIT}
               >
-                <span className="sr-only">Edit</span>
+                <span className="sr-only">{UI_LABEL_EDIT}</span>
                 <PencilSimpleIcon className="size-4" />
               </Button>
 
@@ -344,7 +362,7 @@ export function PlanDetailDialog({
                 className={cn(SEPARATED_CONTROL, "flex-1")}
                 onClick={() => onOpenChange(false)}
               >
-                Tutup
+                {UI_LABEL_CLOSE}
               </Button>
             </div>
           </ResponsiveDialogFooter>

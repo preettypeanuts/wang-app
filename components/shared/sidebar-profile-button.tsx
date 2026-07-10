@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { SidebarProfileMenu } from "@/components/shared/sidebar-profile-menu";
 import { SidebarMenuItem } from "@/components/ui/sidebar";
 import { APP_TAGLINE } from "@/config/app";
+import { SETTINGS_DEFAULT_USER } from "@/config/settings-labels";
 import { SEPARATED_MENU_ITEM, SIDEBAR_APP_ICON_GRADIENTS } from "@/config/sidebar";
 import { useSession } from "@/lib/auth/auth-client";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,7 @@ export function SidebarProfileButton() {
   const { data: session } = useSession();
   const isActive = pathname === "/profile";
 
-  const name = session?.user?.name?.trim() || "Pengguna";
+  const name = session?.user?.name?.trim() || SETTINGS_DEFAULT_USER;
   const email = session?.user?.email?.trim();
   const initial = name.charAt(0).toUpperCase() || "W";
 

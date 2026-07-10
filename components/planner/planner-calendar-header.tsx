@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  PAYPLAN_LABEL_NEXT_MONTH,
+  PAYPLAN_LABEL_PREVIOUS_MONTH,
+  UI_LABEL_TODAY,
+} from "@/config/payplan-labels";
+import {
   PLANNER_CALENDAR_NAV_BUTTON,
   PLANNER_CALENDAR_NAV_GROUP,
 } from "@/config/planner-calendar";
@@ -30,7 +35,7 @@ export function PlannerCalendarHeader({
       <div className={PLANNER_CALENDAR_NAV_GROUP}>
         <button
           type="button"
-          aria-label="Bulan sebelumnya"
+          aria-label={PAYPLAN_LABEL_PREVIOUS_MONTH}
           onClick={onPrevious}
           className={cn(PLANNER_CALENDAR_NAV_BUTTON, "w-7")}
         >
@@ -44,11 +49,11 @@ export function PlannerCalendarHeader({
             "border-x border-black/10 px-2.5 text-[11px] font-medium dark:border-white/12",
           )}
         >
-          Hari ini
+          {UI_LABEL_TODAY}
         </button>
         <button
           type="button"
-          aria-label="Bulan berikutnya"
+          aria-label={PAYPLAN_LABEL_NEXT_MONTH}
           onClick={onNext}
           className={cn(PLANNER_CALENDAR_NAV_BUTTON, "w-7")}
         >

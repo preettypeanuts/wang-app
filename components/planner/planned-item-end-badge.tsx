@@ -1,5 +1,6 @@
 import { InfinityIcon } from "@/lib/icons";
 
+import { PAYPLAN_LABEL_REPEAT_FOREVER } from "@/config/payplan-labels";
 import { PLANNER_MANAGE_META } from "@/config/planner-manage";
 import {
   formatPlannedEndLabel,
@@ -17,8 +18,8 @@ export function PlannedItemEndBadge({ item }: PlannedItemEndBadgeProps) {
     return (
       <span
         className="inline-flex items-center text-muted-foreground"
-        aria-label="Berulang tanpa akhir"
-        title="Berulang tanpa akhir"
+        aria-label={PAYPLAN_LABEL_REPEAT_FOREVER}
+        title={PAYPLAN_LABEL_REPEAT_FOREVER}
       >
         <InfinityIcon className="size-3" />
       </span>

@@ -23,8 +23,8 @@ export const DATABASE_APP_CONNECTION_BUDGET =
  */
 const PRODUCTION_MAX_SERVER_INSTANCES = 5;
 
-/** Dev — single local process; allow parallel RSC `Promise.all` queries. */
-export const DATABASE_POOL_MAX_DEVELOPMENT = 8;
+/** Dev — single process; keep low to avoid exhausting the DB role during HMR. */
+export const DATABASE_POOL_MAX_DEVELOPMENT = 4;
 
 /** Prod — conservative per instance for serverless multiplication. */
 export const DATABASE_POOL_MAX_PRODUCTION = Math.min(

@@ -6,7 +6,11 @@ import {
   DrawerContent,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { INBOX_SUMMARY_DRAWER_BODY, INBOX_SUMMARY_DRAWER_SURFACE } from "@/config/inbox-mobile";
+import { UI_LABEL_TODAY_SUMMARY } from "@/config/ui-labels";
+import {
+  INBOX_SUMMARY_DRAWER_BODY,
+  INBOX_SUMMARY_DRAWER_SURFACE,
+} from "@/config/inbox-mobile";
 import { useDrawerScrollLock } from "@/hooks/use-drawer-scroll-lock";
 import type { DailySummarySnapshot, TodaySummary } from "@/types/summary";
 
@@ -28,7 +32,7 @@ export function InboxTodaySummaryDrawer({
   return (
     <Drawer onOpenChange={onOpenChange} open={open} showSwipeHandle swipeDirection="right">
       <DrawerContent className={INBOX_SUMMARY_DRAWER_SURFACE}>
-        <DrawerTitle className="sr-only">Ringkasan hari ini</DrawerTitle>
+        <DrawerTitle className="sr-only">{UI_LABEL_TODAY_SUMMARY}</DrawerTitle>
         <div className={INBOX_SUMMARY_DRAWER_BODY}>
           <TodaySummaryPanel
             dailySummary={dailySummary}

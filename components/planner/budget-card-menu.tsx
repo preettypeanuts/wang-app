@@ -9,6 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  formatBudgetOptionsLabel,
+  PAYPLAN_LABEL_DELETE,
+  PAYPLAN_LABEL_EDIT,
+} from "@/config/payplan-labels";
 import { PLANNER_SELECT_ITEM } from "@/config/planner-manage";
 import type { BudgetStatus } from "@/types/budget";
 
@@ -33,7 +38,7 @@ export function BudgetCardMenu({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={`Opsi budget ${status.categoryLabel}`}
+            aria-label={formatBudgetOptionsLabel(status.categoryLabel)}
             disabled={disabled}
           />
         }
@@ -46,7 +51,7 @@ export function BudgetCardMenu({
           onClick={() => onEdit(status)}
         >
           <PencilSimpleIcon />
-          Edit
+          {PAYPLAN_LABEL_EDIT}
         </DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
@@ -54,7 +59,7 @@ export function BudgetCardMenu({
           onClick={() => onDelete(status)}
         >
           <TrashIcon />
-          Hapus
+          {PAYPLAN_LABEL_DELETE}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

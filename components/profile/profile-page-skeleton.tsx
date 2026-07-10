@@ -3,6 +3,7 @@ import {
   SETTINGS_IOS_GROUP,
   SETTINGS_IOS_ROW,
 } from "@/config/settings-ios";
+import { PROFILE_LOADING } from "@/config/settings-labels";
 import { STACK_GAP } from "@/config/spacing";
 import { cn } from "@/lib/utils";
 
@@ -10,7 +11,7 @@ export function ProfilePageSkeleton() {
   return (
     <div
       aria-busy="true"
-      aria-label="Memuat profil"
+      aria-label={PROFILE_LOADING}
       className={cn("flex flex-col gap-5 md:mt-3")}
     >
       <header className="hidden shrink-0 max-md:hidden">

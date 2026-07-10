@@ -3,6 +3,7 @@
 import { CheckIcon } from "@/lib/icons";
 
 import { useWallpaper } from "@/components/shared/wallpaper-provider";
+import { formatWallpaperMaskColorAria } from "@/config/settings-labels";
 import { WALLPAPER_MASK_COLORS } from "@/config/wallpaper-mask";
 import { SEPARATED_CONTROL, SEPARATED_PILL } from "@/config/shape";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ export function WallpaperMaskColorPicker({
             key={color.id}
             type="button"
             aria-pressed={selected}
-            aria-label={`Mask ${color.label}`}
+            aria-label={formatWallpaperMaskColorAria(color.label)}
             disabled={disabled}
             onClick={() => setMaskColor(color.id)}
             className={cn(

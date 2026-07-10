@@ -14,6 +14,14 @@ import { SavingsGoalCard } from "@/components/savings/savings-goal-card";
 import { SavingsGoalDetailDialog } from "@/components/savings/savings-goal-detail-dialog";
 import { SavingsGoalsSummaryWidgets } from "@/components/savings/savings-goals-summary-widgets";
 import { Button } from "@/components/ui/button";
+import {
+  PLANS_LABEL_ADD_SAVINGS,
+  SAVINGS_EMPTY_DESC,
+  SAVINGS_EMPTY_TITLE,
+  SAVINGS_NEW,
+  SAVINGS_SECTION_DESC,
+  UI_LABEL_ADD,
+} from "@/config/plans-labels";
 import { SAVINGS_PAGE_TITLE } from "@/config/navigation";
 import {
   SAVINGS_CARD_LIST,
@@ -164,7 +172,7 @@ export function SavingsGoalsView({ goals, overview }: SavingsGoalsViewProps) {
         <div>
           <h2 className="text-sm font-semibold">{SAVINGS_PAGE_TITLE}</h2>
           <p className="text-xs text-muted-foreground">
-            Alokasikan saldo bebas ke target tabungan.
+            {SAVINGS_SECTION_DESC}
           </p>
         </div>
         <Button
@@ -174,7 +182,7 @@ export function SavingsGoalsView({ goals, overview }: SavingsGoalsViewProps) {
           onClick={openCreate}
         >
           <PlusIcon className="size-4" />
-          Tambah
+          {UI_LABEL_ADD}
         </Button>
       </div>
 
@@ -186,9 +194,9 @@ export function SavingsGoalsView({ goals, overview }: SavingsGoalsViewProps) {
             "flex flex-col items-center justify-center px-4 py-12 text-center",
           )}
         >
-          <p className="text-sm font-medium">Belum ada tabungan</p>
+          <p className="text-sm font-medium">{SAVINGS_EMPTY_TITLE}</p>
           <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-            Buat target tabungan atau ketik di inbox: buat tabungan liburan 5jt
+            {SAVINGS_EMPTY_DESC}
           </p>
           <Button
             type="button"
@@ -197,7 +205,7 @@ export function SavingsGoalsView({ goals, overview }: SavingsGoalsViewProps) {
             onClick={openCreate}
           >
             <PlusIcon className="size-4" />
-            Tabungan baru
+            {SAVINGS_NEW}
           </Button>
         </div>
       ) : (
@@ -208,7 +216,7 @@ export function SavingsGoalsView({ goals, overview }: SavingsGoalsViewProps) {
         </div>
       )}
 
-      <PlansAddFab onClick={openCreate} />
+      <PlansAddFab ariaLabel={PLANS_LABEL_ADD_SAVINGS} onClick={openCreate} />
 
       <SavingsGoalDetailDialog
         open={dialogOpen}

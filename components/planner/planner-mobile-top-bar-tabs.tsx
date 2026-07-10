@@ -9,6 +9,7 @@ import {
   PAYPLAN_TOP_BAR_TABS_TRIGGER,
 } from "@/config/payplan-mobile";
 import { PAYPLAN_ROUTE } from "@/config/navigation";
+import { PAYPLAN_LABEL_BUDGET, PAYPLAN_LABEL_CALENDAR } from "@/config/payplan-labels";
 import { getCurrentMonthKey } from "@/lib/planner/calendar";
 import {
   getPayplanTabState,
@@ -70,14 +71,14 @@ export function PlannerMobileTopBarTabs() {
         <TabsTrigger
           value="calendar"
           className={cn(PAYPLAN_TOP_BAR_TABS_TRIGGER)}
-          aria-label="Kalender"
+          aria-label={PAYPLAN_LABEL_CALENDAR}
         >
           <CalendarBlankIcon aria-hidden />
         </TabsTrigger>
         <TabsTrigger
           value="budget"
           className={cn(PAYPLAN_TOP_BAR_TABS_TRIGGER)}
-          aria-label="Budget"
+          aria-label={PAYPLAN_LABEL_BUDGET}
         >
           <ChartBarIcon aria-hidden />
         </TabsTrigger>

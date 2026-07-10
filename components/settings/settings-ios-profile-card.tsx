@@ -1,6 +1,7 @@
 "use client";
 
 import { APP_TAGLINE } from "@/config/app";
+import { SETTINGS_DEFAULT_USER } from "@/config/settings-labels";
 import {
   SETTINGS_IOS_PROFILE_GROUP,
   SETTINGS_IOS_PROFILE_NAME,
@@ -11,7 +12,7 @@ import { useSession } from "@/lib/auth/auth-client";
 
 export function SettingsIosProfileCard() {
   const { data: session } = useSession();
-  const name = session?.user?.name?.trim() || "Pengguna";
+  const name = session?.user?.name?.trim() || SETTINGS_DEFAULT_USER;
   const email = session?.user?.email?.trim();
   const initial = name.charAt(0).toUpperCase() || "W";
 

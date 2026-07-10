@@ -1,6 +1,15 @@
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
 import { BudgetCardMenu } from "@/components/planner/budget-card-menu";
 import {
+  formatBudgetDailyLimit,
+  PAYPLAN_LABEL_LIMIT,
+  PAYPLAN_LABEL_MANUAL_TOTAL,
+  PAYPLAN_LABEL_PER_DAY,
+  PAYPLAN_LABEL_REMAINING_BUDGET,
+  PAYPLAN_LABEL_REPEAT_NEXT_MONTH,
+  PAYPLAN_LABEL_USED,
+} from "@/config/payplan-labels";
+import {
   BUDGET_PROGRESS_TRACK,
   BUDGET_SUBTEXT,
   getBudgetProgressColor,
@@ -37,10 +46,13 @@ const MODE_BADGE =
 
 function formatLimitModeLabel(status: BudgetStatus): string {
   if (status.budget.limitMode === "daily") {
-    return `${formatIdr(status.budget.dailyAmount ?? 0)}/hari · ${status.dayCount} hari`;
+    return formatBudgetDailyLimit(
+      formatIdr(status.budget.dailyAmount ?? 0),
+      status.dayCount,
+    );
   }
 
-  return "Total manual";
+  return PAYPLAN_LABEL_MANUAL_TOTAL;
 }
 
 export function BudgetCard({
@@ -94,11 +106,11 @@ export function BudgetCard({
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={MODE_BADGE}>
               {status.budget.limitMode === "daily"
-                ? "Per hari"
-                : "Total manual"}
+                ? PAYPLAN_LABEL_PER_DAY
+                : PAYPLAN_LABEL_MANUAL_TOTAL}
             </span>
             {status.budget.repeatNextMonth ? (
-              <span className={MODE_BADGE}>Ulangi bulan depan</span>
+              <span className={MODE_BADGE}>{PAYPLAN_LABEL_REPEAT_NEXT_MONTH}</span>
             ) : null}
           </div>
           <span
@@ -113,7 +125,7 @@ export function BudgetCard({
 
         <div className="mt-auto space-y-2">
           <div>
-            <p className={BUDGET_SUBTEXT}>Sisa budget</p>
+            <p className={BUDGET_SUBTEXT}>{PAYPLAN_LABEL_REMAINING_BUDGET}</p>
             <p
               className={cn(
                 PLANNER_MANAGE_AMOUNT,
@@ -127,7 +139,7 @@ export function BudgetCard({
               {formatIdr(status.remaining)}
             </p>
             <p className={cn("mt-0.5", BUDGET_SUBTEXT)}>
-              {formatLimitModeLabel(status)} · limit{" "}
+              {formatLimitModeLabel(status)} · {PAYPLAN_LABEL_LIMIT}{" "}
               {formatIdr(status.totalLimit)}
             </p>
           </div>
@@ -135,7 +147,7 @@ export function BudgetCard({
           <div>
             <div className="mb-1.5 flex items-center justify-between gap-2 text-[11px]">
               <span className="text-muted-foreground">
-                Terpakai {formatIdr(status.spent)}
+                {PAYPLAN_LABEL_USED} {formatIdr(status.spent)}
               </span>
               <span className="font-medium tabular-nums text-muted-foreground">
                 {status.usedPercent}%

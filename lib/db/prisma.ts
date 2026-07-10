@@ -19,15 +19,23 @@ const POOL_MAX = resolveDatabasePoolMax(IS_DEV);
 const REQUIRED_PLANNED_ITEM_FIELDS = ["paidInstallmentCount"] as const;
 const REQUIRED_CATEGORY_BUDGET_FIELDS = ["repeatNextMonth"] as const;
 
-function recyclePrismaResources(): void {
+function disconnectCachedClient(): void {
   const client = globalForPrisma.prisma;
-  const pool = globalForPrisma.prismaPool;
-
   globalForPrisma.prisma = undefined;
+
+  if (client) {
+    void client.$disconnect();
+  }
+}
+
+function recyclePrismaResources(): void {
+  disconnectCachedClient();
+
+  const pool = globalForPrisma.prismaPool;
   globalForPrisma.prismaPool = undefined;
   globalForPrisma.prismaClientVersion = undefined;
 
-  void Promise.allSettled([client?.$disconnect(), pool?.end()]);
+  void pool?.end();
 }
 
 function getConnectionPool(): Pool {
@@ -97,9 +105,9 @@ function getPrismaClient(): PrismaClient {
     return cached;
   }
 
-  if (cached || globalForPrisma.prismaPool) {
-    recyclePrismaResources();
-  }
+  // HMR may reload the Prisma client — reuse the existing pool so connections
+  // are not leaked while the old pool is still closing.
+  disconnectCachedClient();
 
   const client = createPrismaClient();
 

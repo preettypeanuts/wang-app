@@ -14,6 +14,7 @@ import {
   PLANS_MOBILE_SOLID_DIVIDER,
   getPlanCategoryAccent,
 } from "@/config/plans";
+import { PLANS_NO_NOTE } from "@/config/plans-labels";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import type { PlanRecord } from "@/types/plan";
@@ -92,7 +93,7 @@ export function PlanCard({ plan, onClick }: PlanCardProps) {
         <div className={cn(PLANS_CARD_DIVIDER, PLANS_MOBILE_SOLID_DIVIDER)} />
         <div className={PLANS_CARD_FOOTER_CONTENT}>
           <p className="truncate text-[11px] text-muted-foreground">
-            {plan.note?.trim() || "Tanpa catatan"}
+            {plan.note?.trim() || PLANS_NO_NOTE}
           </p>
         </div>
       </div>

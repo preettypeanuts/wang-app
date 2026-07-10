@@ -10,6 +10,14 @@ import { BudgetFormDialog } from "@/components/planner/budget-form-dialog";
 import { BudgetMonthHeader } from "@/components/planner/budget-month-header";
 import { PayplanAddFab } from "@/components/planner/payplan-add-fab";
 import { Button } from "@/components/ui/button";
+import {
+  formatPayPlanDeleteBudgetConfirm,
+  PAYPLAN_LABEL_ADD_BUDGET,
+  PAYPLAN_LABEL_BUDGET_EMPTY_HINT,
+  PAYPLAN_LABEL_CREATE_FIRST_BUDGET,
+  PAYPLAN_LABEL_NO_CATEGORY_BUDGET,
+  UI_LABEL_ADD,
+} from "@/config/payplan-labels";
 import { BUDGET_CARD_GRID } from "@/config/budget";
 import { PAYPLAN_BUDGET_MOBILE_END_SPACER, PAYPLAN_MANAGE_EMPTY_MOBILE } from "@/config/payplan-mobile";
 import { CONTROL_GAP, STACK_GAP } from "@/config/spacing";
@@ -41,7 +49,7 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
 
   function handleDelete(status: BudgetStatus) {
     const confirmed = window.confirm(
-      `Hapus budget ${status.categoryLabel} untuk bulan ini?`,
+      formatPayPlanDeleteBudgetConfirm(status.categoryLabel),
     );
 
     if (!confirmed) {
@@ -85,7 +93,7 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
           disabled={isPending}
         >
           <PlusIcon className="size-4" />
-          Tambah
+          {UI_LABEL_ADD}
         </Button>
       </div>
 
@@ -97,11 +105,10 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
           )}
         >
           <p className="text-sm font-medium text-foreground/90">
-            Belum ada budget kategori
+            {PAYPLAN_LABEL_NO_CATEGORY_BUDGET}
           </p>
           <p className="mt-1 max-w-sm text-[11px] text-muted-foreground">
-            Contoh: Makanan 50K/hari × 30 hari = Rp 1.500.000. Hanya pengeluaran
-            yang dicatat manual di Inbox yang mengurangi sisa budget.
+            {PAYPLAN_LABEL_BUDGET_EMPTY_HINT}
           </p>
           <Button
             type="button"
@@ -110,7 +117,7 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
             onClick={openCreate}
           >
             <PlusIcon className="size-4" />
-            Buat budget pertama
+            {PAYPLAN_LABEL_CREATE_FIRST_BUDGET}
           </Button>
         </div>
       ) : (
@@ -129,7 +136,7 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
 
       <div aria-hidden className={PAYPLAN_BUDGET_MOBILE_END_SPACER} />
 
-      <PayplanAddFab onClick={openCreate} label="Tambah budget" />
+      <PayplanAddFab onClick={openCreate} label={PAYPLAN_LABEL_ADD_BUDGET} />
 
       <BudgetFormDialog
         open={sheetOpen}

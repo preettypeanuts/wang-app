@@ -16,6 +16,24 @@ import {
 } from "@/components/shared/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  formatPayPlanCompletedProgress,
+  formatPayPlanInstallmentEntry,
+  PAYPLAN_LABEL_AMOUNT,
+  PAYPLAN_LABEL_CLOSE,
+  PAYPLAN_LABEL_DELETE,
+  PAYPLAN_LABEL_DETAIL_DESC,
+  PAYPLAN_LABEL_EDIT,
+  PAYPLAN_LABEL_END,
+  PAYPLAN_LABEL_INSTALLMENT_SCHEDULE,
+  PAYPLAN_LABEL_NOTE,
+  PAYPLAN_LABEL_PAY_PER_PERIOD,
+  PAYPLAN_LABEL_SAVING,
+  PAYPLAN_LABEL_START,
+  PAYPLAN_LABEL_STATUS_PAID,
+  PAYPLAN_LABEL_STATUS_UNPAID,
+  UI_LABEL_TOTAL,
+} from "@/config/payplan-labels";
 import { getCategoryLabel } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
@@ -122,7 +140,7 @@ export function PlannedItemDetailDialog({
           {currentItem.name}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          Detail jadwal PayPlan dan status pembayaran.
+          {PAYPLAN_LABEL_DETAIL_DESC}
         </DialogDescription>
       </ResponsiveDialogHeader>
 
@@ -143,8 +161,8 @@ export function PlannedItemDetailDialog({
               <div className="min-w-0">
                 <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
                   {currentItem.kind === "installment"
-                    ? "Bayar per periode"
-                    : "Nominal"}
+                    ? PAYPLAN_LABEL_PAY_PER_PERIOD
+                    : PAYPLAN_LABEL_AMOUNT}
                 </p>
                 <p
                   className={cn(
@@ -160,7 +178,7 @@ export function PlannedItemDetailDialog({
                 </p>
                 {totalAmount ? (
                   <p className="mt-1 text-[11px] text-muted-foreground">
-                    Total {formatIdr(totalAmount)}
+                    {UI_LABEL_TOTAL} {formatIdr(totalAmount)}
                   </p>
                 ) : null}
               </div>
@@ -179,8 +197,10 @@ export function PlannedItemDetailDialog({
                   progress={installmentProgress}
                 />
                 <p className="mt-1.5 text-center text-[11px] font-medium tabular-nums text-muted-foreground">
-                  {installmentProgress.completed}/{installmentProgress.total}{" "}
-                  selesai
+                  {formatPayPlanCompletedProgress(
+                    installmentProgress.completed,
+                    installmentProgress.total,
+                  )}
                 </p>
               </div>
             ) : null}
@@ -192,13 +212,13 @@ export function PlannedItemDetailDialog({
             <div className={FORM_GROUP}>
               <div className="grid grid-cols-2 gap-3 px-4 py-3">
                 <div className="min-w-0">
-                  <p className={PLANNER_MANAGE_META}>Mulai</p>
+                  <p className={PLANNER_MANAGE_META}>{PAYPLAN_LABEL_START}</p>
                   <p className="mt-1 text-sm font-medium text-foreground/90">
                     {formatPlannedStartLabel(currentItem)}
                   </p>
                 </div>
                 <div className="min-w-0 text-right">
-                  <p className={PLANNER_MANAGE_META}>Selesai</p>
+                  <p className={PLANNER_MANAGE_META}>{PAYPLAN_LABEL_END}</p>
                   <div className="mt-1 flex justify-end">
                     <PlannedItemEndBadge item={currentItem} />
                   </div>
@@ -210,7 +230,7 @@ export function PlannedItemDetailDialog({
               <div className={FORM_GROUP}>
                 <div className="px-4 py-3">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Catatan
+                    {PAYPLAN_LABEL_NOTE}
                   </p>
                   <p className="mt-1 text-sm leading-relaxed text-foreground/90">
                     {currentItem.note}
@@ -223,7 +243,7 @@ export function PlannedItemDetailDialog({
               <div className={FORM_GROUP}>
                 <div className="px-4 py-3">
                   <p className="text-xs font-medium text-muted-foreground">
-                    Jadwal cicilan
+                    {PAYPLAN_LABEL_INSTALLMENT_SCHEDULE}
                   </p>
                   <ul className="mt-2 space-y-2">
                     {installmentSchedule.map((entry) => (
@@ -232,7 +252,7 @@ export function PlannedItemDetailDialog({
                         className="flex items-center justify-between gap-3 text-sm"
                       >
                         <span className="min-w-0 truncate text-foreground/90">
-                          Cicilan {entry.index + 1}
+                          {formatPayPlanInstallmentEntry(entry.index)}
                           <span className="ml-2 text-xs text-muted-foreground">
                             {formatDayMonth(entry.dueAt)}
                           </span>
@@ -243,7 +263,9 @@ export function PlannedItemDetailDialog({
                             entry.isPaid ? "text-[#34C759]" : "text-[#FF9500]",
                           )}
                         >
-                          {entry.isPaid ? "Lunas" : "Belum"}
+                          {entry.isPaid
+                            ? PAYPLAN_LABEL_STATUS_PAID
+                            : PAYPLAN_LABEL_STATUS_UNPAID}
                         </span>
                       </li>
                     ))}
@@ -261,9 +283,9 @@ export function PlannedItemDetailDialog({
           disabled={isPending}
           className={cn(SEPARATED_CONTROL, "shrink-0")}
           onClick={handleDelete}
-          aria-label="Hapus"
+          aria-label={PAYPLAN_LABEL_DELETE}
         >
-          <span className="sr-only">Hapus</span>
+          <span className="sr-only">{PAYPLAN_LABEL_DELETE}</span>
           <TrashIcon className="size-4" />
         </Button>
         <div className="flex min-w-0 flex-1 gap-2">
@@ -276,7 +298,7 @@ export function PlannedItemDetailDialog({
               onClick={handleMarkPaid}
             >
               <CheckCircleIcon className="size-4" />
-              {isPending ? "Menyimpan..." : payLabel}
+              {isPending ? PAYPLAN_LABEL_SAVING : payLabel}
             </Button>
           ) : null}
           <Button
@@ -286,9 +308,9 @@ export function PlannedItemDetailDialog({
             disabled={isPending}
             className={cn(SEPARATED_CONTROL, "shrink-0")}
             onClick={handleEdit}
-            aria-label="Edit"
+            aria-label={PAYPLAN_LABEL_EDIT}
           >
-            <span className="sr-only">Edit</span>
+            <span className="sr-only">{PAYPLAN_LABEL_EDIT}</span>
             <PencilSimpleIcon className="size-4" />
           </Button>
           <Button
@@ -297,7 +319,7 @@ export function PlannedItemDetailDialog({
             className={cn(SEPARATED_CONTROL, "flex-1")}
             onClick={() => onOpenChange(false)}
           >
-            Tutup
+            {PAYPLAN_LABEL_CLOSE}
           </Button>
         </div>
       </ResponsiveDialogFooter>

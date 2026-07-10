@@ -11,6 +11,11 @@ import {
   SAVINGS_STATUS_ACCENT,
   SAVINGS_STATUS_LABEL,
 } from "@/config/savings";
+import {
+  formatSavingsFromTarget,
+  formatSavingsProgressPercent,
+  PLANS_NO_NOTE,
+} from "@/config/plans-labels";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { getSavingsGoalProgress } from "@/lib/finance/build-savings-overview";
 import { WalletIcon } from "@/lib/icons";
@@ -49,7 +54,7 @@ export function SavingsGoalCard({ goal, onClick }: SavingsGoalCardProps) {
 
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] font-semibold text-muted-foreground">
-            {progress}% tercapai
+            {formatSavingsProgressPercent(progress)}
           </span>
           <span
             className={cn(
@@ -78,7 +83,7 @@ export function SavingsGoalCard({ goal, onClick }: SavingsGoalCardProps) {
             {formatIdr(goal.savedAmount)}
           </p>
           <p className="mt-0.5 text-[11px] text-muted-foreground">
-            dari {formatIdr(goal.targetAmount)}
+            {formatSavingsFromTarget(goal.targetAmount)}
           </p>
         </div>
       </div>
@@ -87,7 +92,7 @@ export function SavingsGoalCard({ goal, onClick }: SavingsGoalCardProps) {
         <div className={cn(SAVINGS_CARD_DIVIDER, SAVINGS_MOBILE_SOLID_DIVIDER)} />
         <div className={SAVINGS_CARD_FOOTER_CONTENT}>
           <p className="truncate text-[11px] text-muted-foreground">
-            {goal.note?.trim() || "Tanpa catatan"}
+            {goal.note?.trim() || PLANS_NO_NOTE}
           </p>
         </div>
       </div>

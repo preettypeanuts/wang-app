@@ -2,6 +2,7 @@
 
 import { useAppearance } from "@/components/shared/appearance-provider";
 import { ACCENT_COLORS } from "@/config/accent-colors";
+import { SETTINGS_ACCENT_COLOR } from "@/config/settings-labels";
 import { SETTINGS_INSET_BLOCK } from "@/config/settings-layout";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +12,7 @@ export function AccentColorPicker() {
   return (
     <div className={SETTINGS_INSET_BLOCK}>
       <fieldset className="grid grid-cols-4 gap-x-1 gap-y-3 border-0 p-0">
-        <legend className="sr-only">Warna aksen</legend>
+        <legend className="sr-only">{SETTINGS_ACCENT_COLOR}</legend>
         {ACCENT_COLORS.map((accent) => {
           const selected = accentId === accent.id;
           const swatch = resolvedDark ? accent.dark : accent.light;

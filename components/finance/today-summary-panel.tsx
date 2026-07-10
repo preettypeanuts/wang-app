@@ -5,10 +5,13 @@ import { SummaryTile } from "@/components/finance/summary-tile";
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
 import {
   UI_LABEL_BALANCE,
+  UI_LABEL_CATEGORIES,
   UI_LABEL_EXPENSE,
   UI_LABEL_INCOME,
+  UI_LABEL_NO_SPENDING_TODAY,
   UI_LABEL_SUMMARY,
   UI_LABEL_TODAY,
+  formatTransactionCount,
 } from "@/config/ui-labels";
 import { GLASS_SURFACE } from "@/config/glass";
 import {
@@ -106,10 +109,10 @@ export function TodaySummaryPanel({
         </section>
 
         <section>
-          <h3 className={cn("mb-3 text-sm font-semibold")}>Kategori</h3>
+          <h3 className={cn("mb-3 text-sm font-semibold")}>{UI_LABEL_CATEGORIES}</h3>
           {summary.categories.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Belum ada pengeluaran hari ini.
+              {UI_LABEL_NO_SPENDING_TODAY}
             </p>
           ) : (
             <div className={cn("grid grid-cols-2", GRID_GAP)}>
@@ -121,7 +124,7 @@ export function TodaySummaryPanel({
                     key={category.category}
                     label={category.label}
                     value={formatAmount(category.total)}
-                    subtitle={`${category.count} transaksi`}
+                    subtitle={formatTransactionCount(category.count)}
                     icon={tile.icon}
                     surfaceClassName={tile.surface}
                     iconClassName={tile.iconColor}

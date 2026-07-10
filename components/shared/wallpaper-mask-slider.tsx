@@ -4,6 +4,13 @@ import { useWallpaper } from "@/components/shared/wallpaper-provider";
 import { WallpaperMaskColorPicker } from "@/components/shared/wallpaper-mask-color-picker";
 import { Slider } from "@/components/ui/slider";
 import {
+  WALLPAPER_MASK_ACCESSIBILITY,
+  WALLPAPER_MASK_COLOR,
+  WALLPAPER_MASK_DEFAULT_HINT,
+  WALLPAPER_MASK_READABILITY_HINT,
+  WALLPAPER_MASK_SLIDER_ARIA,
+} from "@/config/settings-labels";
+import {
   WALLPAPER_MASK_MAX,
   WALLPAPER_MASK_MIN,
   WALLPAPER_MASK_STEP,
@@ -32,14 +39,16 @@ export function WallpaperMaskSlider() {
           htmlFor="wallpaper-mask-slider"
           className="text-sm font-medium leading-none"
         >
-          Mask aksesibilitas
+          {WALLPAPER_MASK_ACCESSIBILITY}
         </label>
         <span className="text-xs tabular-nums text-muted-foreground">
           {maskOpacity}%
         </span>
       </div>
       <div className="space-y-2">
-        <span className="text-xs font-medium text-muted-foreground">Warna</span>
+        <span className="text-xs font-medium text-muted-foreground">
+          {WALLPAPER_MASK_COLOR}
+        </span>
         <WallpaperMaskColorPicker disabled={isDefaultWallpaper} />
       </div>
       <Slider
@@ -53,12 +62,12 @@ export function WallpaperMaskSlider() {
         max={WALLPAPER_MASK_MAX}
         step={WALLPAPER_MASK_STEP}
         disabled={isDefaultWallpaper}
-        aria-label="Tingkat mask wallpaper untuk keterbacaan"
+        aria-label={WALLPAPER_MASK_SLIDER_ARIA}
       />
       <p className="text-[11px] leading-relaxed text-muted-foreground">
         {isDefaultWallpaper
-          ? "Pilih wallpaper selain Default untuk menyesuaikan overlay."
-          : "Naikkan jika teks atau UI sulit dibaca di atas wallpaper."}
+          ? WALLPAPER_MASK_DEFAULT_HINT
+          : WALLPAPER_MASK_READABILITY_HINT}
       </p>
     </div>
   );

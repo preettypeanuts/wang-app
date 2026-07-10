@@ -1,3 +1,8 @@
+import {
+  formatPayPlanDueInDays,
+  formatPayPlanInstallmentPaid,
+  PAYPLAN_LABEL_ALREADY_PAID,
+} from "@/config/payplan-labels";
 import { startOfDay } from "@/lib/finance/day-range";
 import type { PlannedOccurrence } from "@/types/planner";
 
@@ -40,23 +45,15 @@ function getDaysUntilDue(dueDate: Date, referenceDate: Date): number {
 }
 
 function formatDueCountdown(daysUntil: number): string {
-  if (daysUntil > 0) {
-    return `Jatuh tempo dalam ${daysUntil} hari`;
-  }
-
-  if (daysUntil === 0) {
-    return "Jatuh tempo hari ini";
-  }
-
-  return `Jatuh tempo ${Math.abs(daysUntil)} hari lalu`;
+  return formatPayPlanDueInDays(daysUntil);
 }
 
 function getPaidLabel(item: PlannedOccurrence): string {
   if (isInstallmentOccurrence(item)) {
-    return `Sudah bayar cicilan ke ${getInstallmentDisplayNumber(item)}`;
+    return formatPayPlanInstallmentPaid(getInstallmentDisplayNumber(item));
   }
 
-  return "Sudah dibayar";
+  return PAYPLAN_LABEL_ALREADY_PAID;
 }
 
 export function getOccurrencePaymentStatus(

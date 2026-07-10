@@ -12,6 +12,10 @@ import {
   ResponsiveDialogHeader,
 } from "@/components/shared/responsive-dialog";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import {
+  PAYPLAN_LABEL_FILTER_SCHEDULE_DESC,
+  UI_LABEL_FILTER,
+} from "@/config/payplan-labels";
 import { PLANNED_ITEMS_DEFAULT_FILTERS } from "@/config/planner-manage-filters";
 import { FORM_DIALOG_BODY_SCROLL } from "@/config/form-dialog";
 import { buildPlannedItemsManageParams } from "@/lib/validations/planned-items-manage";
@@ -58,13 +62,13 @@ export function PlannedItemsFilterDialog({
   }
 
   return (
-    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title="Filter">
+    <ResponsiveDialog open={open} onOpenChange={onOpenChange} title={UI_LABEL_FILTER}>
       <ResponsiveDialogHeader>
         <DialogTitle className="text-lg font-semibold tracking-tight">
-          Filter
+          {UI_LABEL_FILTER}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          Saring tagihan, langganan, dan cicilan.
+          {PAYPLAN_LABEL_FILTER_SCHEDULE_DESC}
         </DialogDescription>
       </ResponsiveDialogHeader>
 

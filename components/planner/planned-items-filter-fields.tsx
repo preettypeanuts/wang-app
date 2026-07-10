@@ -12,6 +12,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  PAYPLAN_FILTER_LABEL_END,
+  PAYPLAN_FILTER_LABEL_FLOW,
+  PAYPLAN_FILTER_LABEL_KIND,
+  PAYPLAN_FILTER_LABEL_PAYMENT_STATUS,
+  PAYPLAN_FILTER_LABEL_REPEAT,
+  PAYPLAN_LABEL_FILTER_SCHEDULE,
+  PAYPLAN_LABEL_FILTER_SCHEDULE_DESC,
+  UI_LABEL_APPLY,
+  UI_LABEL_RESET,
+} from "@/config/payplan-labels";
+import {
   PLANNED_ITEMS_END_MODE_OPTIONS,
   PLANNED_ITEMS_FLOW_OPTIONS,
   PLANNED_ITEMS_KIND_OPTIONS,
@@ -59,16 +70,16 @@ export function PlannedItemsFilterFields({
     >
       {isStack ? (
         <div>
-          <p className="text-sm font-semibold">Filter jadwal</p>
+          <p className="text-sm font-semibold">{PAYPLAN_LABEL_FILTER_SCHEDULE}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Saring tagihan, langganan, dan cicilan.
+            {PAYPLAN_LABEL_FILTER_SCHEDULE_DESC}
           </p>
         </div>
       ) : null}
 
       <div className={cn("grid gap-3", !isStack ? "sm:grid-cols-2" : "sm:grid-cols-2")}>
         <div className="grid gap-1.5">
-          <Label htmlFor="planned-filter-kind">Jenis</Label>
+          <Label htmlFor="planned-filter-kind">{PAYPLAN_FILTER_LABEL_KIND}</Label>
           <Select
             value={draft.kind}
             onValueChange={(value) =>
@@ -99,7 +110,7 @@ export function PlannedItemsFilterFields({
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="planned-filter-repeat">Pengulangan</Label>
+          <Label htmlFor="planned-filter-repeat">{PAYPLAN_FILTER_LABEL_REPEAT}</Label>
           <Select
             value={draft.repeat}
             onValueChange={(value) =>
@@ -132,7 +143,7 @@ export function PlannedItemsFilterFields({
 
       <div className={cn("grid gap-3", !isStack ? "sm:grid-cols-2" : "sm:grid-cols-2")}>
         <div className="grid gap-1.5">
-          <Label htmlFor="planned-filter-flow">Arus</Label>
+          <Label htmlFor="planned-filter-flow">{PAYPLAN_FILTER_LABEL_FLOW}</Label>
           <Select
             value={draft.flowType}
             onValueChange={(value) =>
@@ -163,7 +174,7 @@ export function PlannedItemsFilterFields({
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="planned-filter-end">Akhir</Label>
+          <Label htmlFor="planned-filter-end">{PAYPLAN_FILTER_LABEL_END}</Label>
           <Select
             value={draft.endMode}
             onValueChange={(value) =>
@@ -195,7 +206,9 @@ export function PlannedItemsFilterFields({
       </div>
 
       <div className="grid gap-1.5">
-        <Label htmlFor="planned-filter-payment">Status bayar</Label>
+        <Label htmlFor="planned-filter-payment">
+          {PAYPLAN_FILTER_LABEL_PAYMENT_STATUS}
+        </Label>
         <Select
           value={draft.paymentStatus}
           onValueChange={(value) =>
@@ -240,14 +253,14 @@ export function PlannedItemsFilterFields({
           className={cn(SEPARATED_CONTROL, isStack && "flex-1")}
           onClick={onReset}
         >
-          Reset
+          {UI_LABEL_RESET}
         </Button>
         <Button
           type="submit"
           size={isStack ? "default" : "sm"}
           className={cn(SEPARATED_CONTROL, isStack && "flex-1")}
         >
-          Terapkan
+          {UI_LABEL_APPLY}
         </Button>
       </div>
     </form>

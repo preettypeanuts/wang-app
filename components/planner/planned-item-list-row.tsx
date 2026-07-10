@@ -1,6 +1,10 @@
 import { PlannedItemCardMenu } from "@/components/planner/planned-item-card-menu";
 import { PlannedItemEndBadge } from "@/components/planner/planned-item-end-badge";
 import { PlannedItemKindIcon } from "@/components/planner/planned-item-kind-icon";
+import {
+  formatPayPlanViewDetail,
+  PAYPLAN_LABEL_START,
+} from "@/config/payplan-labels";
 import { PLANNER_MANAGE_STATUS } from "@/config/planner-manage";
 import {
   PLANNER_LIST_AMOUNT_EXPENSE,
@@ -52,14 +56,14 @@ export function PlannedItemListRow({
         PLANNER_LIST_ROW,
         "relative",
         !disabled &&
-          "transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]",
+          "transition-colors hover:bg-black/2 dark:hover:bg-white/3",
       )}
     >
       {disabled ? null : (
         <button
           type="button"
           className="absolute inset-0 z-0"
-          aria-label={`Lihat detail ${item.name}`}
+          aria-label={formatPayPlanViewDetail(item.name)}
           onClick={() => onViewDetail(item)}
         />
       )}
@@ -97,7 +101,7 @@ export function PlannedItemListRow({
             |
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="font-medium text-foreground/60">Mulai</span>
+            <span className="font-medium text-foreground/60">{PAYPLAN_LABEL_START}</span>
             <span className="text-foreground/90">{startLabel}</span>
           </span>
           <span

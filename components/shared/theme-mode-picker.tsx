@@ -9,6 +9,7 @@ import {
 
 import { useAppearance } from "@/components/shared/appearance-provider";
 import { THEME_MODES } from "@/config/theme-modes";
+import { SETTINGS_THEME_MODE_ARIA } from "@/config/settings-labels";
 import {
   SETTINGS_INSET_BLOCK,
   SETTINGS_SEGMENTED_ITEM,
@@ -32,7 +33,7 @@ export function ThemeModePicker() {
       <div
         className={SETTINGS_SEGMENTED_TRACK}
         role="group"
-        aria-label="Mode tema"
+        aria-label={SETTINGS_THEME_MODE_ARIA}
       >
         {THEME_MODES.map((mode) => {
           const IconComponent = MODE_ICONS[mode.id];

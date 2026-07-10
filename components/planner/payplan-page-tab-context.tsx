@@ -4,6 +4,7 @@ import {
   createContext,
   useContext,
   useLayoutEffect,
+  useMemo,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -39,10 +40,15 @@ export function PayplanPageTabProvider({
   monthKey,
   children,
 }: PayplanPageTabProviderProps) {
+  const serverSnapshot = useMemo(
+    () => ({ tab: initialTab, monthKey }),
+    [initialTab, monthKey],
+  );
+
   const snapshot = useSyncExternalStore(
     subscribePayplanTabState,
     getPayplanTabState,
-    () => ({ tab: initialTab, monthKey }),
+    () => serverSnapshot,
   );
 
   useLayoutEffect(() => {

@@ -23,6 +23,11 @@ import {
   SETTINGS_IOS_NAV_HEADER,
   SETTINGS_IOS_SHEET,
 } from "@/config/settings-ios";
+import {
+  SETTINGS_CLOSE_SETTINGS,
+  SETTINGS_DONE,
+  SETTINGS_TITLE,
+} from "@/config/settings-labels";
 import { SEPARATED_PILL } from "@/config/shape";
 import { useDrawerScrollLock } from "@/hooks/use-drawer-scroll-lock";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
@@ -39,14 +44,14 @@ function SettingsChromeHeader({ onClose }: { onClose: () => void }) {
   return (
     <header className={SETTINGS_IOS_NAV_HEADER}>
       <div className="min-w-18" />
-      <p className="sr-only">Pengaturan</p>
+      <p className="sr-only">{SETTINGS_TITLE}</p>
       <Button
         type="button"
         variant="ghost"
         className={SETTINGS_IOS_DONE_BUTTON}
         onClick={onClose}
       >
-        Selesai
+        {SETTINGS_DONE}
       </Button>
     </header>
   );
@@ -86,7 +91,7 @@ export function SettingsSheet({
       type="button"
       variant="ghost"
       size="icon-sm"
-      aria-label="Pengaturan"
+      aria-label={SETTINGS_TITLE}
       className={cn(GLASS_SURFACE, GLASS_HOVER, "size-9 p-0", SEPARATED_PILL)}
     >
       <GearSixIcon className="size-4" />
@@ -111,7 +116,7 @@ export function SettingsSheet({
       <Drawer onOpenChange={setOpen} open={open} showSwipeHandle>
         {trigger ? <DrawerTrigger render={trigger} /> : null}
         <DrawerContent className={SETTINGS_IOS_DRAWER_SURFACE}>
-          <DrawerTitle className="sr-only">Pengaturan</DrawerTitle>
+          <DrawerTitle className="sr-only">{SETTINGS_TITLE}</DrawerTitle>
           <SettingsSheetBody isMobile onClose={handleClose} open={open} />
         </DrawerContent>
       </Drawer>
@@ -127,7 +132,7 @@ export function SettingsSheet({
         className={SETTINGS_IOS_SHEET}
       >
         <SettingsSheetBody isMobile={false} onClose={handleClose} open={open} />
-        <SheetClose className="sr-only">Tutup pengaturan</SheetClose>
+        <SheetClose className="sr-only">{SETTINGS_CLOSE_SETTINGS}</SheetClose>
       </SheetContent>
     </Sheet>
   );

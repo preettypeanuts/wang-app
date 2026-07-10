@@ -26,6 +26,27 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  formatBudgetDailyPreview,
+  formatBudgetEmptyDayCountHint,
+  PAYPLAN_LABEL_ADD_BUDGET,
+  PAYPLAN_LABEL_BUDGET_FORM_DESC,
+  PAYPLAN_LABEL_DAY_COUNT,
+  PAYPLAN_LABEL_EDIT_BUDGET,
+  PAYPLAN_LABEL_LIMIT_MODE,
+  PAYPLAN_LABEL_MANUAL_TOTAL,
+  PAYPLAN_LABEL_MONTHLY_LIMIT,
+  PAYPLAN_LABEL_NEW_BUDGET,
+  PAYPLAN_LABEL_NOTE,
+  PAYPLAN_LABEL_NOTE_OPTIONAL,
+  PAYPLAN_LABEL_PER_DAY,
+  PAYPLAN_LABEL_SAVING,
+  UI_LABEL_CANCEL,
+  UI_LABEL_CATEGORY,
+  UI_LABEL_SAVE,
+  UI_LABEL_SELECT_CATEGORY,
+  UI_LABEL_TOTAL,
+} from "@/config/payplan-labels";
+import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_FIELD_GRID_ROW,
   FORM_FIELD_INPUT,
@@ -150,8 +171,9 @@ export function BudgetFormDialog({
     });
   }
 
-  const limitModeLabel = limitMode === "daily" ? "Per hari" : "Total manual";
-  const dialogTitle = status ? "Edit budget" : "Budget baru";
+  const limitModeLabel =
+    limitMode === "daily" ? PAYPLAN_LABEL_PER_DAY : PAYPLAN_LABEL_MANUAL_TOTAL;
+  const dialogTitle = status ? PAYPLAN_LABEL_EDIT_BUDGET : PAYPLAN_LABEL_NEW_BUDGET;
 
   return (
     <ResponsiveDialog
@@ -165,8 +187,7 @@ export function BudgetFormDialog({
           {dialogTitle}
         </DialogTitle>
         <DialogDescription className="text-[13px] leading-snug">
-          Pengeluaran yang kamu catat manual di Inbox (mis. makan warteg 15K)
-          otomatis mengurangi sisa budget kategori yang cocok.
+          {PAYPLAN_LABEL_BUDGET_FORM_DESC}
         </DialogDescription>
       </ResponsiveDialogHeader>
 
@@ -190,21 +211,23 @@ export function BudgetFormDialog({
             <div className={FORM_PREVIEW_COMPACT}>
               <div className="min-w-0">
                 <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                  Limit bulan ini
+                  {PAYPLAN_LABEL_MONTHLY_LIMIT}
                 </p>
                 <p className={cn("mt-0.5", FORM_PREVIEW_COMPACT_AMOUNT)}>
                   {formatIdr(previewTotal)}
                 </p>
               </div>
               <div className="shrink-0 text-right text-[11px] leading-snug text-muted-foreground">
-                <p>{selectedCategory?.label ?? "Kategori"}</p>
+                <p>{selectedCategory?.label ?? UI_LABEL_CATEGORY}</p>
                 <p>{limitModeLabel}</p>
                 {limitMode === "daily" ? (
                   <p className="mt-1 font-medium text-foreground">
-                    {formatIdr(
-                      Number.parseInt(dailyAmount.replace(/\D/g, ""), 10) || 0,
+                    {formatBudgetDailyPreview(
+                      formatIdr(
+                        Number.parseInt(dailyAmount.replace(/\D/g, ""), 10) || 0,
+                      ),
+                      dayCount || defaultDayCount,
                     )}
-                    /hari × {dayCount || defaultDayCount} hari
                   </p>
                 ) : null}
               </div>
@@ -213,7 +236,7 @@ export function BudgetFormDialog({
             <div
               className={FORM_SEGMENTED}
               role="tablist"
-              aria-label="Mode limit"
+              aria-label={PAYPLAN_LABEL_LIMIT_MODE}
             >
               <button
                 type="button"
@@ -227,7 +250,7 @@ export function BudgetFormDialog({
                     : FORM_SEGMENT_INACTIVE,
                 )}
               >
-                Per hari
+                {PAYPLAN_LABEL_PER_DAY}
               </button>
               <button
                 type="button"
@@ -241,12 +264,12 @@ export function BudgetFormDialog({
                     : FORM_SEGMENT_INACTIVE,
                 )}
               >
-                Total manual
+                {PAYPLAN_LABEL_MANUAL_TOTAL}
               </button>
             </div>
 
             <div className={FORM_GROUP}>
-              <FormDialogField label="Kategori" htmlFor="budget-category">
+              <FormDialogField label={UI_LABEL_CATEGORY} htmlFor="budget-category">
                 <Select
                   value={category}
                   onValueChange={(value) => {
@@ -272,7 +295,7 @@ export function BudgetFormDialog({
                           className="size-5 shrink-0 rounded-md"
                         />
                       ) : null}
-                      <SelectValue placeholder="Pilih kategori" />
+                      <SelectValue placeholder={UI_LABEL_SELECT_CATEGORY} />
                     </span>
                   </SelectTrigger>
                   <SelectContent className={PLANNER_SELECT_CONTENT}>
@@ -292,7 +315,7 @@ export function BudgetFormDialog({
               {limitMode === "daily" ? (
                 <div className={FORM_FIELD_GRID_ROW}>
                   <FormDialogField
-                    label="Per hari"
+                    label={PAYPLAN_LABEL_PER_DAY}
                     htmlFor="budget-daily-amount"
                     gridItem
                   >
@@ -307,7 +330,7 @@ export function BudgetFormDialog({
                   </FormDialogField>
 
                   <FormDialogField
-                    label="Jumlah hari"
+                    label={PAYPLAN_LABEL_DAY_COUNT}
                     htmlFor="budget-day-count"
                     gridItem
                   >
@@ -323,7 +346,7 @@ export function BudgetFormDialog({
                   </FormDialogField>
                 </div>
               ) : (
-                <FormDialogField label="Total" htmlFor="budget-fixed-limit">
+                <FormDialogField label={UI_LABEL_TOTAL} htmlFor="budget-fixed-limit">
                   <AmountTextInput
                     id="budget-fixed-limit"
                     name="fixedLimit"
@@ -338,8 +361,7 @@ export function BudgetFormDialog({
 
             {limitMode === "daily" ? (
               <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
-                Kosongkan jumlah hari untuk pakai hari di bulan ini (
-                {defaultDayCount} hari).
+                {formatBudgetEmptyDayCountHint(defaultDayCount)}
               </p>
             ) : null}
 
@@ -353,13 +375,13 @@ export function BudgetFormDialog({
             </div>
 
             <div className={FORM_GROUP}>
-              <FormDialogField label="Catatan" htmlFor="budget-note">
+              <FormDialogField label={PAYPLAN_LABEL_NOTE} htmlFor="budget-note">
                 <Textarea
                   id="budget-note"
                   name="note"
                   defaultValue={status?.budget.note ?? ""}
                   rows={3}
-                  placeholder="Catatan opsional"
+                  placeholder={PAYPLAN_LABEL_NOTE_OPTIONAL}
                   className={FORM_NOTE}
                 />
               </FormDialogField>
@@ -374,14 +396,18 @@ export function BudgetFormDialog({
             className={cn(SEPARATED_CONTROL, "flex-1")}
             onClick={() => onOpenChange(false)}
           >
-            Batal
+            {UI_LABEL_CANCEL}
           </Button>
           <Button
             type="submit"
             disabled={isPending}
             className={cn(SEPARATED_CONTROL, "flex-1")}
           >
-            {isPending ? "Menyimpan..." : status ? "Simpan" : "Tambah budget"}
+            {isPending
+              ? PAYPLAN_LABEL_SAVING
+              : status
+                ? UI_LABEL_SAVE
+                : PAYPLAN_LABEL_ADD_BUDGET}
           </Button>
         </ResponsiveDialogFooter>
       </form>

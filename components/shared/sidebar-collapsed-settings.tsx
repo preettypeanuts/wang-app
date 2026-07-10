@@ -5,6 +5,7 @@ import {
   SidebarDockItem,
   useSidebarDockTooltipVisible,
 } from "@/components/shared/sidebar-dock";
+import { SETTINGS_TITLE } from "@/config/settings-labels";
 import {
   SIDEBAR_APP_ICON_GLYPH,
   SIDEBAR_APP_ICON_GRADIENTS,
@@ -44,7 +45,7 @@ export function SidebarCollapsedSettings({ index }: SidebarCollapsedSettingsProp
           trigger={
             <button
               type="button"
-              aria-label="Pengaturan"
+              aria-label={SETTINGS_TITLE}
               className={DOCK_TRIGGER_CLASS}
             >
               <span
@@ -59,7 +60,7 @@ export function SidebarCollapsedSettings({ index }: SidebarCollapsedSettingsProp
             </button>
           }
         />
-        <DockLabel label="Pengaturan" />
+        <DockLabel label={SETTINGS_TITLE} />
       </div>
     </SidebarDockItem>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import { SETTINGS_TITLE } from "@/config/settings-labels";
 import { SETTINGS_IOS_BACK_BUTTON } from "@/config/settings-ios";
 import { CaretLeftIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -11,7 +12,7 @@ interface SettingsMobileBackProps {
 
 export function SettingsMobileBack({
   onBack,
-  label = "Pengaturan",
+  label = SETTINGS_TITLE,
 }: SettingsMobileBackProps) {
   return (
     <button type="button" onClick={onBack} className={cn(SETTINGS_IOS_BACK_BUTTON)}>

@@ -1,6 +1,7 @@
 "use client";
 
 import { IosSwitch } from "@/components/shared/ios-switch";
+import { SETTINGS_PUSH_NOTIFICATIONS } from "@/config/settings-labels";
 import {
   MOBILE_DRAWER_ROW,
   MOBILE_DRAWER_TILE,
@@ -24,9 +25,9 @@ export function MobileNavDrawerPushToggleRow() {
         >
           <BellIcon aria-hidden="true" />
         </span>
-        <span className="min-w-0 flex-1">Notifikasi push</span>
+        <span className="min-w-0 flex-1">{SETTINGS_PUSH_NOTIFICATIONS}</span>
         <IosSwitch
-          aria-label="Notifikasi push"
+          aria-label={SETTINGS_PUSH_NOTIFICATIONS}
           checked={enabled}
           disabled={pending}
           onCheckedChange={(checked) => void toggle(checked)}

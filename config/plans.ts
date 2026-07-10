@@ -170,8 +170,8 @@ export const PLANS_CARD_DIVIDER = PLANNER_MANAGE_CARD_DIVIDER_LINE;
 export const PLANS_CARD_FOOTER_CONTENT = "px-3.5 py-2.5 sm:px-4";
 
 export const PLAN_STATUS_LABEL: Record<"active" | "done", string> = {
-  active: "Aktif",
-  done: "Selesai",
+  active: "Active",
+  done: "Done",
 };
 
 /** Purchased wish marker in plan detail dialog. */

@@ -8,6 +8,15 @@ import {
   PLANS_AI_SUMMARY_SHELL,
   getPlansInsightToneStyle,
 } from "@/config/plans";
+import {
+  PLANS_AI_BUDGET_IMPACT,
+  PLANS_AI_BUDGET_OVER_BY,
+  PLANS_AI_BUDGET_REMAINING,
+  PLANS_AI_METRIC_BALANCE_PREFIX,
+  PLANS_AI_PAYPLAN_THIS_MONTH,
+  PLANS_AI_PROJECTED_REMAINING,
+  PLANS_AI_REMAINING_BUDGET_THIS_MONTH,
+} from "@/config/plans-labels";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import { cn } from "@/lib/utils";
 import type { PlansOverview } from "@/types/plan";
@@ -103,7 +112,8 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
                 <span className={cn("font-semibold", style.metricSpend)}>
                   {formatAmount(overview.estimatedCost)}
                 </span>
-                {" · saldo "}
+                {" · "}
+                {PLANS_AI_METRIC_BALANCE_PREFIX}{" "}
                 <span className={cn("font-semibold", style.metricBalance)}>
                   {formatAmount(overview.availableBalance)}
                 </span>
@@ -111,7 +121,7 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
             ) : null}
             {overview.upcomingPayPlanTotal > 0 ? (
               <p>
-                Tagihan PayPlan bulan ini{" "}
+                {PLANS_AI_PAYPLAN_THIS_MONTH}{" "}
                 <span className={cn("font-semibold", style.metricSpend)}>
                   {formatAmount(overview.upcomingPayPlanTotal)}
                 </span>
@@ -119,14 +129,14 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
             ) : null}
             {overview.remainingBudgetTotal > 0 ? (
               <p>
-                Sisa budget PayPlan bulan ini{" "}
+                {PLANS_AI_REMAINING_BUDGET_THIS_MONTH}{" "}
                 <span className={cn("font-semibold", style.metricSpend)}>
                   {formatAmount(overview.remainingBudgetTotal)}
                 </span>
               </p>
             ) : null}
             <p>
-              Proyeksi sisa{" "}
+              {PLANS_AI_PROJECTED_REMAINING}{" "}
               <span className={cn("font-semibold", style.metricRemaining)}>
                 {formatAmount(overview.projectedBalance)}
               </span>
@@ -137,7 +147,7 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
         {riskyBudgetImpacts.length > 0 ? (
           <div className={cn("mt-3 space-y-1.5", style.subtitleColor)}>
             <p className="text-[11px] font-semibold uppercase tracking-[0.12em]">
-              Dampak ke budget
+              {PLANS_AI_BUDGET_IMPACT}
             </p>
             {riskyBudgetImpacts.map((impact) => {
               const badge = getPlanBudgetImpactBadge(impact.status);
@@ -153,7 +163,7 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
                     {impact.status === "over" ? (
                       <>
                         {" "}
-                        kebobol{" "}
+                        {PLANS_AI_BUDGET_OVER_BY}{" "}
                         <span className="font-semibold text-[#FF3B30]">
                           {formatAmount(overAmount)}
                         </span>
@@ -161,7 +171,7 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
                     ) : (
                       <>
                         {" "}
-                        sisa{" "}
+                        {PLANS_AI_BUDGET_REMAINING}{" "}
                         <span className="font-semibold text-[#FF9500]">
                           {formatAmount(
                             Math.max(0, impact.budgetLimit - impact.projectedSpent),

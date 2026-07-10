@@ -7,6 +7,7 @@ import {
   SidebarDockItem,
   useSidebarDockTooltipVisible,
 } from "@/components/shared/sidebar-dock";
+import { SETTINGS_DEFAULT_USER } from "@/config/settings-labels";
 import { GLASS_SURFACE } from "@/config/glass";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { useSession } from "@/lib/auth/auth-client";
@@ -51,7 +52,7 @@ interface SidebarCollapsedProfileProps {
 export function SidebarCollapsedProfile({ index }: SidebarCollapsedProfileProps) {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const name = session?.user?.name?.trim() || "Pengguna";
+  const name = session?.user?.name?.trim() || SETTINGS_DEFAULT_USER;
   const initial = name.charAt(0).toUpperCase() || "W";
   const isActive = pathname === "/profile";
 

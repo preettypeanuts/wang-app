@@ -9,6 +9,11 @@ import {
   SETTINGS_INSET_BLOCK,
   SETTINGS_ROW_DIVIDER,
 } from "@/config/settings-layout";
+import {
+  WALLPAPER_IMPORT_ACTION,
+  WALLPAPER_IMPORT_FROM_URL,
+  WALLPAPER_IMPORT_URL_HINT,
+} from "@/config/settings-labels";
 import { cn } from "@/lib/utils";
 
 export function WallpaperUrlImport() {
@@ -42,7 +47,7 @@ export function WallpaperUrlImport() {
         htmlFor="wallpaper-url"
         className="text-xs font-medium text-muted-foreground"
       >
-        Import dari link
+        {WALLPAPER_IMPORT_FROM_URL}
       </label>
       <div className="flex items-center gap-2">
         <Input
@@ -62,12 +67,11 @@ export function WallpaperUrlImport() {
           className="h-9 shrink-0 px-3"
           disabled={!canSubmit}
         >
-          {isUploading ? "..." : "Import"}
+          {isUploading ? "..." : WALLPAPER_IMPORT_ACTION}
         </Button>
       </div>
       <p className="text-[11px] leading-relaxed text-muted-foreground">
-        Tempel link langsung ke file gambar (JPG, PNG, WebP) yang bisa diakses
-        publik.
+        {WALLPAPER_IMPORT_URL_HINT}
       </p>
     </form>
   );

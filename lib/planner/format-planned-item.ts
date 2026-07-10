@@ -6,11 +6,11 @@ import { formatDayMonth } from "@/lib/finance/format-datetime";
 import { getInstallmentEndDate } from "@/lib/planner/installment-progress";
 import type { PlannedItemRecord } from "@/types/planner";
 
-const MONTH_ONLY_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const MONTH_ONLY_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "short",
 });
 
-const MONTH_YEAR_FORMAT = new Intl.DateTimeFormat("id-ID", {
+const MONTH_YEAR_FORMAT = new Intl.DateTimeFormat("en-US", {
   month: "short",
   year: "numeric",
 });

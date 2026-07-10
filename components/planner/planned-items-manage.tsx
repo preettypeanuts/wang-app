@@ -15,6 +15,13 @@ import { PlannedItemsSearchInput } from "@/components/planner/planned-items-sear
 import { PlannedItemsTable } from "@/components/planner/planned-items-table";
 import { Button } from "@/components/ui/button";
 import {
+  formatPayPlanDeleteConfirm,
+  PAYPLAN_LABEL_ADD_PAY_PLAN,
+  PAYPLAN_LABEL_MANAGE_DESC,
+  PAYPLAN_LABEL_SCHEDULES,
+  UI_LABEL_OPEN_FILTER,
+} from "@/config/payplan-labels";
+import {
   PAYPLAN_FILTER_SEARCH_INPUT,
   PAYPLAN_FILTER_TRIGGER,
   PAYPLAN_FILTER_TRIGGER_ACTIVE,
@@ -123,7 +130,7 @@ export function PlannedItemsManage({
   }
 
   function handleDelete(item: PlannedItemRecord) {
-    const confirmed = window.confirm(`Hapus "${item.name}" dari PayPlan?`);
+    const confirmed = window.confirm(formatPayPlanDeleteConfirm(item.name));
     if (!confirmed) {
       return;
     }
@@ -153,9 +160,9 @@ export function PlannedItemsManage({
     <div className={cn("flex min-h-0 flex-1 flex-col", STACK_GAP, className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className={cn("min-w-0", PAYPLAN_MANAGE_SECTION_HEADER)}>
-          <h2 className="text-sm font-semibold">Jadwal</h2>
+          <h2 className="text-sm font-semibold">{PAYPLAN_LABEL_SCHEDULES}</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Tagihan berulang, langganan, dan cicilan yang muncul di kalender.
+            {PAYPLAN_LABEL_MANAGE_DESC}
           </p>
         </div>
 
@@ -164,7 +171,7 @@ export function PlannedItemsManage({
           <PlannedItemsFilterMenu filters={filters} layout={layout} />
           <Button size="sm" onClick={openCreateSheet}>
             <PlusIcon />
-            Tambah Pay Plan
+            {PAYPLAN_LABEL_ADD_PAY_PLAN}
           </Button>
         </div>
       </div>
@@ -180,7 +187,7 @@ export function PlannedItemsManage({
             type="button"
             variant="outline"
             size="icon"
-            aria-label="Buka filter"
+            aria-label={UI_LABEL_OPEN_FILTER}
             aria-expanded={filterDialogOpen}
             className={cn(
               SEPARATED_CONTROL,

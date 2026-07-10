@@ -1,3 +1,4 @@
+import { PAYPLAN_FILTER_UNPAID } from "@/config/payplan-labels";
 import { getPlannedItemPaymentStatus } from "@/lib/planner/installment-progress";
 import {
   canMarkPlannedItemPaid,
@@ -17,7 +18,7 @@ export function listUnpaidPayPlanChatItems(
       amount: item.amount,
       category: item.category,
       statusLabel:
-        getPlannedItemPaymentStatus(item)?.label ?? "Belum dibayar",
+        getPlannedItemPaymentStatus(item)?.label ?? PAYPLAN_FILTER_UNPAID,
       installmentIndex: getPlannedItemPaymentIndex(item),
     }))
     .sort((left, right) => left.name.localeCompare(right.name, "id"));

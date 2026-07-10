@@ -15,6 +15,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { SETTINGS_TITLE } from "@/config/settings-labels";
 import {
   MOBILE_DRAWER_FOOTER,
   MOBILE_DRAWER_ROW,
@@ -106,7 +107,7 @@ export function MobileNavDrawer({ trigger }: MobileNavDrawerProps) {
               >
                 <GearSixIcon aria-hidden="true" />
               </span>
-              <span className="flex-1 text-left">Pengaturan</span>
+              <span className="flex-1 text-left">{SETTINGS_TITLE}</span>
               <CaretRightIcon
                 aria-hidden="true"
                 className="size-4 text-muted-foreground"

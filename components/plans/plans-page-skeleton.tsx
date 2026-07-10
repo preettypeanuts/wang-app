@@ -1,4 +1,5 @@
 import { PlansAiInsightSkeleton } from "@/components/plans/plans-ai-insight-skeleton";
+import { PLANS_LOADING_WISHLIST } from "@/config/plans-labels";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   PLANS_CARD,
@@ -35,7 +36,7 @@ export function PlansPageSkeleton() {
   return (
     <div
       aria-busy="true"
-      aria-label="Memuat wishlist"
+      aria-label={PLANS_LOADING_WISHLIST}
       className={cn("flex flex-col", STACK_GAP)}
     >
       <div className="hidden items-start justify-between gap-3 md:flex">

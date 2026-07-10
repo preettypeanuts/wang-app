@@ -3,6 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import {
+  PUSH_ERROR_ENABLE_FAILED,
+  PUSH_ERROR_UNSUPPORTED,
+} from "@/config/settings-labels";
+import {
   getPushPermission,
   hasActivePushSubscription,
   subscribeToPushNotifications,
@@ -34,14 +38,14 @@ export function usePushNotificationToggle() {
       const permission = await getPushPermission();
 
       if (permission === "unsupported") {
-        setError("Browser ini belum mendukung push notification.");
+        setError(PUSH_ERROR_UNSUPPORTED);
         return;
       }
 
       const result = await subscribeToPushNotifications();
 
       if (!result.ok) {
-        setError(result.error ?? "Gagal mengaktifkan notifikasi.");
+        setError(result.error ?? PUSH_ERROR_ENABLE_FAILED);
         return;
       }
 

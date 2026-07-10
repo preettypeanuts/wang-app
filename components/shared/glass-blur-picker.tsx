@@ -11,6 +11,12 @@ import {
   getGlassFillTransparencyTrackPercent,
 } from "@/config/glass-fill";
 import {
+  SETTINGS_GLASS_BLUR_LEVEL_ARIA,
+  SETTINGS_GLASS_PANEL_TRANSPARENCY_ARIA,
+  SETTINGS_TRANSPARENCY,
+  SETTINGS_TRANSPARENT,
+} from "@/config/settings-labels";
+import {
   SETTINGS_INSET_BLOCK,
   SETTINGS_ROW_DIVIDER,
   SETTINGS_SEGMENTED_ITEM,
@@ -34,7 +40,7 @@ export function GlassBlurPicker() {
   return (
     <div className={cn(SETTINGS_INSET_BLOCK, "space-y-3")}>
       <fieldset className={cn(SETTINGS_SEGMENTED_TRACK, "border-0")}>
-        <legend className="sr-only">Tingkat blur glass</legend>
+        <legend className="sr-only">{SETTINGS_GLASS_BLUR_LEVEL_ARIA}</legend>
         {GLASS_BLUR_LEVELS.map((level) => {
           const selected = glassBlurLevel === level.id;
 
@@ -64,7 +70,7 @@ export function GlassBlurPicker() {
             htmlFor="glass-fill-transparency-slider"
             className="text-sm font-medium leading-none"
           >
-            Transparansi
+            {SETTINGS_TRANSPARENCY}
           </label>
           <span className="text-xs tabular-nums text-muted-foreground">
             {glassFillTransparency}%
@@ -83,7 +89,7 @@ export function GlassBlurPicker() {
             min={GLASS_FILL_TRANSPARENCY_MIN}
             max={GLASS_FILL_TRANSPARENCY_MAX}
             step={GLASS_FILL_TRANSPARENCY_STEP}
-            aria-label="Transparansi panel glass"
+            aria-label={SETTINGS_GLASS_PANEL_TRANSPARENCY_ARIA}
           />
           <span
             aria-hidden
@@ -95,7 +101,7 @@ export function GlassBlurPicker() {
         <div className="flex justify-between text-[10px] text-muted-foreground">
           <span>Solid</span>
           <span>Default {DEFAULT_GLASS_FILL_TRANSPARENCY}%</span>
-          <span>Transparan</span>
+          <span>{SETTINGS_TRANSPARENT}</span>
         </div>
       </div>
     </div>

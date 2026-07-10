@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import {
   fetchNotificationsFeedMeta,
@@ -32,28 +32,6 @@ interface UseNotificationsFeedResult {
 
 const EMPTY_COUNTS: AppNotificationCounts = { total: 0, unread: 0 };
 
-function resolveInitialState() {
-  const cached = readNotificationsFeedCache();
-
-  if (cached) {
-    return {
-      items: cached.items,
-      counts: cached.counts,
-      nextCursor: cached.nextCursor,
-      isLoading: false,
-      hasWarmCache: true,
-    };
-  }
-
-  return {
-    items: [] as AppNotificationRecord[],
-    counts: EMPTY_COUNTS,
-    nextCursor: null as string | null,
-    isLoading: true,
-    hasWarmCache: false,
-  };
-}
-
 function scheduleIdle(task: () => void) {
   if (typeof requestIdleCallback !== "undefined") {
     const id = requestIdleCallback(task, { timeout: 2_000 });
@@ -65,15 +43,15 @@ function scheduleIdle(task: () => void) {
 }
 
 export function useNotificationsFeed(): UseNotificationsFeedResult {
-  const initial = resolveInitialState();
-  const [items, setItems] = useState<AppNotificationRecord[]>(initial.items);
-  const [counts, setCounts] = useState<AppNotificationCounts>(initial.counts);
-  const [nextCursor, setNextCursor] = useState<string | null>(initial.nextCursor);
-  const [isLoading, setIsLoading] = useState(initial.isLoading);
+  const [items, setItems] = useState<AppNotificationRecord[]>([]);
+  const [counts, setCounts] = useState<AppNotificationCounts>(EMPTY_COUNTS);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const isFetchingRef = useRef(false);
-  const hasWarmCacheRef = useRef(initial.hasWarmCache);
+  const hasWarmCacheRef = useRef(false);
+  const didMountRef = useRef(false);
 
   const applyPage = useCallback(
     (
@@ -164,6 +142,23 @@ export function useNotificationsFeed(): UseNotificationsFeedResult {
     setIsLoading(items.length === 0);
     void revalidate({ force: true });
   }, [items.length, revalidate]);
+
+  useLayoutEffect(() => {
+    if (didMountRef.current) {
+      return;
+    }
+
+    didMountRef.current = true;
+
+    const cached = readNotificationsFeedCache();
+    if (cached) {
+      setItems(cached.items);
+      setCounts(cached.counts);
+      setNextCursor(cached.nextCursor);
+      setIsLoading(false);
+      hasWarmCacheRef.current = true;
+    }
+  }, []);
 
   useEffect(() => {
     if (hasWarmCacheRef.current) {

@@ -16,7 +16,7 @@ import { SIDEBAR_DOCK_ICON_SIZE } from "@/config/sidebar";
 import { getDockScale } from "@/lib/sidebar/dock-scale";
 import { cn } from "@/lib/utils";
 
-const ITEM_GAP_PX = 6;
+const ITEM_GAP_PX = 9;
 
 interface SidebarDockContextValue {
   mouseY: number | null;

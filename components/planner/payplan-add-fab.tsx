@@ -1,5 +1,6 @@
 "use client";
 
+import { PAYPLAN_LABEL_ADD_PAY_PLAN } from "@/config/payplan-labels";
 import { MOBILE_ADD_FAB_ICON } from "@/config/mobile-nav";
 import { PAYPLAN_ADD_FAB } from "@/config/payplan-mobile";
 import { PlusIcon } from "@/lib/icons";
@@ -14,7 +15,7 @@ interface PayplanAddFabProps {
 export function PayplanAddFab({
   onClick,
   className,
-  label = "Tambah Pay Plan",
+  label = PAYPLAN_LABEL_ADD_PAY_PLAN,
 }: PayplanAddFabProps) {
   return (
     <button

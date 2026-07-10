@@ -11,6 +11,9 @@ export const SETTINGS_IOS_SCROLL = [
   "pb-[calc(1rem+var(--mobile-safe-bottom))]",
 ].join(" ");
 
+/** Scroll area below a sub-panel header (appearance, wallpaper, etc.). */
+export const SETTINGS_IOS_SUB_SCROLL = [SETTINGS_IOS_SCROLL, "pt-4"].join(" ");
+
 export const SETTINGS_IOS_LARGE_TITLE = [
   "px-1 pb-2 pt-1",
   "text-[2.125rem] font-bold leading-tight tracking-tight text-foreground",

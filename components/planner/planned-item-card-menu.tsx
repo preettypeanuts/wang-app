@@ -17,6 +17,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  formatPayPlanOptionsLabel,
+  PAYPLAN_LABEL_DELETE,
+  PAYPLAN_LABEL_EDIT,
+  PAYPLAN_LABEL_SAVING,
+} from "@/config/payplan-labels";
 import { PLANNER_SELECT_ITEM } from "@/config/planner-manage";
 import {
   canMarkPlannedItemPaid,
@@ -68,7 +74,7 @@ export function PlannedItemCardMenu({
             type="button"
             variant="ghost"
             size="icon-sm"
-            aria-label={`Opsi ${item.name}`}
+            aria-label={formatPayPlanOptionsLabel(item.name)}
             disabled={disabled}
             onClick={(event) => event.stopPropagation()}
             onPointerDown={(event) => event.stopPropagation()}
@@ -85,12 +91,12 @@ export function PlannedItemCardMenu({
             onClick={handleMarkPaid}
           >
             <CheckCircleIcon />
-            {isPending ? "Menyimpan..." : payLabel}
+            {isPending ? PAYPLAN_LABEL_SAVING : payLabel}
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem className={PLANNER_SELECT_ITEM} onClick={() => onEdit(item)}>
           <PencilSimpleIcon />
-          Edit
+          {PAYPLAN_LABEL_EDIT}
         </DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
@@ -98,7 +104,7 @@ export function PlannedItemCardMenu({
           onClick={() => onDelete(item)}
         >
           <TrashIcon />
-          Hapus
+          {PAYPLAN_LABEL_DELETE}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

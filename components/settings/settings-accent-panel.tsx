@@ -1,7 +1,11 @@
 import { AccentColorPicker } from "@/components/shared/accent-color-picker";
 import { SettingsIosSection } from "@/components/settings/settings-ios-section";
 import { SettingsSubHeader } from "@/components/settings/settings-sub-header";
-import { SETTINGS_IOS_SCROLL } from "@/config/settings-ios";
+import {
+  SETTINGS_ACCENT_COLOR,
+  SETTINGS_ACCENT_COLOR_FOOTER,
+} from "@/config/settings-labels";
+import { SETTINGS_IOS_SUB_SCROLL } from "@/config/settings-ios";
 
 interface SettingsAccentPanelProps {
   onBack: () => void;
@@ -10,9 +14,9 @@ interface SettingsAccentPanelProps {
 export function SettingsAccentPanel({ onBack }: SettingsAccentPanelProps) {
   return (
     <>
-      <SettingsSubHeader title="Warna aksen" onBack={onBack} />
-      <section className={SETTINGS_IOS_SCROLL}>
-        <SettingsIosSection footer="Mengatur warna tombol dan highlight di seluruh aplikasi.">
+      <SettingsSubHeader title={SETTINGS_ACCENT_COLOR} onBack={onBack} />
+      <section className={SETTINGS_IOS_SUB_SCROLL}>
+        <SettingsIosSection footer={SETTINGS_ACCENT_COLOR_FOOTER}>
           <AccentColorPicker />
         </SettingsIosSection>
       </section>

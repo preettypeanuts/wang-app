@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
+import { PAYPLAN_LABEL_SEARCH_SCHEDULE } from "@/config/payplan-labels";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { buildPlannedItemsManageParams } from "@/lib/validations/planned-items-manage";
 import { cn } from "@/lib/utils";
@@ -51,8 +52,8 @@ export function PlannedItemsSearchInput({
     <Input
       value={q}
       onChange={(event) => setQ(event.target.value)}
-      placeholder="Cari jadwal..."
-      aria-label="Cari jadwal"
+      placeholder={PAYPLAN_LABEL_SEARCH_SCHEDULE}
+      aria-label={PAYPLAN_LABEL_SEARCH_SCHEDULE}
       className={cn(SEPARATED_CONTROL, "h-8 w-36 sm:w-44", className)}
     />
   );

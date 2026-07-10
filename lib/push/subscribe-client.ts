@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  PUSH_ERROR_INVALID_SUBSCRIPTION,
+  PUSH_ERROR_NOT_CONFIGURED,
+  PUSH_ERROR_PERMISSION_DENIED,
+  PUSH_ERROR_SAVE_SUBSCRIPTION,
+  PUSH_ERROR_SERVICE_WORKER,
+  PUSH_ERROR_UNSUPPORTED,
+} from "@/config/settings-labels";
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -36,7 +45,7 @@ export async function subscribeToPushNotifications(): Promise<{
   if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
     return {
       ok: false,
-      error: "Browser ini belum mendukung push notification.",
+      error: PUSH_ERROR_UNSUPPORTED,
     };
   }
 
@@ -45,7 +54,7 @@ export async function subscribeToPushNotifications(): Promise<{
   if (permission !== "granted") {
     return {
       ok: false,
-      error: "Izin notifikasi ditolak.",
+      error: PUSH_ERROR_PERMISSION_DENIED,
     };
   }
 
@@ -54,7 +63,7 @@ export async function subscribeToPushNotifications(): Promise<{
   if (!keyResponse.ok) {
     return {
       ok: false,
-      error: "Push notification belum dikonfigurasi di server.",
+      error: PUSH_ERROR_NOT_CONFIGURED,
     };
   }
 
@@ -64,7 +73,7 @@ export async function subscribeToPushNotifications(): Promise<{
   if (!registration) {
     return {
       ok: false,
-      error: "Service worker gagal didaftarkan.",
+      error: PUSH_ERROR_SERVICE_WORKER,
     };
   }
 
@@ -78,7 +87,7 @@ export async function subscribeToPushNotifications(): Promise<{
   if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) {
     return {
       ok: false,
-      error: "Subscription push tidak valid.",
+      error: PUSH_ERROR_INVALID_SUBSCRIPTION,
     };
   }
 
@@ -97,7 +106,7 @@ export async function subscribeToPushNotifications(): Promise<{
   if (!saveResponse.ok) {
     return {
       ok: false,
-      error: "Gagal menyimpan subscription push.",
+      error: PUSH_ERROR_SAVE_SUBSCRIPTION,
     };
   }
 

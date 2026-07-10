@@ -1,4 +1,10 @@
 import { PlannedItemListRow } from "@/components/planner/planned-item-list-row";
+import {
+  PAYPLAN_LABEL_ADD_SCHEDULE_HINT,
+  PAYPLAN_LABEL_FILTER_RESET_HINT,
+  PAYPLAN_LABEL_NO_MATCHING_SCHEDULE,
+  PAYPLAN_LABEL_NO_SCHEDULE_YET,
+} from "@/config/payplan-labels";
 import { PLANNER_MANAGE_EMPTY } from "@/config/planner-manage";
 import {
   PAYPLAN_LIST_CONTAINER_MOBILE,
@@ -41,12 +47,14 @@ export function PlannedItemsTable({
     return (
       <div className={cn(PLANNER_MANAGE_EMPTY, PAYPLAN_MANAGE_EMPTY_MOBILE)}>
         <p className="text-sm font-medium">
-          {filteredEmpty ? "Tidak ada jadwal cocok" : "Belum ada jadwal"}
+          {filteredEmpty
+            ? PAYPLAN_LABEL_NO_MATCHING_SCHEDULE
+            : PAYPLAN_LABEL_NO_SCHEDULE_YET}
         </p>
         <p className="mt-1 max-w-sm text-xs text-muted-foreground">
           {filteredEmpty
-            ? "Ubah filter atau reset untuk melihat jadwal lain."
-            : "Tambah tagihan, langganan, atau cicilan untuk muncul di kalender."}
+            ? PAYPLAN_LABEL_FILTER_RESET_HINT
+            : PAYPLAN_LABEL_ADD_SCHEDULE_HINT}
         </p>
       </div>
     );

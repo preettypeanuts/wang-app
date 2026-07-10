@@ -4,7 +4,13 @@ import {
   getDateOnlyParts,
   startOfDay,
 } from "@/lib/finance/day-range";
-import { formatDayMonth } from "@/lib/finance/format-datetime";
+import {
+  formatPayPlanDueInDays,
+  formatPayPlanDueInDaysLower,
+  formatPayPlanPaidOn,
+  formatPayPlanPaidOnWithDue,
+  formatPayPlanPaidOnWithNext,
+} from "@/config/payplan-labels";
 import type { PlannedItemRecord, PlannedRepeatInterval } from "@/types/planner";
 
 function addMonthsDateOnly(
@@ -108,26 +114,18 @@ export function getPlannedItemInstallmentSchedule(
 
 function formatDaysUntilLabel(daysUntil: number): string {
   if (daysUntil > 0) {
-    return `${daysUntil} hari lagi`;
+    return `in ${daysUntil} days`;
   }
 
   if (daysUntil === 0) {
-    return "hari ini";
+    return "today";
   }
 
-  return `${Math.abs(daysUntil)} hari lalu`;
+  return `${Math.abs(daysUntil)} days ago`;
 }
 
 function formatDueCountdown(daysUntil: number): string {
-  if (daysUntil > 0) {
-    return `Jatuh tempo dalam ${daysUntil} hari`;
-  }
-
-  if (daysUntil === 0) {
-    return "Jatuh tempo hari ini";
-  }
-
-  return `Jatuh tempo ${Math.abs(daysUntil)} hari lalu`;
+  return formatPayPlanDueInDays(daysUntil);
 }
 
 function getDaysUntilDue(dueDate: Date, referenceDate: Date): number {
@@ -217,7 +215,7 @@ export function getPlannedItemPaymentStatus(
 
     return {
       status: "paid",
-      label: `Sudah dibayar pada ${formatDayMonth(lastPaidDate)}`,
+      label: formatPayPlanPaidOn(lastPaidDate),
       daysUntil: null,
     };
   }
@@ -229,7 +227,7 @@ export function getPlannedItemPaymentStatus(
     if (!isOccurrenceBeforeEnd(item, nextDueDate)) {
       return {
         status: "paid",
-        label: `Sudah dibayar pada ${formatDayMonth(lastPaidDate)}`,
+        label: formatPayPlanPaidOn(lastPaidDate),
         daysUntil: null,
       };
     }
@@ -239,19 +237,19 @@ export function getPlannedItemPaymentStatus(
     if (hasInstallments) {
       return {
         status: "paid",
-        label: `Sudah dibayar pada ${formatDayMonth(lastPaidDate)}, cicilan berikutnya ${formatDaysUntilLabel(daysUntil)}`,
+        label: formatPayPlanPaidOnWithNext(lastPaidDate, daysUntil),
         daysUntil,
       };
     }
 
     const nextDueLabel =
       daysUntil > 0
-        ? `jatuh tempo dalam ${daysUntil} hari`
+        ? formatPayPlanDueInDaysLower(daysUntil)
         : formatDueCountdown(daysUntil).toLowerCase();
 
     return {
       status: "paid",
-      label: `Sudah dibayar pada ${formatDayMonth(lastPaidDate)}, ${nextDueLabel}`,
+      label: formatPayPlanPaidOnWithDue(lastPaidDate, nextDueLabel),
       daysUntil,
     };
   }

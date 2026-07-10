@@ -9,6 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  PROFILE_TITLE,
+  SETTINGS_SIGN_OUT,
+  SETTINGS_SIGNING_OUT,
+} from "@/config/settings-labels";
 import { signOut } from "@/lib/auth/auth-client";
 import { ArrowLeftIcon, UserCircleIcon } from "@/lib/icons";
 
@@ -57,7 +62,7 @@ export function SidebarProfileDropdown({
       >
         <DropdownMenuItem onClick={() => router.push("/profile")}>
           <UserCircleIcon />
-          Profil
+          {PROFILE_TITLE}
         </DropdownMenuItem>
         <DropdownMenuItem
           variant="destructive"
@@ -65,7 +70,7 @@ export function SidebarProfileDropdown({
           onClick={handleSignOut}
         >
           <ArrowLeftIcon />
-          {pending ? "Keluar..." : "Keluar"}
+          {pending ? SETTINGS_SIGNING_OUT : SETTINGS_SIGN_OUT}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

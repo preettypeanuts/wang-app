@@ -2,6 +2,7 @@
 
 import { WallpaperOption } from "@/components/shared/wallpaper-option";
 import { useWallpaper } from "@/components/shared/wallpaper-provider";
+import { SETTINGS_INSET_BLOCK } from "@/config/settings-layout";
 import { GRID_GAP } from "@/config/spacing";
 import { WALLPAPERS } from "@/config/wallpapers";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,7 @@ export function WallpaperGrid() {
   const customWallpapers = listFilledCustomWallpaperSlots(customWallpaperSlots);
 
   return (
-    <div className={cn("grid grid-cols-2", GRID_GAP)}>
+    <div className={cn(SETTINGS_INSET_BLOCK, "grid grid-cols-2", GRID_GAP)}>
       {customWallpapers.map(({ slot, url }) => {
         const wallpaper = resolveCustomWallpaper(url, slot);
 

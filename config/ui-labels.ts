@@ -19,6 +19,9 @@ export const UI_LABEL_VS_LAST_MONTH_END = "vs end of last month";
 export const UI_LABEL_ADD = "Add";
 export const UI_LABEL_TODAY = "Today";
 export const UI_LABEL_SUMMARY = "Summary";
+export const UI_LABEL_TODAY_SUMMARY = "Today's summary";
+export const UI_LABEL_CATEGORIES = "Categories";
+export const UI_LABEL_NO_SPENDING_TODAY = "No spending today yet.";
 
 export const UI_LABEL_ACTIVE_WISHES = "Active wishes";
 export const UI_LABEL_ACTIVE_SAVINGS = "Active savings";
@@ -26,9 +29,23 @@ export const UI_LABEL_TOTAL_SAVED = "Total saved";
 export const UI_LABEL_FREE_BALANCE = "Free balance";
 
 export const NOTIFICATIONS_PAGE_TITLE = "Notifications";
+export const NOTIFICATIONS_PAGE_DESC =
+  "Alerts, summaries, and financial reminders.";
+export const NOTIFICATIONS_LOADING = "Loading notifications...";
+export const NOTIFICATIONS_MARK_ALL_READ = "Mark all read";
+export const NOTIFICATIONS_ALL_READ = "All caught up";
+
+export function formatNotificationCount(total: number): string {
+  return total === 1 ? "1 notification" : `${total} notifications`;
+}
+
+export function formatUnreadNotificationCount(unread: number): string {
+  return unread === 1 ? "1 unread" : `${unread} unread`;
+}
 
 export const UI_LABEL_FILTER = "Filter";
 export const UI_LABEL_SEARCH = "Search";
+export const UI_LABEL_SEARCH_MESSAGES = "Search messages";
 export const UI_LABEL_SEARCH_TRANSACTIONS = "Search transactions...";
 export const UI_LABEL_SEARCH_INBOX_PLACEHOLDER = "Description, inbox message...";
 export const UI_LABEL_OPEN_FILTER = "Open filter";
@@ -38,12 +55,16 @@ export const UI_LABEL_FILTER_JOURNAL_DESCRIPTION =
 export const UI_LABEL_DATE_RANGE = "Date range";
 export const UI_LABEL_TYPE = "Type";
 export const UI_LABEL_CATEGORY = "Category";
+export const UI_LABEL_NOTE = "Note";
 export const UI_LABEL_ALL_TYPES = "All types";
 export const UI_LABEL_ALL_CATEGORIES = "All categories";
 export const UI_LABEL_APPLY = "Apply";
 export const UI_LABEL_RESET = "Reset";
 export const UI_LABEL_CANCEL = "Cancel";
 export const UI_LABEL_SAVE = "Save";
+export const UI_LABEL_DELETE = "Delete";
+export const UI_LABEL_EDIT = "Edit";
+export const UI_LABEL_CLOSE = "Close";
 export const UI_LABEL_SELECT_CATEGORY = "Select category";
 
 export const UI_LABEL_ADD_TRANSACTION = "Add transaction";
@@ -81,6 +102,10 @@ export function formatJournalPaginationCount(
 
 export function formatJournalPageLabel(page: number, totalPages: number): string {
   return `Page ${page} / ${totalPages}`;
+}
+
+export function formatTransactionCount(count: number): string {
+  return count === 1 ? "1 transaction" : `${count} transactions`;
 }
 
 // Overview widgets

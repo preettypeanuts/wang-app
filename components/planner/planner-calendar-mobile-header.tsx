@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  PAYPLAN_LABEL_NEXT_MONTH,
+  PAYPLAN_LABEL_PREVIOUS_MONTH,
+} from "@/config/payplan-labels";
+import {
   APPLE_CALENDAR_HEADER,
   APPLE_CALENDAR_MONTH_TITLE,
   APPLE_CALENDAR_PILL,
@@ -28,7 +32,7 @@ export function PlannerCalendarMobileHeader({
           type="button"
           onClick={onPrevious}
           className={APPLE_CALENDAR_PILL}
-          aria-label="Bulan sebelumnya"
+          aria-label={PAYPLAN_LABEL_PREVIOUS_MONTH}
         >
           <CaretLeftIcon className="size-3.5 opacity-80" />
           <span className="tabular-nums">{year}</span>
@@ -38,7 +42,7 @@ export function PlannerCalendarMobileHeader({
           type="button"
           onClick={onNext}
           className={APPLE_CALENDAR_PILL}
-          aria-label="Bulan berikutnya"
+          aria-label={PAYPLAN_LABEL_NEXT_MONTH}
         >
           <CaretRightIcon className="size-3.5 opacity-80" />
         </button>
