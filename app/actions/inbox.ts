@@ -33,10 +33,8 @@ import { prisma } from "@/lib/db/prisma";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
 import { createMultipleTransactions } from "@/lib/db/transactions";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
+import { detectRecurringPattern } from "@/lib/finance/detect-recurring-transaction";
 import { formatIdr } from "@/lib/finance/format-currency";
-import {
-  detectRecurringPattern,
-} from "@/lib/finance/detect-recurring-transaction";
 import {
   canMarkPlannedItemPaid,
   getPlannedItemPaymentIndex,
@@ -402,8 +400,11 @@ export async function payPayPlanFromInboxAction(
     });
 
     revalidateUserPlannedItems(userId);
+    revalidateAfterTransactionMutation(userId);
     revalidatePath("/");
     revalidatePath("/payplan");
+    revalidatePath("/journal");
+    revalidatePath("/overview");
 
     return {
       ok: true,

@@ -1,18 +1,19 @@
+import { unstable_cache } from "next/cache";
 import {
   getDefaultCategoryForKind,
   getFlowTypeForKind,
 } from "@/config/planner-items";
+import { revalidateUserPlannedItems } from "@/lib/cache/revalidate-user-data";
 import {
   hydratePlannedItem,
-  serializePlannedItem,
   type SerializedPlannedItemRecord,
+  serializePlannedItem,
 } from "@/lib/cache/serialize-planned-items";
 import { userDataTags } from "@/lib/cache/user-data-tags";
-import { revalidateUserPlannedItems } from "@/lib/cache/revalidate-user-data";
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
 import { parseDateOnlyInput } from "@/lib/finance/day-range";
-import { unstable_cache } from "next/cache";
+import { recordPlannedItemPayment } from "@/lib/finance/record-planned-item-payment";
 import type {
   PlannedItemFormInput,
   PlannedItemKind,
@@ -213,10 +214,7 @@ export async function markInstallmentPaid(
 ): Promise<PlannedItemRecord> {
   const existing = await prisma.plannedItem.findFirst({
     where: scopedId(userId, id),
-    select: {
-      installmentCount: true,
-      paidInstallmentCount: true,
-    },
+    select: PLANNED_ITEM_SELECT,
   });
 
   if (!existing) {
@@ -234,6 +232,7 @@ export async function markInstallmentPaid(
     throw new Error("Periode tidak valid.");
   }
 
+  const isNewPayment = installmentIndex >= existing.paidInstallmentCount;
   const nextPaid = Math.max(
     existing.paidInstallmentCount,
     installmentIndex + 1,
@@ -246,6 +245,14 @@ export async function markInstallmentPaid(
 
   if (updated.count === 0) {
     throw new Error("Item tidak ditemukan.");
+  }
+
+  if (isNewPayment) {
+    await recordPlannedItemPayment(
+      userId,
+      mapPlannedItem(existing),
+      installmentIndex,
+    );
   }
 
   revalidateUserPlannedItems(userId);

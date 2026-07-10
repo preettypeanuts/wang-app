@@ -1,3 +1,8 @@
+import { normalizeCategory, resolveCategoryForType } from "@/config/categories";
+import {
+  getDefaultCategoryForKind,
+  getFlowTypeForKind,
+} from "@/config/planner-items";
 import {
   parseDateOnlyInput,
   toDayKey,
@@ -103,6 +108,13 @@ export function parsePlannedItemFormData(
     return { ok: false, error: "Mode akhir tidak valid." };
   }
 
+  const flowType = getFlowTypeForKind(kind);
+  const categoryInput = readString(formData, "category");
+  const category = resolveCategoryForType(
+    normalizeCategory(categoryInput || getDefaultCategoryForKind(kind)),
+    flowType,
+  );
+
   const input: PlannedItemFormInput = {
     name,
     kind,
@@ -111,6 +123,8 @@ export function parsePlannedItemFormData(
     startAt,
     endMode,
     note: note || undefined,
+    category,
+    flowType,
   };
 
   if (kind === "installment") {
