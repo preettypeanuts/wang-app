@@ -15,6 +15,7 @@
     "db:init": "node scripts/init-db.mjs",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
+    "db:sync": "npx tsx scripts/db-sync.ts",
     "db:seed-demo": "npx tsx scripts/seed-demo-user.ts",
     "db:reset": "ALLOW_DB_RESET=true npx tsx scripts/reset-dev-db.ts",
     "db:reset-clean": "ALLOW_DB_RESET=true SKIP_DEMO_SEED=true npx tsx scripts/reset-dev-db.ts",
