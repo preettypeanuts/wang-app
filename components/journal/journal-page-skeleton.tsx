@@ -90,9 +90,9 @@ export function JournalPageSkeleton() {
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl">
-          <p className={JOURNAL_LIST_SECTION_LABEL}>
+          <div className={JOURNAL_LIST_SECTION_LABEL}>
             <Skeleton className="inline-block h-2.5 w-24" />
-          </p>
+          </div>
           <div className={JOURNAL_LIST_GROUP}>
             {Array.from({ length: 5 }).map((_, index) => (
               <JournalRowSkeleton key={index} />

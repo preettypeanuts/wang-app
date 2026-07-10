@@ -3,7 +3,7 @@
 import {
   createContext,
   useContext,
-  useRef,
+  useLayoutEffect,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -11,9 +11,10 @@ import {
 import type { PlansPageTab } from "@/components/plans/plans-page-tabs";
 import {
   getPlansTabState,
-  initPlansTabState,
+  notifyPlansTabStateSubscribers,
   setPlansTabState,
   subscribePlansTabState,
+  syncPlansTabState,
   syncPlansTabUrl,
 } from "@/lib/plans/plans-tab-store";
 
@@ -33,20 +34,16 @@ export function PlansPageTabProvider({
   initialTab,
   children,
 }: PlansPageTabProviderProps) {
-  const propsRef = useRef({ initialTab });
-  const initializedRef = useRef(false);
-
-  if (!initializedRef.current || propsRef.current.initialTab !== initialTab) {
-    initializedRef.current = true;
-    propsRef.current = { initialTab };
-    initPlansTabState({ tab: initialTab });
-  }
-
   const snapshot = useSyncExternalStore(
     subscribePlansTabState,
     getPlansTabState,
-    getPlansTabState,
+    () => ({ tab: initialTab }),
   );
+
+  useLayoutEffect(() => {
+    syncPlansTabState({ tab: initialTab });
+    notifyPlansTabStateSubscribers();
+  }, [initialTab]);
 
   function setTab(nextTab: PlansPageTab) {
     setPlansTabState(nextTab);

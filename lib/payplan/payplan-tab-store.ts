@@ -24,6 +24,15 @@ export function getPayplanTabState(): PayplanTabState {
   return state;
 }
 
+/** Update store without notifying subscribers — safe during render. */
+export function syncPayplanTabState(next: PayplanTabState): void {
+  state = next;
+}
+
+export function notifyPayplanTabStateSubscribers(): void {
+  emit();
+}
+
 export function initPayplanTabState(next: PayplanTabState) {
   if (state.tab === next.tab && state.monthKey === next.monthKey) {
     return;

@@ -22,6 +22,15 @@ export function getPlansTabState(): PlansTabState {
   return state;
 }
 
+/** Update store without notifying subscribers — safe during render. */
+export function syncPlansTabState(next: PlansTabState): void {
+  state = next;
+}
+
+export function notifyPlansTabStateSubscribers(): void {
+  emit();
+}
+
 export function initPlansTabState(next: PlansTabState) {
   if (state.tab === next.tab) {
     return;

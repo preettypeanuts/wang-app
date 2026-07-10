@@ -3,16 +3,17 @@
 import {
   createContext,
   useContext,
-  useRef,
+  useLayoutEffect,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
 
 import {
   getPayplanTabState,
-  initPayplanTabState,
+  notifyPayplanTabStateSubscribers,
   setPayplanTabState,
   subscribePayplanTabState,
+  syncPayplanTabState,
   syncPayplanTabUrl,
 } from "@/lib/payplan/payplan-tab-store";
 import type { PlannerTab } from "@/types/planner";
@@ -38,21 +39,16 @@ export function PayplanPageTabProvider({
   monthKey,
   children,
 }: PayplanPageTabProviderProps) {
-  const propsRef = useRef({ initialTab, monthKey });
-
-  if (
-    propsRef.current.initialTab !== initialTab ||
-    propsRef.current.monthKey !== monthKey
-  ) {
-    propsRef.current = { initialTab, monthKey };
-    initPayplanTabState({ tab: initialTab, monthKey });
-  }
-
   const snapshot = useSyncExternalStore(
     subscribePayplanTabState,
     getPayplanTabState,
-    getPayplanTabState,
+    () => ({ tab: initialTab, monthKey }),
   );
+
+  useLayoutEffect(() => {
+    syncPayplanTabState({ tab: initialTab, monthKey });
+    notifyPayplanTabStateSubscribers();
+  }, [initialTab, monthKey]);
 
   function setTab(nextTab: PlannerTab) {
     setPayplanTabState(nextTab, monthKey);

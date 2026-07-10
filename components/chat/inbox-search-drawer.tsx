@@ -203,7 +203,7 @@ export function InboxSearchDrawer({
             "max-md:gap-2 max-md:bg-transparent max-md:px-0 max-md:pt-0 max-md:pb-(--mobile-safe-bottom)",
           )}
         >
-          <div className="relative shrink-0 max-md:px-0">
+          <div className="relative shrink-0 max-md:mx-3">
             <MagnifyingGlassIcon
               aria-hidden="true"
               className={cn(
