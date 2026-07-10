@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 
 import { normalizeCategory } from "@/config/categories";
 import { requireUserId } from "@/lib/auth/session";
-import { revalidateUserPlannedItems } from "@/lib/cache/revalidate-user-data";
+import {
+  revalidateAfterTransactionMutation,
+  revalidateUserPlannedItems,
+} from "@/lib/cache/revalidate-user-data";
 import {
   createPlannedItem,
   deletePlannedItem,
@@ -12,9 +15,9 @@ import {
   updatePlannedItem,
 } from "@/lib/db/planned-items";
 import { prisma } from "@/lib/db/prisma";
+import { toDayKey } from "@/lib/finance/day-range";
 import type { RecurringSuggestion } from "@/lib/finance/detect-recurring-transaction";
 import { extractCategoryKeyword } from "@/lib/finance/extract-category-keyword";
-import { toDayKey } from "@/lib/finance/day-range";
 import { parsePlannedItemFormData } from "@/lib/validations/planned-item";
 import type { PlannedItemRecord } from "@/types/planner";
 
@@ -35,6 +38,13 @@ export type PlannedItemActionResult =
 function revalidatePayPlan(userId: string) {
   revalidateUserPlannedItems(userId);
   revalidatePath("/payplan");
+}
+
+function revalidatePayPlanPayment(userId: string) {
+  revalidatePayPlan(userId);
+  revalidateAfterTransactionMutation(userId);
+  revalidatePath("/journal");
+  revalidatePath("/overview");
 }
 
 function startAtNextMonth(fromIso: string): string {
@@ -79,7 +89,7 @@ export async function markInstallmentPaidAction(
 
   try {
     const item = await markInstallmentPaid(userId, trimmed, installmentIndex);
-    revalidatePayPlan(userId);
+    revalidatePayPlanPayment(userId);
     return { ok: true, paidCount: item.paidInstallmentCount };
   } catch {
     return { ok: false, error: "Gagal menandai cicilan." };

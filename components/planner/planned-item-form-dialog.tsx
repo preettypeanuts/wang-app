@@ -1,21 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { JournalCategoryCombobox } from "@/components/journal/journal-category-combobox";
+import { resolveCategoryForEntry } from "@/components/journal/journal-entry-form-fields";
 import { PlannedItemPriorPaymentFields } from "@/components/planner/planned-item-prior-payment-fields";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
+import { FormDatePicker } from "@/components/shared/form-date-picker";
+import { FormDialogField } from "@/components/shared/form-dialog-field";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
   ResponsiveDialogFooter,
   ResponsiveDialogHeader,
 } from "@/components/shared/responsive-dialog";
-import { FormDatePicker } from "@/components/shared/form-date-picker";
-import { FormDialogField } from "@/components/shared/form-dialog-field";
 import { Button } from "@/components/ui/button";
-import {
-  DialogDescription,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -25,6 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { TransactionCategoryId } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_FIELD_GRID_ROW,
@@ -41,6 +41,8 @@ import {
   FORM_SEGMENTED,
 } from "@/config/form-dialog";
 import {
+  getDefaultCategoryForKind,
+  getFlowTypeForKind,
   getPlannedKindLabel,
   getPlannedRepeatLabel,
   PLANNED_ITEM_KINDS,
@@ -109,6 +111,7 @@ export function PlannedItemFormDialog({
   const [isPending, startTransition] = useTransition();
   const [kind, setKind] = useState<PlannedItemKind>("bill");
   const [repeat, setRepeat] = useState<PlannedRepeatInterval>("monthly");
+  const [category, setCategory] = useState<TransactionCategoryId>("housing");
   const [endMode, setEndMode] = useState<PlannedEndMode>("never");
   const [amountDraft, setAmountDraft] = useState("");
   const [totalDraft, setTotalDraft] = useState("");
@@ -122,6 +125,7 @@ export function PlannedItemFormDialog({
   const [formSession, setFormSession] = useState(0);
 
   const isInstallmentKind = kind === "installment";
+  const flowType = getFlowTypeForKind(kind);
 
   const fallbackStartAt = useMemo(
     () => defaultStartAt ?? todayDateInputValue(),
@@ -192,6 +196,12 @@ export function PlannedItemFormDialog({
     if (item) {
       setKind(item.kind);
       setRepeat(item.repeat);
+      setCategory(
+        resolveCategoryForEntry(
+          item.flowType,
+          item.category,
+        ) as TransactionCategoryId,
+      );
       setEndMode(getPlannedItemEndMode(item));
       setAmountDraft(getInitialAmountDraft(item));
       setTotalDraft(getInitialTotalDraft(item));
@@ -217,6 +227,7 @@ export function PlannedItemFormDialog({
 
     setKind("bill");
     setRepeat("monthly");
+    setCategory(getDefaultCategoryForKind("bill") as TransactionCategoryId);
     setEndMode("never");
     setAmountDraft("");
     setTotalDraft("");
@@ -249,6 +260,7 @@ export function PlannedItemFormDialog({
     const formData = new FormData(event.currentTarget);
     formData.set("kind", kind);
     formData.set("repeat", repeat);
+    formData.set("category", category);
     formData.set("endMode", isInstallmentKind ? "installments" : endMode);
 
     if (isInstallmentKind && installmentSchedule) {
@@ -321,148 +333,78 @@ export function PlannedItemFormDialog({
         onSubmit={handleSubmit}
       >
         <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
-            {item ? <input type="hidden" name="id" value={item.id} /> : null}
+          {item ? <input type="hidden" name="id" value={item.id} /> : null}
 
-            <div className={FORM_PREVIEW_COMPACT}>
-              <div className="min-w-0">
-                <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                  {isInstallmentKind ? "Total cicilan" : "Nominal"}
-                </p>
-                <p className={cn("mt-0.5", FORM_PREVIEW_COMPACT_AMOUNT)}>
-                  {formatIdr(previewAmount)}
-                </p>
-              </div>
-              <div className="shrink-0 text-right text-[11px] leading-snug text-muted-foreground">
-                <p>{getPlannedKindLabel(kind)}</p>
-                <p>
-                  {getPlannedRepeatLabel(repeat)}
-                  {installmentSchedule
-                    ? ` · ${installmentSchedule.installmentCount}x`
-                    : null}
-                </p>
-                {isInstallmentKind &&
-                installmentSchedule &&
-                !isNewInstallment &&
-                Number.isFinite(Number.parseInt(paidPriorCount, 10)) ? (
-                  <p className="mt-1 font-medium text-foreground">
-                    {Number.parseInt(paidPriorCount, 10)}/
-                    {installmentSchedule.installmentCount} dibayar
-                  </p>
-                ) : null}
-                {installmentEndLabel ? (
-                  <p className="mt-1 font-medium capitalize text-[#007AFF]">
-                    {installmentEndLabel}
-                  </p>
-                ) : null}
-              </div>
+          <div className={FORM_PREVIEW_COMPACT}>
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                {isInstallmentKind ? "Total cicilan" : "Nominal"}
+              </p>
+              <p className={cn("mt-0.5", FORM_PREVIEW_COMPACT_AMOUNT)}>
+                {formatIdr(previewAmount)}
+              </p>
             </div>
+            <div className="shrink-0 text-right text-[11px] leading-snug text-muted-foreground">
+              <p>{getPlannedKindLabel(kind)}</p>
+              <p>
+                {getPlannedRepeatLabel(repeat)}
+                {installmentSchedule
+                  ? ` · ${installmentSchedule.installmentCount}x`
+                  : null}
+              </p>
+              {isInstallmentKind &&
+              installmentSchedule &&
+              !isNewInstallment &&
+              Number.isFinite(Number.parseInt(paidPriorCount, 10)) ? (
+                <p className="mt-1 font-medium text-foreground">
+                  {Number.parseInt(paidPriorCount, 10)}/
+                  {installmentSchedule.installmentCount} dibayar
+                </p>
+              ) : null}
+              {installmentEndLabel ? (
+                <p className="mt-1 font-medium capitalize text-[#007AFF]">
+                  {installmentEndLabel}
+                </p>
+              ) : null}
+            </div>
+          </div>
 
-            <div className={FORM_GROUP}>
-              <FormDialogField label="Nama" htmlFor="planned-name">
-                <Input
-                  key={`name-${formSession}`}
-                  id="planned-name"
-                  name="name"
-                  defaultValue={nameDefaultValue}
-                  placeholder="MacBook, Netflix"
-                  required
-                  className={FORM_FIELD_INPUT}
-                />
-              </FormDialogField>
+          <div className={FORM_GROUP}>
+            <FormDialogField label="Nama" htmlFor="planned-name">
+              <Input
+                key={`name-${formSession}`}
+                id="planned-name"
+                name="name"
+                defaultValue={nameDefaultValue}
+                placeholder="MacBook, Netflix"
+                required
+                className={FORM_FIELD_INPUT}
+              />
+            </FormDialogField>
 
-              {!isInstallmentKind ? (
-                <div className={FORM_FIELD_GRID_ROW}>
-                  <FormDialogField
-                    label="Jenis"
-                    htmlFor="planned-kind"
-                    gridItem
-                  >
-                    <Select
-                      value={kind}
-                      onValueChange={(value) => {
-                        if (value) {
-                          const nextKind = value as PlannedItemKind;
-                          setKind(nextKind);
-                          if (nextKind === "installment") {
-                            setEndMode("installments");
-                            setRepeat("monthly");
-                            setEndDateMode("auto");
-                          }
-                        }
-                      }}
-                    >
-                      <SelectTrigger
-                        id="planned-kind"
-                        className={cn(
-                          PLANNER_SELECT_TRIGGER,
-                          FORM_FIELD_SELECT,
-                          "text-left",
-                        )}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className={PLANNER_SELECT_CONTENT}>
-                        {PLANNED_ITEM_KINDS.map((entry) => (
-                          <SelectItem
-                            key={entry.value}
-                            value={entry.value}
-                            className={PLANNER_SELECT_ITEM}
-                          >
-                            {entry.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormDialogField>
+            <FormDialogField label="Kategori" htmlFor="planned-category">
+              <JournalCategoryCombobox
+                id="planned-category"
+                type={flowType}
+                value={category}
+                onChange={setCategory}
+              />
+            </FormDialogField>
 
-                  <FormDialogField
-                    label="Ulang"
-                    htmlFor="planned-repeat"
-                    gridItem
-                  >
-                    <Select
-                      value={repeat}
-                      onValueChange={(value) => {
-                        if (value) {
-                          setRepeat(value as PlannedRepeatInterval);
-                        }
-                      }}
-                    >
-                      <SelectTrigger
-                        id="planned-repeat"
-                        className={cn(
-                          PLANNER_SELECT_TRIGGER,
-                          FORM_FIELD_SELECT,
-                          "text-left",
-                        )}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className={PLANNER_SELECT_CONTENT}>
-                        {PLANNED_REPEAT_INTERVALS.map((entry) => (
-                          <SelectItem
-                            key={entry.value}
-                            value={entry.value}
-                            className={PLANNER_SELECT_ITEM}
-                          >
-                            {entry.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormDialogField>
-                </div>
-              ) : (
-                <FormDialogField
-                  label="Jenis"
-                  htmlFor="planned-kind-installment"
-                >
+            {!isInstallmentKind ? (
+              <div className={FORM_FIELD_GRID_ROW}>
+                <FormDialogField label="Jenis" htmlFor="planned-kind" gridItem>
                   <Select
                     value={kind}
                     onValueChange={(value) => {
                       if (value) {
                         const nextKind = value as PlannedItemKind;
                         setKind(nextKind);
+                        setCategory(
+                          getDefaultCategoryForKind(
+                            nextKind,
+                          ) as TransactionCategoryId,
+                        );
                         if (nextKind === "installment") {
                           setEndMode("installments");
                           setRepeat("monthly");
@@ -472,7 +414,7 @@ export function PlannedItemFormDialog({
                     }}
                   >
                     <SelectTrigger
-                      id="planned-kind-installment"
+                      id="planned-kind"
                       className={cn(
                         PLANNER_SELECT_TRIGGER,
                         FORM_FIELD_SELECT,
@@ -494,315 +436,395 @@ export function PlannedItemFormDialog({
                     </SelectContent>
                   </Select>
                 </FormDialogField>
-              )}
 
-              {isInstallmentKind ? (
-                <>
-                  <div className={FORM_FIELD_GRID_ROW}>
-                    <FormDialogField
-                      label="Total pinjaman"
-                      htmlFor="planned-total"
-                      gridItem
+                <FormDialogField
+                  label="Ulang"
+                  htmlFor="planned-repeat"
+                  gridItem
+                >
+                  <Select
+                    value={repeat}
+                    onValueChange={(value) => {
+                      if (value) {
+                        setRepeat(value as PlannedRepeatInterval);
+                      }
+                    }}
+                  >
+                    <SelectTrigger
+                      id="planned-repeat"
+                      className={cn(
+                        PLANNER_SELECT_TRIGGER,
+                        FORM_FIELD_SELECT,
+                        "text-left",
+                      )}
                     >
-                      <AmountTextInput
-                        key={`total-${formSession}`}
-                        id="planned-total"
-                        name="installmentTotal"
-                        defaultValue={totalDraft || totalDefaultValue}
-                        onInput={(event) => {
-                          setEndDateMode("auto");
-                          setTotalDraft(event.currentTarget.value);
-                        }}
-                        placeholder="20jt"
-                        required
-                      />
-                    </FormDialogField>
-
-                    <FormDialogField
-                      label="Cicilan / bulan"
-                      htmlFor="planned-amount"
-                      gridItem
-                    >
-                      <AmountTextInput
-                        key={`amount-${formSession}`}
-                        id="planned-amount"
-                        name="amount"
-                        defaultValue={amountDraft || amountDefaultValue}
-                        onInput={(event) => {
-                          setEndDateMode("auto");
-                          setAmountDraft(event.currentTarget.value);
-                        }}
-                        placeholder="5jt"
-                        required
-                      />
-                    </FormDialogField>
-                  </div>
-
-                  <div className={FORM_FIELD_GRID_ROW}>
-                    <FormDialogField
-                      label="Mulai bayar"
-                      htmlFor="planned-start"
-                      gridItem
-                    >
-                      <FormDatePicker
-                        id="planned-start"
-                        name="startAt"
-                        value={startAtText}
-                        onChange={(nextValue) => {
-                          setEndDateMode("auto");
-                          setStartAtText(nextValue);
-                        }}
-                        required
-                      />
-                    </FormDialogField>
-
-                    <FormDialogField label="Jumlah cicilan" gridItem>
-                      <p className="flex h-10 items-center text-sm font-semibold tabular-nums">
-                        {installmentSchedule
-                          ? `${installmentSchedule.installmentCount}x`
-                          : "—"}
-                      </p>
-                    </FormDialogField>
-                  </div>
-
-                  <PlannedItemPriorPaymentFields
-                    isNewFromStart={isNewInstallment}
-                    paidPriorCount={paidPriorCount}
-                    maxInstallments={
-                      installmentSchedule?.installmentCount ?? null
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className={PLANNER_SELECT_CONTENT}>
+                      {PLANNED_REPEAT_INTERVALS.map((entry) => (
+                        <SelectItem
+                          key={entry.value}
+                          value={entry.value}
+                          className={PLANNER_SELECT_ITEM}
+                        >
+                          {entry.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormDialogField>
+              </div>
+            ) : (
+              <FormDialogField label="Jenis" htmlFor="planned-kind-installment">
+                <Select
+                  value={kind}
+                  onValueChange={(value) => {
+                    if (value) {
+                      const nextKind = value as PlannedItemKind;
+                      setKind(nextKind);
+                      setCategory(
+                        getDefaultCategoryForKind(
+                          nextKind,
+                        ) as TransactionCategoryId,
+                      );
+                      if (nextKind === "installment") {
+                        setEndMode("installments");
+                        setRepeat("monthly");
+                        setEndDateMode("auto");
+                      }
                     }
-                    onIsNewFromStartChange={setIsNewInstallment}
-                    onPaidPriorCountChange={setPaidPriorCount}
-                  />
-                </>
-              ) : (
+                  }}
+                >
+                  <SelectTrigger
+                    id="planned-kind-installment"
+                    className={cn(
+                      PLANNER_SELECT_TRIGGER,
+                      FORM_FIELD_SELECT,
+                      "text-left",
+                    )}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className={PLANNER_SELECT_CONTENT}>
+                    {PLANNED_ITEM_KINDS.map((entry) => (
+                      <SelectItem
+                        key={entry.value}
+                        value={entry.value}
+                        className={PLANNER_SELECT_ITEM}
+                      >
+                        {entry.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormDialogField>
+            )}
+
+            {isInstallmentKind ? (
+              <>
                 <div className={FORM_FIELD_GRID_ROW}>
                   <FormDialogField
-                    label="Nominal"
-                    htmlFor="planned-amount-other"
+                    label="Total pinjaman"
+                    htmlFor="planned-total"
+                    gridItem
+                  >
+                    <AmountTextInput
+                      key={`total-${formSession}`}
+                      id="planned-total"
+                      name="installmentTotal"
+                      defaultValue={totalDraft || totalDefaultValue}
+                      onInput={(event) => {
+                        setEndDateMode("auto");
+                        setTotalDraft(event.currentTarget.value);
+                      }}
+                      placeholder="20jt"
+                      required
+                    />
+                  </FormDialogField>
+
+                  <FormDialogField
+                    label="Cicilan / bulan"
+                    htmlFor="planned-amount"
                     gridItem
                   >
                     <AmountTextInput
                       key={`amount-${formSession}`}
-                      id="planned-amount-other"
+                      id="planned-amount"
                       name="amount"
                       defaultValue={amountDraft || amountDefaultValue}
                       onInput={(event) => {
+                        setEndDateMode("auto");
                         setAmountDraft(event.currentTarget.value);
                       }}
-                      placeholder="69K"
+                      placeholder="5jt"
                       required
                     />
                   </FormDialogField>
+                </div>
 
+                <div className={FORM_FIELD_GRID_ROW}>
                   <FormDialogField
-                    label="Mulai"
-                    htmlFor="planned-start-other"
+                    label="Mulai bayar"
+                    htmlFor="planned-start"
                     gridItem
                   >
                     <FormDatePicker
-                      id="planned-start-other"
+                      id="planned-start"
                       name="startAt"
                       value={startAtText}
-                      onChange={setStartAtText}
+                      onChange={(nextValue) => {
+                        setEndDateMode("auto");
+                        setStartAtText(nextValue);
+                      }}
+                      required
+                    />
+                  </FormDialogField>
+
+                  <FormDialogField label="Jumlah cicilan" gridItem>
+                    <p className="flex h-10 items-center text-sm font-semibold tabular-nums">
+                      {installmentSchedule
+                        ? `${installmentSchedule.installmentCount}x`
+                        : "—"}
+                    </p>
+                  </FormDialogField>
+                </div>
+
+                <PlannedItemPriorPaymentFields
+                  isNewFromStart={isNewInstallment}
+                  paidPriorCount={paidPriorCount}
+                  maxInstallments={
+                    installmentSchedule?.installmentCount ?? null
+                  }
+                  onIsNewFromStartChange={setIsNewInstallment}
+                  onPaidPriorCountChange={setPaidPriorCount}
+                />
+              </>
+            ) : (
+              <div className={FORM_FIELD_GRID_ROW}>
+                <FormDialogField
+                  label="Nominal"
+                  htmlFor="planned-amount-other"
+                  gridItem
+                >
+                  <AmountTextInput
+                    key={`amount-${formSession}`}
+                    id="planned-amount-other"
+                    name="amount"
+                    defaultValue={amountDraft || amountDefaultValue}
+                    onInput={(event) => {
+                      setAmountDraft(event.currentTarget.value);
+                    }}
+                    placeholder="69K"
+                    required
+                  />
+                </FormDialogField>
+
+                <FormDialogField
+                  label="Mulai"
+                  htmlFor="planned-start-other"
+                  gridItem
+                >
+                  <FormDatePicker
+                    id="planned-start-other"
+                    name="startAt"
+                    value={startAtText}
+                    onChange={setStartAtText}
+                    required
+                  />
+                </FormDialogField>
+              </div>
+            )}
+          </div>
+
+          {isInstallmentKind ? (
+            <>
+              <div
+                className={FORM_SEGMENTED}
+                role="tablist"
+                aria-label="Mode tanggal lunas"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={endDateMode === "auto"}
+                  onClick={() => setEndDateMode("auto")}
+                  className={cn(
+                    FORM_SEGMENT,
+                    endDateMode === "auto"
+                      ? FORM_SEGMENT_ACTIVE
+                      : FORM_SEGMENT_INACTIVE,
+                  )}
+                >
+                  Lunas otomatis
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={endDateMode === "manual"}
+                  onClick={() => {
+                    if (installmentSchedule && !isValidDateInput(endAtText)) {
+                      setEndAtText(toDateInputValue(installmentSchedule.endAt));
+                    }
+                    setEndDateMode("manual");
+                  }}
+                  className={cn(
+                    FORM_SEGMENT,
+                    endDateMode === "manual"
+                      ? FORM_SEGMENT_ACTIVE
+                      : FORM_SEGMENT_INACTIVE,
+                  )}
+                >
+                  Tanggal manual
+                </button>
+              </div>
+
+              <div className={FORM_GROUP}>
+                {endDateMode === "auto" ? (
+                  <div className="px-4 py-3">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Estimasi lunas
+                    </p>
+                    {installmentEndLabel ? (
+                      <>
+                        <p className="mt-1 text-sm font-semibold capitalize leading-snug">
+                          {installmentEndLabel}
+                        </p>
+                        {isValidDateInput(endAtText) ? (
+                          <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
+                            {endAtText}
+                          </p>
+                        ) : null}
+                      </>
+                    ) : (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Isi total & cicilan per bulan
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <FormDialogField
+                    label="Tanggal lunas"
+                    htmlFor="planned-end-date"
+                  >
+                    <FormDatePicker
+                      id="planned-end-date"
+                      name="endAt"
+                      value={endAtText}
+                      onChange={setEndAtText}
+                      required
+                    />
+                  </FormDialogField>
+                )}
+                {endDateMode === "auto" && isValidDateInput(endAtText) ? (
+                  <input type="hidden" name="endAt" value={endAtText} />
+                ) : null}
+              </div>
+            </>
+          ) : null}
+
+          {!isInstallmentKind ? (
+            <>
+              <div
+                className={FORM_SEGMENTED}
+                role="tablist"
+                aria-label="Mode berakhir"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={endMode === "never"}
+                  onClick={() => setEndMode("never")}
+                  className={cn(
+                    FORM_SEGMENT,
+                    endMode === "never"
+                      ? FORM_SEGMENT_ACTIVE
+                      : FORM_SEGMENT_INACTIVE,
+                  )}
+                >
+                  Selamanya
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={endMode === "installments"}
+                  onClick={() => setEndMode("installments")}
+                  className={cn(
+                    FORM_SEGMENT,
+                    endMode === "installments"
+                      ? FORM_SEGMENT_ACTIVE
+                      : FORM_SEGMENT_INACTIVE,
+                  )}
+                >
+                  Terbatas
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={endMode === "date"}
+                  onClick={() => setEndMode("date")}
+                  className={cn(
+                    FORM_SEGMENT,
+                    endMode === "date"
+                      ? FORM_SEGMENT_ACTIVE
+                      : FORM_SEGMENT_INACTIVE,
+                  )}
+                >
+                  Tanggal
+                </button>
+              </div>
+
+              {endMode === "installments" ? (
+                <div className={FORM_GROUP}>
+                  <FormDialogField
+                    label="Jumlah kali"
+                    htmlFor="planned-installments"
+                  >
+                    <Input
+                      key={`installments-${formSession}`}
+                      id="planned-installments"
+                      name="installmentCount"
+                      type="number"
+                      min={1}
+                      defaultValue={item?.installmentCount ?? 12}
+                      required
+                      className={FORM_FIELD_INPUT}
+                    />
+                  </FormDialogField>
+                </div>
+              ) : null}
+
+              {endMode === "date" ? (
+                <div className={FORM_GROUP}>
+                  <FormDialogField
+                    label="Berakhir"
+                    htmlFor="planned-end-date-other"
+                  >
+                    <FormDatePicker
+                      id="planned-end-date-other"
+                      name="endAt"
+                      value={endAtText || fallbackStartAt}
+                      onChange={setEndAtText}
                       required
                     />
                   </FormDialogField>
                 </div>
-              )}
-            </div>
+              ) : null}
+            </>
+          ) : null}
 
-            {isInstallmentKind ? (
-              <>
-                <div
-                  className={FORM_SEGMENTED}
-                  role="tablist"
-                  aria-label="Mode tanggal lunas"
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={endDateMode === "auto"}
-                    onClick={() => setEndDateMode("auto")}
-                    className={cn(
-                      FORM_SEGMENT,
-                      endDateMode === "auto"
-                        ? FORM_SEGMENT_ACTIVE
-                        : FORM_SEGMENT_INACTIVE,
-                    )}
-                  >
-                    Lunas otomatis
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={endDateMode === "manual"}
-                    onClick={() => {
-                      if (installmentSchedule && !isValidDateInput(endAtText)) {
-                        setEndAtText(
-                          toDateInputValue(installmentSchedule.endAt),
-                        );
-                      }
-                      setEndDateMode("manual");
-                    }}
-                    className={cn(
-                      FORM_SEGMENT,
-                      endDateMode === "manual"
-                        ? FORM_SEGMENT_ACTIVE
-                        : FORM_SEGMENT_INACTIVE,
-                    )}
-                  >
-                    Tanggal manual
-                  </button>
-                </div>
-
-                <div className={FORM_GROUP}>
-                  {endDateMode === "auto" ? (
-                    <div className="px-4 py-3">
-                      <p className="text-xs font-medium text-muted-foreground">
-                        Estimasi lunas
-                      </p>
-                      {installmentEndLabel ? (
-                        <>
-                          <p className="mt-1 text-sm font-semibold capitalize leading-snug">
-                            {installmentEndLabel}
-                          </p>
-                          {isValidDateInput(endAtText) ? (
-                            <p className="mt-0.5 text-[11px] tabular-nums text-muted-foreground">
-                              {endAtText}
-                            </p>
-                          ) : null}
-                        </>
-                      ) : (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          Isi total & cicilan per bulan
-                        </p>
-                      )}
-                    </div>
-                  ) : (
-                    <FormDialogField
-                      label="Tanggal lunas"
-                      htmlFor="planned-end-date"
-                    >
-                      <FormDatePicker
-                        id="planned-end-date"
-                        name="endAt"
-                        value={endAtText}
-                        onChange={setEndAtText}
-                        required
-                      />
-                    </FormDialogField>
-                  )}
-                  {endDateMode === "auto" && isValidDateInput(endAtText) ? (
-                    <input type="hidden" name="endAt" value={endAtText} />
-                  ) : null}
-                </div>
-              </>
-            ) : null}
-
-            {!isInstallmentKind ? (
-              <>
-                <div
-                  className={FORM_SEGMENTED}
-                  role="tablist"
-                  aria-label="Mode berakhir"
-                >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={endMode === "never"}
-                    onClick={() => setEndMode("never")}
-                    className={cn(
-                      FORM_SEGMENT,
-                      endMode === "never"
-                        ? FORM_SEGMENT_ACTIVE
-                        : FORM_SEGMENT_INACTIVE,
-                    )}
-                  >
-                    Selamanya
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={endMode === "installments"}
-                    onClick={() => setEndMode("installments")}
-                    className={cn(
-                      FORM_SEGMENT,
-                      endMode === "installments"
-                        ? FORM_SEGMENT_ACTIVE
-                        : FORM_SEGMENT_INACTIVE,
-                    )}
-                  >
-                    Terbatas
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={endMode === "date"}
-                    onClick={() => setEndMode("date")}
-                    className={cn(
-                      FORM_SEGMENT,
-                      endMode === "date"
-                        ? FORM_SEGMENT_ACTIVE
-                        : FORM_SEGMENT_INACTIVE,
-                    )}
-                  >
-                    Tanggal
-                  </button>
-                </div>
-
-                {endMode === "installments" ? (
-                  <div className={FORM_GROUP}>
-                    <FormDialogField
-                      label="Jumlah kali"
-                      htmlFor="planned-installments"
-                    >
-                      <Input
-                        key={`installments-${formSession}`}
-                        id="planned-installments"
-                        name="installmentCount"
-                        type="number"
-                        min={1}
-                        defaultValue={item?.installmentCount ?? 12}
-                        required
-                        className={FORM_FIELD_INPUT}
-                      />
-                    </FormDialogField>
-                  </div>
-                ) : null}
-
-                {endMode === "date" ? (
-                  <div className={FORM_GROUP}>
-                    <FormDialogField
-                      label="Berakhir"
-                      htmlFor="planned-end-date-other"
-                    >
-                      <FormDatePicker
-                        id="planned-end-date-other"
-                        name="endAt"
-                        value={endAtText || fallbackStartAt}
-                        onChange={setEndAtText}
-                        required
-                      />
-                    </FormDialogField>
-                  </div>
-                ) : null}
-              </>
-            ) : null}
-
-            <div className={FORM_GROUP}>
-              <FormDialogField label="Catatan" htmlFor="planned-note">
-                <Textarea
-                  key={`note-${formSession}`}
-                  id="planned-note"
-                  name="note"
-                  defaultValue={noteDefaultValue}
-                  rows={2}
-                  placeholder="Opsional"
-                  className={FORM_NOTE}
-                />
-              </FormDialogField>
-            </div>
+          <div className={FORM_GROUP}>
+            <FormDialogField label="Catatan" htmlFor="planned-note">
+              <Textarea
+                key={`note-${formSession}`}
+                id="planned-note"
+                name="note"
+                defaultValue={noteDefaultValue}
+                rows={2}
+                placeholder="Opsional"
+                className={FORM_NOTE}
+              />
+            </FormDialogField>
+          </div>
         </ResponsiveDialogBody>
 
         <ResponsiveDialogFooter>
