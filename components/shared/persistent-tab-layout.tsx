@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import {
+  useEffect,
   useLayoutEffect,
   useMemo,
   useState,
@@ -12,6 +13,8 @@ import { isPersistentMobileTabRoute } from "@/config/persistent-tabs";
 import { PersistentTabActiveProvider } from "@/components/shared/persistent-tab-active-context";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useSession } from "@/lib/auth/auth-client";
+import { hasDeploymentMismatch } from "@/lib/deployment/has-deployment-mismatch";
+import { reloadForDeployment } from "@/lib/errors/reload-for-deployment";
 
 interface PersistentTabLayoutProps {
   children: ReactNode;
@@ -32,6 +35,31 @@ export function PersistentTabLayout({ children }: PersistentTabLayoutProps) {
   useLayoutEffect(() => {
     setCache({});
   }, [userId]);
+
+  useEffect(() => {
+    const invalidateOnDeployment = async () => {
+      if (!(await hasDeploymentMismatch())) {
+        return;
+      }
+
+      setCache({});
+      reloadForDeployment();
+    };
+
+    void invalidateOnDeployment();
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void invalidateOnDeployment();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     if (!isMobile || !tabPath) {

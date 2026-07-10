@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import { Suspense } from "react";
 import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
 import { PWA_APPLE_TOUCH_ICON, PWA_ICON_192, PWA_ICON_512 } from "@/config/pwa";
+import { readServerBuildId } from "@/lib/deployment/build-id";
 import "./globals.css";
 import { RootBootstrapScript } from "@/components/shared/root-bootstrap-script";
 import { RootLayoutBody } from "@/components/shared/root-layout-body";
@@ -58,13 +59,18 @@ export default function RootLayout({ children }: RootLayoutProps) {
       data-wallpaper="default"
       suppressHydrationWarning
     >
+      <head>
+        <meta name="monmon-build-id" content={readServerBuildId()} />
+      </head>
       <body
         className="flex h-svh max-h-svh flex-col overflow-hidden font-sans"
         suppressHydrationWarning
       >
         <RootBootstrapScript />
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <Suspense fallback={<RootLayoutFallback>{children}</RootLayoutFallback>}>
+          <Suspense
+            fallback={<RootLayoutFallback>{children}</RootLayoutFallback>}
+          >
             <RootLayoutBody>{children}</RootLayoutBody>
           </Suspense>
         </div>
