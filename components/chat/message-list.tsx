@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { ChatMessageMenu } from "@/components/chat/chat-message-menu";
 import { ChatMessageMenuHint } from "@/components/chat/chat-message-menu-hint";
@@ -14,13 +15,17 @@ import { MobilePageTitle } from "@/components/shared/mobile-page-title";
 import { useSyncMobileScrollChrome } from "@/components/shared/mobile-scroll-chrome-provider";
 import { useSyncMobileTopBlur } from "@/components/shared/mobile-top-blur-provider";
 import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
-import type { TransactionCategoryId } from "@/config/categories";
 import {
   CHAT_MESSAGE_INSET_BOTTOM,
   CHAT_MESSAGE_INSET_TOP,
   CHAT_MESSAGE_INSET_X,
   INBOX_MESSAGE_SCROLL_AREA,
 } from "@/config/chat-layout";
+import {
+  CHAT_MESSAGE_EXIT,
+  CHAT_MESSAGE_EXIT_TRANSITION,
+  CHAT_MESSAGE_LAYOUT_SPRING,
+} from "@/config/chat-message-enter";
 import {
   INBOX_DESKTOP_MESSAGE_PB,
   INBOX_DESKTOP_MESSAGE_PT,
@@ -32,6 +37,11 @@ import { MOBILE_CHROME_SCROLL_INSET_TOP } from "@/config/mobile-chrome";
 import { STACK_GAP } from "@/config/spacing";
 import { useMobileLargeTitleScroll } from "@/hooks/use-mobile-large-title-scroll";
 import { findInboxEditHintTargetIndex } from "@/lib/chat/find-inbox-edit-hint-target";
+import {
+  getChatMessageKey,
+  isPendingChatMessage,
+} from "@/lib/chat/optimistic-chat-message";
+import { scrollMessageListToBottom } from "@/lib/chat/scroll-message-list-to-bottom";
 import { getInboxRetryContext } from "@/lib/chat/inbox-error";
 import { canManageSentUserMessage, canUndoSentUserMessage } from "@/lib/chat/inbox-message-actions";
 import { isReceiptUserMessage } from "@/lib/receipt/receipt-message";
@@ -53,7 +63,7 @@ interface MessageListProps {
   onQuickCorrect?: (input: {
     assistantMessageId: string;
     transactionId: string;
-    category: TransactionCategoryId;
+    category: string;
     type: TransactionType;
   }) => Promise<void>;
   actionsDisabled?: boolean;
@@ -69,6 +79,13 @@ interface MessageListProps {
 
 const SCROLLBAR_IDLE_MS = 700;
 const STICK_TO_BOTTOM_THRESHOLD = 96;
+
+interface MessageListSnapshot {
+  initialized: boolean;
+  firstId: string | null;
+  lastId: string | null;
+  length: number;
+}
 
 function isNearBottom(element: HTMLElement): boolean {
   return (
@@ -99,13 +116,35 @@ export function MessageList({
   const [isScrolling, setIsScrolling] = useState(false);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const isActiveTab = usePersistentTabActive();
-  const initialScrollDoneRef = useRef(false);
   const stickToBottomRef = useRef(true);
-  const prevFirstIdRef = useRef<string | null>(null);
-  const prevLastIdRef = useRef<string | null>(null);
-  const prevLengthRef = useRef(0);
+  const listSnapshotRef = useRef<MessageListSnapshot>({
+    initialized: false,
+    firstId: null,
+    lastId: null,
+    length: 0,
+  });
+  const [enteringMountKeys, setEnteringMountKeys] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const loadingOlderRef = useRef(false);
   const [editHintSeen, setEditHintSeen] = useState(true);
+  const reduceMotion = useReducedMotion();
+
+  function clearEnteringMountKey(mountKey: string | undefined) {
+    if (!mountKey) {
+      return;
+    }
+
+    setEnteringMountKeys((current) => {
+      if (!current.has(mountKey)) {
+        return current;
+      }
+
+      const next = new Set(current);
+      next.delete(mountKey);
+      return next;
+    });
+  }
 
   const { showBlur: showLargeTitleBlur, showCompactTitle } =
     useMobileLargeTitleScroll(() => scrollRootRef.current, titleRef, {
@@ -176,24 +215,26 @@ export function MessageList({
 
     const firstId = messages[0]?.id ?? null;
     const lastId = messages.at(-1)?.id ?? null;
-    const prevLength = prevLengthRef.current;
+    const snapshot = listSnapshotRef.current;
 
-    if (!initialScrollDoneRef.current) {
+    if (!snapshot.initialized) {
       element.scrollTop = element.scrollHeight;
-      initialScrollDoneRef.current = true;
-      prevFirstIdRef.current = firstId;
-      prevLastIdRef.current = lastId;
-      prevLengthRef.current = messages.length;
+      listSnapshotRef.current = {
+        initialized: true,
+        firstId,
+        lastId,
+        length: messages.length,
+      };
       return;
     }
 
     const prepended =
-      messages.length > prevLength &&
-      firstId !== prevFirstIdRef.current &&
-      lastId === prevLastIdRef.current;
-    const appended = lastId !== prevLastIdRef.current;
+      messages.length > snapshot.length &&
+      firstId !== snapshot.firstId &&
+      lastId === snapshot.lastId;
+    const appended = lastId !== snapshot.lastId;
     const pendingTail = lastId?.startsWith("pending-") ?? false;
-    const shrank = messages.length < prevLength;
+    const shrank = messages.length < snapshot.length;
 
     if (prepended) {
       const previousHeight = element.scrollHeight;
@@ -205,12 +246,40 @@ export function MessageList({
       shrank ||
       (appended && (stickToBottomRef.current || pendingTail))
     ) {
-      element.scrollTop = element.scrollHeight;
+      scrollMessageListToBottom(element);
     }
 
-    prevFirstIdRef.current = firstId;
-    prevLastIdRef.current = lastId;
-    prevLengthRef.current = messages.length;
+    if (appended && !prepended && snapshot.lastId !== null) {
+      const previousLastIndex = messages.findIndex(
+        (message) => message.id === snapshot.lastId,
+      );
+      const newlyAppended =
+        previousLastIndex >= 0
+          ? messages.slice(previousLastIndex + 1)
+          : messages;
+      const pendingMountKeys = newlyAppended
+        .filter(
+          (message) => message.mountKey && isPendingChatMessage(message),
+        )
+        .map((message) => message.mountKey as string);
+
+      if (pendingMountKeys.length > 0) {
+        setEnteringMountKeys((current) => {
+          const next = new Set(current);
+          for (const mountKey of pendingMountKeys) {
+            next.add(mountKey);
+          }
+          return next;
+        });
+      }
+    }
+
+    listSnapshotRef.current = {
+      initialized: true,
+      firstId,
+      lastId,
+      length: messages.length,
+    };
   }, [fixedMobileTopBar, messages]);
 
   useEffect(() => {
@@ -311,6 +380,7 @@ export function MessageList({
               </p>
             </div>
           ) : null}
+          <AnimatePresence initial={false}>
           {messages.map((message, index) => {
             const isUser = message.role === "user";
             const retryContext = getInboxRetryContext(messages, index);
@@ -333,7 +403,6 @@ export function MessageList({
               canEditReceipt ||
               (canUndo && isReceiptUserMessage(message.content));
 
-            const isPending = message.id.startsWith("pending-");
             const previousMessage = index > 0 ? messages[index - 1] : undefined;
             const userInput =
               previousMessage?.role === "user" ? previousMessage.content : "";
@@ -368,24 +437,37 @@ export function MessageList({
             const showEditHintHere =
               showEditHint && index === editHintTargetIndex;
 
+            const messageKey = getChatMessageKey(message);
+            const shouldAnimateEnter = message.mountKey
+              ? enteringMountKeys.has(message.mountKey)
+              : false;
+
             const bubble = (
               <MessageBubble
                 role={message.role}
                 content={message.content}
+                inMenu={hasMessageMenu}
+                animateEnter={shouldAnimateEnter}
+                onEnterComplete={() => clearEnteringMountKey(message.mountKey)}
                 className={cn(
-                  hasMessageMenu ? "max-w-full" : undefined,
                   isUser && !hasMessageMenu ? "ml-auto" : undefined,
-                  isPending && "opacity-70",
                 )}
               />
             );
 
             return (
-              <div
-                key={message.id}
+              <motion.div
+                key={messageKey}
+                layout="position"
+                initial={false}
+                exit={reduceMotion ? undefined : CHAT_MESSAGE_EXIT}
+                transition={{
+                  layout: CHAT_MESSAGE_LAYOUT_SPRING,
+                  ...CHAT_MESSAGE_EXIT_TRANSITION,
+                }}
                 data-message-id={message.id}
                 className={cn(
-                  "flex w-full flex-col gap-1 rounded-2xl transition-[box-shadow,background-color]",
+                  "flex w-full flex-col gap-1 rounded-2xl",
                   isUser ? "items-end" : "items-start",
                 )}
               >
@@ -468,9 +550,10 @@ export function MessageList({
                     ))}
                   </div>
                 ) : null}
-              </div>
+              </motion.div>
             );
           })}
+          </AnimatePresence>
           <div ref={bottomRef} />
         </div>
       )}

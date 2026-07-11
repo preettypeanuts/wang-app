@@ -4,6 +4,8 @@ import type { ParsedTransaction } from "@/types/transaction";
 export type MessageRole = "user" | "assistant";
 
 export interface ChatMessage {
+  /** Stable React key across optimistic → server id swap. */
+  mountKey?: string;
   id: string;
   role: MessageRole;
   content: string;
@@ -32,6 +34,7 @@ export interface UnpaidPayPlanChatItem {
   category: string;
   statusLabel: string;
   installmentIndex: number;
+  flowType: "income" | "expense";
 }
 
 export interface ActivePlanChatItem {

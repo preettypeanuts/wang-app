@@ -22,14 +22,25 @@ import { MessageList } from "@/components/chat/message-list";
 import { ReceiptConfirmDialog } from "@/components/chat/receipt-confirm-dialog";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
 import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
-import type { TransactionCategoryId } from "@/config/categories";
-import { resolveCategoryForType } from "@/config/categories";
+import { useOptionalUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
+import {
+  mergeUserCategoryCatalog,
+  resolveCategoryForTransaction,
+} from "@/lib/finance/user-category-catalog";
 import { CHAT_INPUT_DOCK } from "@/config/chat-layout";
 import { INBOX_CHAT_VIEW_ROOT } from "@/config/inbox-desktop";
 import { INBOX_CHAT_INPUT_DOCK } from "@/config/inbox-mobile";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { buildWarmTransactionReply } from "@/lib/ai/build-warm-transaction-reply";
 import { buildReceiptManualFallbackNotice } from "@/lib/ai/format-gemini-api-error";
+import {
+  createChatMountKey,
+  createOptimisticAssistantMessage,
+  createOptimisticMessagePair,
+  createOptimisticUserMessage,
+  isPendingChatMessage,
+  preserveChatMountKey,
+} from "@/lib/chat/optimistic-chat-message";
 import { patchInboxBootstrapMessages } from "@/lib/inbox/inbox-bootstrap-cache";
 import {
   mergeInboxMessageTail,
@@ -66,7 +77,7 @@ interface ReceiptEditContext {
 interface ReceiptConfirmInput {
   type: TransactionType;
   amount: string;
-  category: TransactionCategoryId;
+  category: string;
   description: string;
   merchant: string;
   occurredAt: string;
@@ -91,14 +102,6 @@ interface InboxViewProps {
   onFocusMessageHandled?: () => void;
 }
 
-function createPendingId(prefix: "user" | "assistant"): string {
-  return `pending-${prefix}-${crypto.randomUUID()}`;
-}
-
-function isPendingMessageId(id: string): boolean {
-  return id.startsWith("pending-");
-}
-
 const RECEIPT_READING_MESSAGE = "Membaca struk";
 
 export function InboxView({
@@ -114,6 +117,8 @@ export function InboxView({
   focusMessageId = null,
   onFocusMessageHandled,
 }: InboxViewProps) {
+  const categoryCatalog = useOptionalUserCategoryCatalog();
+  const catalog = categoryCatalog?.catalog ?? mergeUserCategoryCatalog([]);
   const isActiveTab = usePersistentTabActive();
   const isMobileViewport = useIsMobileViewport();
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
@@ -185,7 +190,7 @@ export function InboxView({
     }
 
     const oldest = messages[0];
-    if (!oldest || isPendingMessageId(oldest.id)) {
+    if (!oldest || isPendingChatMessage(oldest)) {
       return;
     }
 
@@ -259,15 +264,15 @@ export function InboxView({
   ) {
     const excludeIds = new Set(options?.excludeMessageIds ?? []);
     const skipOptimisticUser = options?.skipOptimisticUser ?? false;
-    const pendingId = skipOptimisticUser ? null : createPendingId("user");
+    const userMountKey = skipOptimisticUser ? null : createChatMountKey();
+    let pendingId: string | null = null;
 
-    if (!skipOptimisticUser && pendingId) {
-      const optimisticUser: ChatMessage = {
-        id: pendingId,
-        role: "user",
-        content: `📄 Struk ${input.merchant.trim() || "Struk"} · ${input.description.trim()}`,
-        createdAt: new Date().toISOString(),
-      };
+    if (!skipOptimisticUser && userMountKey) {
+      const optimisticUser = createOptimisticUserMessage(
+        `📄 Struk ${input.merchant.trim() || "Struk"} · ${input.description.trim()}`,
+        userMountKey,
+      );
+      pendingId = optimisticUser.id;
 
       setMessages((current) => [...current, optimisticUser]);
     }
@@ -295,7 +300,7 @@ export function InboxView({
             (pendingId ? message.id !== pendingId : true) &&
             !excludeIds.has(message.id),
         ),
-        result.userMessage,
+        preserveChatMountKey(result.userMessage, userMountKey ?? undefined),
         result.assistantMessage,
       ]);
 
@@ -324,13 +329,10 @@ export function InboxView({
 
   async function handleReceiptFile(file: File) {
     setReceiptError(null);
-    const readingMessageId = createPendingId("assistant");
-    const readingMessage: ChatMessage = {
-      id: readingMessageId,
-      role: "assistant",
-      content: RECEIPT_READING_MESSAGE,
-      createdAt: new Date().toISOString(),
-    };
+    const readingMessage = createOptimisticAssistantMessage(
+      RECEIPT_READING_MESSAGE,
+    );
+    const readingMessageId = readingMessage.id;
 
     function removeReadingMessage() {
       setMessages((current) =>
@@ -486,20 +488,14 @@ export function InboxView({
       return;
     }
 
-    const pendingUserId = createPendingId("user");
-    const pendingAssistantId = createPendingId("assistant");
-    const optimisticUser: ChatMessage = {
-      id: pendingUserId,
-      role: "user",
-      content: trimmed,
-      createdAt: new Date().toISOString(),
-    };
-    const optimisticAssistant: ChatMessage = {
-      id: pendingAssistantId,
-      role: "assistant",
-      content: "Mencatat...",
-      createdAt: new Date().toISOString(),
-    };
+    const {
+      user: optimisticUser,
+      assistant: optimisticAssistant,
+      userMountKey,
+      assistantMountKey,
+    } = createOptimisticMessagePair(trimmed, "Mencatat...");
+    const pendingUserId = optimisticUser.id;
+    const pendingAssistantId = optimisticAssistant.id;
 
     setMessages((current) => [...current, optimisticUser, optimisticAssistant]);
     beginInFlight();
@@ -512,8 +508,8 @@ export function InboxView({
           (message) =>
             message.id !== pendingUserId && message.id !== pendingAssistantId,
         ),
-        result.userMessage,
-        result.assistantMessage,
+        preserveChatMountKey(result.userMessage, userMountKey),
+        preserveChatMountKey(result.assistantMessage, assistantMountKey),
       ]);
 
       if (result.ok && result.transaction) {
@@ -628,7 +624,7 @@ export function InboxView({
   async function handleQuickCorrect(input: {
     assistantMessageId: string;
     transactionId: string;
-    category: TransactionCategoryId;
+    category: string;
     type: TransactionType;
   }) {
     beginInFlight();
@@ -648,7 +644,11 @@ export function InboxView({
           return message;
         }
 
-        const nextCategory = resolveCategoryForType(input.category, input.type);
+        const nextCategory = resolveCategoryForTransaction(
+          input.category,
+          input.type,
+          catalog,
+        );
         const nextBatch = batch.map((item) =>
           item.id === input.transactionId
             ? {
@@ -720,20 +720,18 @@ export function InboxView({
   }
 
   async function handlePayPlan(item: UnpaidPayPlanChatItem) {
-    const pendingUserId = createPendingId("user");
-    const pendingAssistantId = createPendingId("assistant");
-    const optimisticUser: ChatMessage = {
-      id: pendingUserId,
-      role: "user",
-      content: `Bayar ${item.name}`,
-      createdAt: new Date().toISOString(),
-    };
-    const optimisticAssistant: ChatMessage = {
-      id: pendingAssistantId,
-      role: "assistant",
-      content: "Menandai pembayaran...",
-      createdAt: new Date().toISOString(),
-    };
+    const isIncome = item.flowType === "income";
+    const {
+      user: optimisticUser,
+      assistant: optimisticAssistant,
+      userMountKey,
+      assistantMountKey,
+    } = createOptimisticMessagePair(
+      `${isIncome ? "Terima" : "Bayar"} ${item.name}`,
+      isIncome ? "Menandai pemasukan..." : "Menandai pembayaran...",
+    );
+    const pendingUserId = optimisticUser.id;
+    const pendingAssistantId = optimisticAssistant.id;
 
     setMessages((current) => [...current, optimisticUser, optimisticAssistant]);
     beginInFlight();
@@ -749,8 +747,8 @@ export function InboxView({
           (message) =>
             message.id !== pendingUserId && message.id !== pendingAssistantId,
         ),
-        result.userMessage,
-        result.assistantMessage,
+        preserveChatMountKey(result.userMessage, userMountKey),
+        preserveChatMountKey(result.assistantMessage, assistantMountKey),
       ]);
     } catch {
       setMessages((current) =>
@@ -765,20 +763,17 @@ export function InboxView({
   }
 
   async function handleMarkPlanDone(item: ActivePlanChatItem) {
-    const pendingUserId = createPendingId("user");
-    const pendingAssistantId = createPendingId("assistant");
-    const optimisticUser: ChatMessage = {
-      id: pendingUserId,
-      role: "user",
-      content: `Beli ${item.name}`,
-      createdAt: new Date().toISOString(),
-    };
-    const optimisticAssistant: ChatMessage = {
-      id: pendingAssistantId,
-      role: "assistant",
-      content: "Menandai wish selesai...",
-      createdAt: new Date().toISOString(),
-    };
+    const {
+      user: optimisticUser,
+      assistant: optimisticAssistant,
+      userMountKey,
+      assistantMountKey,
+    } = createOptimisticMessagePair(
+      `Beli ${item.name}`,
+      "Menandai wish selesai...",
+    );
+    const pendingUserId = optimisticUser.id;
+    const pendingAssistantId = optimisticAssistant.id;
 
     setMessages((current) => [...current, optimisticUser, optimisticAssistant]);
     beginInFlight();
@@ -791,8 +786,8 @@ export function InboxView({
           (message) =>
             message.id !== pendingUserId && message.id !== pendingAssistantId,
         ),
-        result.userMessage,
-        result.assistantMessage,
+        preserveChatMountKey(result.userMessage, userMountKey),
+        preserveChatMountKey(result.assistantMessage, assistantMountKey),
       ]);
     } catch {
       setMessages((current) =>
@@ -807,20 +802,17 @@ export function InboxView({
   }
 
   async function handleCheckSavings(item: ActiveSavingsChatItem) {
-    const pendingUserId = createPendingId("user");
-    const pendingAssistantId = createPendingId("assistant");
-    const optimisticUser: ChatMessage = {
-      id: pendingUserId,
-      role: "user",
-      content: `cek tabungan ${item.name}`,
-      createdAt: new Date().toISOString(),
-    };
-    const optimisticAssistant: ChatMessage = {
-      id: pendingAssistantId,
-      role: "assistant",
-      content: "Memuat tabungan...",
-      createdAt: new Date().toISOString(),
-    };
+    const {
+      user: optimisticUser,
+      assistant: optimisticAssistant,
+      userMountKey,
+      assistantMountKey,
+    } = createOptimisticMessagePair(
+      `cek tabungan ${item.name}`,
+      "Memuat tabungan...",
+    );
+    const pendingUserId = optimisticUser.id;
+    const pendingAssistantId = optimisticAssistant.id;
 
     setMessages((current) => [...current, optimisticUser, optimisticAssistant]);
     beginInFlight();
@@ -833,8 +825,8 @@ export function InboxView({
           (message) =>
             message.id !== pendingUserId && message.id !== pendingAssistantId,
         ),
-        result.userMessage,
-        result.assistantMessage,
+        preserveChatMountKey(result.userMessage, userMountKey),
+        preserveChatMountKey(result.assistantMessage, assistantMountKey),
       ]);
     } catch {
       setMessages((current) =>
