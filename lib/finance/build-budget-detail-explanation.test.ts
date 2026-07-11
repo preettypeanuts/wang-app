@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { buildBudgetDetailExplanation } from "@/lib/finance/build-budget-detail-explanation";
+import {
+  buildBudgetDetailExplanation,
+  formatBudgetDetailExplanationPlain,
+} from "@/lib/finance/build-budget-detail-explanation";
 import { computeBudgetPace } from "@/lib/finance/compute-budget-pace";
 import type { BudgetStatus, CategoryBudgetRecord } from "@/types/budget";
 
@@ -48,18 +51,36 @@ function buildStatus(
 }
 
 describe("buildBudgetDetailExplanation", () => {
-  it("menjelaskan pacing cepat dengan adjusted daily di bawah rencana", () => {
-    const explanation = buildBudgetDetailExplanation(buildStatus());
+  it("menyorot angka penting pada pacing cepat", () => {
+    const segments = buildBudgetDetailExplanation(buildStatus());
+    const plain = formatBudgetDetailExplanationPlain(segments);
 
-    expect(explanation).toContain("Rp75.948");
-    expect(explanation).toContain("Rp70.000");
-    expect(explanation).toContain("Rp66.729");
-    expect(explanation).toContain("20 hari");
-    expect(explanation).toContain("bisa habis sebelum akhir bulan");
+    expect(plain).toContain("Rp75.948");
+    expect(plain).toContain("Rp70.000");
+    expect(plain).toContain("Rp66.729");
+    expect(plain).toContain("20 hari");
+    expect(plain).toContain("bisa habis sebelum akhir bulan");
+
+    expect(
+      segments.some(
+        (segment) =>
+          segment.tone === "warning" && segment.text.includes("Rp75.948"),
+      ),
+    ).toBe(true);
+    expect(
+      segments.some(
+        (segment) =>
+          segment.tone === "warning" &&
+          segment.text.includes("bisa habis sebelum akhir bulan"),
+      ),
+    ).toBe(true);
+    expect(
+      segments.filter((segment) => segment.tone === undefined).length,
+    ).toBeGreaterThan(0);
   });
 
-  it("menjelaskan kondisi over budget", () => {
-    const explanation = buildBudgetDetailExplanation(
+  it("menyorot over budget dengan tone danger", () => {
+    const segments = buildBudgetDetailExplanation(
       buildStatus({
         spent: 2_200_000,
         remaining: -30_000,
@@ -67,20 +88,25 @@ describe("buildBudgetDetailExplanation", () => {
       }),
     );
 
-    expect(explanation).toContain("melebihi limit");
-    expect(explanation).toContain("Rp30.000");
+    expect(
+      segments.some(
+        (segment) => segment.tone === "danger" && segment.text === "Rp30.000",
+      ),
+    ).toBe(true);
   });
 
   it("menjelaskan bulan yang belum dimulai", () => {
-    const explanation = buildBudgetDetailExplanation(
-      buildStatus({
-        budget: { periodMonth: "2026-08" },
-        spent: 0,
-        remaining: 2_170_000,
-      }),
+    const plain = formatBudgetDetailExplanationPlain(
+      buildBudgetDetailExplanation(
+        buildStatus({
+          budget: { periodMonth: "2026-08" },
+          spent: 0,
+          remaining: 2_170_000,
+        }),
+      ),
     );
 
-    expect(explanation).toContain("belum dimulai");
-    expect(explanation).toContain("Rp70.000");
+    expect(plain).toContain("belum dimulai");
+    expect(plain).toContain("Rp70.000");
   });
 });
