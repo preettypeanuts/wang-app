@@ -394,6 +394,7 @@ export async function getOverviewPageData(
       remainingBudgetTotal,
       upcomingIncomeTotal,
       salaryCycleProjection,
+      budgets,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
@@ -401,7 +402,11 @@ export async function getOverviewPageData(
     remainingBudgetTotal,
     upcomingIncomeTotal,
     upcomingIncomeCount,
-    { nextMonthPayPlanTotal, remainingBudgetNextMonth },
+    {
+      nextMonthPayPlanTotal,
+      remainingBudgetNextMonth,
+      categoryBudgets: budgets,
+    },
   );
 
   const savingsOverview = buildSavingsOverview(savingsGoals, availableBalance);

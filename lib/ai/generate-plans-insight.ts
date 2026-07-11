@@ -10,6 +10,7 @@ import {
   buildFallbackPlansInsight,
   computePlansSalaryCycleProjection,
 } from "@/lib/finance/build-plans-overview";
+import type { BudgetStatus } from "@/types/budget";
 import type { PlanBudgetImpact, PlanRecord } from "@/types/plan";
 
 function groupWishNamesByCategory(
@@ -41,6 +42,7 @@ export async function generatePlansInsight(
   upcomingIncomeTotal = 0,
   nextMonthPayPlanTotal = 0,
   remainingBudgetNextMonth = 0,
+  categoryBudgets: BudgetStatus[] = [],
 ): Promise<string> {
   const dateKey = todayDateKey();
   const cached = await getCachedAiInsight<string>(
@@ -81,6 +83,7 @@ export async function generatePlansInsight(
         upcomingPayPlanTotal,
         upcomingIncomeTotal,
         remainingBudgetTotal,
+        categoryBudgets,
         nextMonthPayPlanTotal,
         remainingBudgetNextMonth,
         salaryCycleProjection,
@@ -98,6 +101,7 @@ export async function generatePlansInsight(
         remainingBudgetTotal,
         upcomingIncomeTotal,
         salaryCycleProjection,
+        categoryBudgets,
       );
     }
   }
@@ -109,5 +113,6 @@ export async function generatePlansInsight(
     remainingBudgetTotal,
     upcomingIncomeTotal,
     salaryCycleProjection,
+    categoryBudgets,
   );
 }

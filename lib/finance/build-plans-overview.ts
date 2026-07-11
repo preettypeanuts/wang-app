@@ -1,3 +1,4 @@
+import { buildFallbackCategoryBudgetHint } from "@/lib/finance/build-plans-category-budget-hints";
 import { formatIdr } from "@/lib/finance/format-currency";
 import {
   UI_LABEL_PLANS_INSIGHT_EMPTY,
@@ -5,6 +6,7 @@ import {
   UI_LABEL_PLANS_INSIGHT_TIGHT,
   UI_LABEL_PLANS_INSIGHT_UNSAFE,
 } from "@/config/ui-labels";
+import type { BudgetStatus } from "@/types/budget";
 import type {
   PlanBudgetImpact,
   PlanRecord,
@@ -140,6 +142,7 @@ export function resolvePlansInsightMeta(
 export interface BuildPlansOverviewOptions {
   nextMonthPayPlanTotal?: number;
   remainingBudgetNextMonth?: number;
+  categoryBudgets?: BudgetStatus[];
 }
 
 export function buildPlansOverview(
@@ -184,6 +187,7 @@ export function buildPlansOverview(
     upcomingIncomeTotal,
     upcomingIncomeCount,
     remainingBudgetTotal,
+    categoryBudgets: options.categoryBudgets ?? [],
     nextMonthPayPlanTotal: options.nextMonthPayPlanTotal ?? 0,
     remainingBudgetNextMonth: options.remainingBudgetNextMonth ?? 0,
     projectedBalance,
@@ -207,6 +211,7 @@ export function buildFallbackPlansInsight(
   remainingBudgetTotal: number,
   upcomingIncomeTotal = 0,
   _salaryCycleProjection: number | null = null,
+  categoryBudgets: BudgetStatus[] = [],
 ): string {
   if (
     estimatedCost <= 0 &&
@@ -227,11 +232,22 @@ export function buildFallbackPlansInsight(
     upcomingPayPlanTotal,
     remainingBudgetTotal,
   );
+  const insightMeta = resolvePlansInsightMeta(
+    estimatedCost,
+    availableBalance,
+    upcomingPayPlanTotal,
+    remainingBudgetTotal,
+    upcomingIncomeTotal,
+  );
   const incomeHint =
     upcomingIncomeTotal > 0 ? " Gaji terjadwal belum bisa dipakai sekarang." : "";
+  const budgetHint = buildFallbackCategoryBudgetHint(
+    categoryBudgets,
+    insightMeta.tone,
+  );
 
   if (spendableBalance >= safeThreshold) {
-    return `Aman — masih ada ruang ${formatIdr(spendableBalance)}.${incomeHint}`;
+    return `Aman — masih ada ruang ${formatIdr(spendableBalance)}.${incomeHint}${budgetHint}`;
   }
 
   if (spendableBalance >= 0) {
@@ -239,16 +255,16 @@ export function buildFallbackPlansInsight(
       estimatedCost > 0
         ? "Hati-hati tambah wish lagi."
         : "Hati-hati pengeluaran besar.";
-    return `Cukup tipis, sisa ${formatIdr(spendableBalance)} — ${action}${incomeHint}`;
+    return `Cukup tipis, sisa ${formatIdr(spendableBalance)} — ${action}${incomeHint}${budgetHint}`;
   }
 
   const shortfall = Math.abs(spendableBalance);
   const action =
     estimatedCost > 0
       ? "Tunda atau kurangi wishlist."
-      : "Periksa tagihan dan budget bulan ini.";
+      : "Periksa tagihan dan budget kategori bulan ini.";
 
-  return `Belum aman, kurang ${formatIdr(shortfall)} — ${action}${incomeHint}`;
+  return `Belum aman, kurang ${formatIdr(shortfall)} — ${action}${incomeHint}${budgetHint}`;
 }
 
 export function isPlansInsightTone(value: string): value is PlansInsightTone {

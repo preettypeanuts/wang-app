@@ -14,16 +14,19 @@ import {
   PLANS_AI_BUDGET_IMPACT,
   PLANS_AI_BUDGET_OVER_BY,
   PLANS_AI_BUDGET_REMAINING,
+  PLANS_AI_CATEGORY_BUDGET_PREFIX,
+  PLANS_AI_CATEGORY_BUDGET_REMAINING,
   PLANS_AI_HIDE_DETAILS,
   PLANS_AI_METRIC_BALANCE_PREFIX,
   PLANS_AI_PAYPLAN_THIS_MONTH,
   PLANS_AI_PROJECTED_REMAINING,
-  PLANS_AI_REMAINING_BUDGET_THIS_MONTH,
+  formatPlansCategoryBudgetMoreCategories,
   PLANS_AI_SALARY_CYCLE_PROJECTION,
   PLANS_AI_SHOW_DETAILS,
   PLANS_AI_UPCOMING_INCOME_THIS_MONTH,
 } from "@/config/plans-labels";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
+import { selectPlansCategoryBudgetsForDisplay } from "@/lib/finance/select-plans-category-budgets-for-display";
 import { CaretDownIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type { PlansOverview } from "@/types/plan";
@@ -33,10 +36,14 @@ interface PlansAiSummaryProps {
 }
 
 function hasPlansAiBreakdown(overview: PlansOverview): boolean {
+  const hasCategoryBudgets = overview.categoryBudgets.some(
+    (budget) => budget.totalLimit > 0 && budget.remaining > 0,
+  );
+
   return (
     overview.estimatedCost > 0 ||
     overview.upcomingPayPlanTotal > 0 ||
-    overview.remainingBudgetTotal > 0 ||
+    hasCategoryBudgets ||
     overview.upcomingIncomeTotal > 0 ||
     overview.budgetImpacts.some(
       (impact) => impact.status === "waspada" || impact.status === "over",
@@ -56,6 +63,9 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
   );
   const showBreakdown = hasPlansAiBreakdown(overview);
   const [detailsOpen, setDetailsOpen] = useState(hasOverBudget);
+  const categoryBudgetDisplay = selectPlansCategoryBudgetsForDisplay(
+    overview.categoryBudgets,
+  );
 
   return (
     <div className={PLANS_AI_SUMMARY_SHELL}>
@@ -171,12 +181,20 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
                       </span>
                     </p>
                   ) : null}
-                  {overview.remainingBudgetTotal > 0 ? (
-                    <p>
-                      {PLANS_AI_REMAINING_BUDGET_THIS_MONTH}{" "}
+                  {categoryBudgetDisplay.visible.map((budget) => (
+                    <p key={budget.budget.category}>
+                      {PLANS_AI_CATEGORY_BUDGET_PREFIX}{" "}
+                      {budget.categoryLabel}: {PLANS_AI_CATEGORY_BUDGET_REMAINING}{" "}
                       <span className={cn("font-semibold", style.metricSpend)}>
-                        {formatAmount(overview.remainingBudgetTotal)}
+                        {formatAmount(budget.remaining)}
                       </span>
+                    </p>
+                  ))}
+                  {categoryBudgetDisplay.hiddenCount > 0 ? (
+                    <p className="text-[11px] opacity-80">
+                      {formatPlansCategoryBudgetMoreCategories(
+                        categoryBudgetDisplay.hiddenCount,
+                      )}
                     </p>
                   ) : null}
                   {overview.upcomingIncomeTotal > 0 ? (

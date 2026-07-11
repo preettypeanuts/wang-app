@@ -86,6 +86,7 @@ function buildLocalOverview(
       base.remainingBudgetTotal,
       base.upcomingIncomeTotal,
       salaryCycleProjection,
+      base.categoryBudgets,
     ),
     base.upcomingPayPlanTotal,
     base.upcomingPayPlanCount,
@@ -96,6 +97,7 @@ function buildLocalOverview(
     {
       nextMonthPayPlanTotal: base.nextMonthPayPlanTotal,
       remainingBudgetNextMonth: base.remainingBudgetNextMonth,
+      categoryBudgets: base.categoryBudgets,
     },
   );
 }

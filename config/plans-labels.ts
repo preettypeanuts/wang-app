@@ -68,8 +68,11 @@ export const PLANS_RELATED_UPCOMING_DESC =
 
 export const PLANS_AI_METRIC_BALANCE_PREFIX = "balance";
 export const PLANS_AI_PAYPLAN_THIS_MONTH = "PayPlan bills this month";
-export const PLANS_AI_REMAINING_BUDGET_THIS_MONTH =
-  "Remaining PayPlan budget this month";
+export const PLANS_AI_CATEGORY_BUDGET_PREFIX = "Budget";
+export const PLANS_AI_CATEGORY_BUDGET_REMAINING = "sisa";
+export function formatPlansCategoryBudgetMoreCategories(count: number): string {
+  return `+${count} kategori lain`;
+}
 export const PLANS_AI_SHOW_DETAILS = "Lihat rincian";
 export const PLANS_AI_HIDE_DETAILS = "Sembunyikan rincian";
 export const PLANS_AI_PROJECTED_REMAINING = "Remaining after obligations";

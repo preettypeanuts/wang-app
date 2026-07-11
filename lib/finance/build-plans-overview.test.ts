@@ -112,4 +112,53 @@ describe("buildFallbackPlansInsight", () => {
     expect(insight).not.toContain("sisa budget");
     expect(insight).toContain("Gaji terjadwal belum bisa dipakai sekarang.");
   });
+
+  it("mentions a specific category budget when usage is high", () => {
+    const insight = buildFallbackPlansInsight(
+      500_000,
+      1_861_553,
+      2_646_640,
+      1_183_676,
+      0,
+      null,
+      [
+        {
+          budget: {
+            id: "1",
+            category: "food",
+            periodMonth: "2026-07",
+            limitMode: "fixed",
+            dailyAmount: null,
+            fixedLimit: 2_000_000,
+            dayCount: null,
+            note: null,
+            repeatNextMonth: false,
+          },
+          categoryLabel: "Makanan & Minum",
+          periodMonth: "2026-07",
+          dayCount: 31,
+          totalLimit: 2_000_000,
+          spent: 1_850_000,
+          remaining: 150_000,
+          usedPercent: 92,
+          remainingPercent: 8,
+          pace: {
+            elapsedDays: 11,
+            remainingDays: 20,
+            isCurrentMonth: true,
+            isPastMonth: false,
+            isFutureMonth: false,
+            avgDailySpent: null,
+            plannedDailyBudget: null,
+            adjustedDailyBudget: null,
+            dailyDelta: null,
+            paceStatus: "fast",
+          },
+        },
+      ],
+    );
+
+    expect(insight).toContain("Makanan & Minum");
+    expect(insight).toContain("92%");
+  });
 });

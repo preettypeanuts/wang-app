@@ -1,3 +1,5 @@
+import type { BudgetStatus } from "@/types/budget";
+
 export type PlanStatus = "active" | "done";
 
 export interface PlanRecord {
@@ -36,11 +38,13 @@ export interface PlansOverview {
   /** Planned income still expected this month (not yet received). */
   upcomingIncomeTotal: number;
   upcomingIncomeCount: number;
-  /** Positive remaining budget across all PayPlan categories this month. */
+  /** Sum of positive remaining across category budgets (calculation only). */
   remainingBudgetTotal: number;
+  /** Per-category budget status for display and AI context. */
+  categoryBudgets: BudgetStatus[];
   /** Unpaid PayPlan bills due next month — reserved against scheduled salary. */
   nextMonthPayPlanTotal: number;
-  /** Positive remaining budget across all PayPlan categories next month. */
+  /** Sum of positive remaining category budgets next month (calculation only). */
   remainingBudgetNextMonth: number;
   /** Cash-only projection after wishes, PayPlan, and budget this month. */
   projectedBalance: number;
@@ -72,6 +76,7 @@ export interface PlansInsightInputs {
   upcomingIncomeTotal: number;
   upcomingIncomeCount: number;
   remainingBudgetTotal: number;
+  categoryBudgets: BudgetStatus[];
   nextMonthPayPlanTotal: number;
   remainingBudgetNextMonth: number;
   budgetImpacts: PlanBudgetImpact[];

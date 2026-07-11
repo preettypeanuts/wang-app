@@ -20,6 +20,7 @@ const plansOverview: PlansOverview = {
   upcomingIncomeTotal: 0,
   upcomingIncomeCount: 0,
   remainingBudgetTotal: 0,
+  categoryBudgets: [],
   nextMonthPayPlanTotal: 0,
   remainingBudgetNextMonth: 0,
   projectedBalance: 4_426_401,

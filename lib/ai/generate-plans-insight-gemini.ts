@@ -4,11 +4,14 @@ import {
 } from "@/config/gemini";
 import { GEMINI_WANG_APP_CONTEXT } from "@/config/gemini-locale";
 import { getGeminiClient } from "@/lib/ai/gemini-client";
+import { formatPlansCategoryBudgetLinesForPrompt } from "@/lib/finance/build-plans-category-budget-hints";
 import {
   computePlansSpendableBalance,
   resolvePlansInsightMeta,
 } from "@/lib/finance/build-plans-overview";
 import { formatIdr } from "@/lib/finance/format-currency";
+import { selectStressedCategoryBudgets } from "@/lib/finance/select-plans-category-budgets-for-display";
+import type { BudgetStatus } from "@/types/budget";
 import type { PlanBudgetImpact } from "@/types/plan";
 
 interface PlansInsightInput {
@@ -18,6 +21,7 @@ interface PlansInsightInput {
   upcomingPayPlanTotal: number;
   upcomingIncomeTotal: number;
   remainingBudgetTotal: number;
+  categoryBudgets: BudgetStatus[];
   nextMonthPayPlanTotal: number;
   remainingBudgetNextMonth: number;
   salaryCycleProjection: number | null;
@@ -82,15 +86,15 @@ export async function generatePlansInsightWithGemini(
       ? `Tagihan PayPlan bulan depan: ${formatIdr(input.nextMonthPayPlanTotal)}`
       : "Tagihan PayPlan bulan depan: (tidak ada)";
 
-  const budgetLine =
-    input.remainingBudgetTotal > 0
-      ? `Sisa budget PayPlan bulan ini (belum terpakai): ${formatIdr(input.remainingBudgetTotal)}`
-      : "Sisa budget PayPlan bulan ini: (tidak ada)";
+  const categoryBudgetLines = formatPlansCategoryBudgetLinesForPrompt(
+    input.categoryBudgets,
+  );
+  const stressedBudgets = selectStressedCategoryBudgets(input.categoryBudgets);
 
   const nextMonthBudgetLine =
     input.remainingBudgetNextMonth > 0
-      ? `Sisa budget PayPlan bulan depan (belum terpakai): ${formatIdr(input.remainingBudgetNextMonth)}`
-      : "Sisa budget PayPlan bulan depan: (tidak ada)";
+      ? `Total sisa budget kategori bulan depan (agregat, untuk kalkulasi): ${formatIdr(input.remainingBudgetNextMonth)}`
+      : "Sisa budget kategori bulan depan: (tidak ada)";
 
   const budgetLines = formatRiskyBudgetLines(
     input.riskyBudgetImpacts,
@@ -109,10 +113,15 @@ export async function generatePlansInsightWithGemini(
     payPlanLine,
     incomeLine,
     nextMonthPayPlanLine,
-    budgetLine,
+    categoryBudgetLines.length > 0
+      ? [
+          "Budget kategori individual bulan ini (BUKAN PayPlan — ini limit pengeluaran per kategori seperti Makanan, Transport):",
+          ...categoryBudgetLines,
+        ].join("\n")
+      : "Budget kategori bulan ini: (belum di-setup)",
     nextMonthBudgetLine,
     `Saldo tersedia (cash sekarang): ${formatIdr(input.availableBalance)}`,
-    `Sisa setelah wish, PayPlan, dan sisa budget bulan ini (tanpa gaji belum diterima): ${formatIdr(spendableBalance)}`,
+    `Sisa setelah wish, PayPlan, dan sisa budget kategori bulan ini (tanpa gaji belum diterima): ${formatIdr(spendableBalance)}`,
     salaryCycleLine,
     `Status keamanan belanja wish sekarang: ${insightMeta.label}`,
     budgetLines.length > 0
@@ -121,9 +130,14 @@ export async function generatePlansInsightWithGemini(
         )
       : "Dampak wish ke budget kategori: (tidak ada yang waspada/over)",
     "",
-    'Tulis MAKSIMAL 1 kalimat pendek (maks 20 kata), fokus HANYA ke kesimpulan dan 1 saran aksi konkret. JANGAN sebutkan ulang angka estimasi wish, tagihan PayPlan, sisa budget, atau proyeksi satu-satu — angka detail itu sudah ditampilkan terpisah di UI. Contoh gaya: "Belum aman, kurang Rp114.763 — tunda salah satu wish dulu." atau "Aman, masih ada ruang Rp2.100.000."',
+    'Tulis MAKSIMAL 1-2 kalimat pendek: gabungkan kesimpulan + 1 saran aksi konkret. JANGAN sebutkan ulang angka estimasi wish, tagihan PayPlan, atau sisa budget kategori satu-satu — angka detail itu sudah ditampilkan terpisah di UI. Contoh gaya: "Belum aman, kurang Rp114.763 — tunda salah satu wish dulu." atau "Aman, masih ada ruang Rp2.100.000."',
     input.upcomingIncomeTotal > 0
       ? "Kalau ada gaji terjadwal belum diterima, cukup tegaskan belum bisa dipakai sekarang — tanpa sebut nominal gaji."
+      : "",
+    insightMeta.tone === "unsafe" ||
+      insightMeta.tone === "tight" ||
+      stressedBudgets.length > 0
+      ? "Kalau status Risk/Waspada, ATAU ada kategori budget di atas 80% terpakai, WAJIB kasih 1 saran aksi konkret yang bisa langsung dilakukan — sebut kategori spesifik yang paling boros/mepet (bukan generik 'kurangi pengeluaran'), contoh: 'Budget Makan & Minum sudah 92% — coba masak di rumah beberapa hari ke depan.' atau 'Tunda wish ini dulu, atau kurangi budget Hiburan bulan depan.'"
       : "",
     insightMeta.tone === "tight" || insightMeta.tone === "unsafe"
       ? "Tekankan risiko atau sisa tipis — jangan bilang aman hanya karena gaji belum diterima."
@@ -140,7 +154,8 @@ export async function generatePlansInsightWithGemini(
         GEMINI_WANG_APP_CONTEXT,
         "Kamu asisten keuangan Wang untuk halaman Wish (wishlist belanja).",
         "Jawab singkat, ramah, objektif, tanpa mengarang angka di luar data.",
-        "Tulis maksimal 1 kalimat pendek: kesimpulan + 1 saran aksi. Jangan ulangi breakdown angka — UI sudah menampilkannya.",
+        "Tulis maksimal 1-2 kalimat pendek: kesimpulan + 1 saran aksi konkret spesifik ke kategori budget yang paling mepet. Jangan ulangi breakdown angka — UI sudah menampilkannya.",
+        "Budget kategori (Makanan, Transport, dll) BUKAN PayPlan — PayPlan hanya untuk tagihan/cicilan terjadwal.",
         "Nilai keamanan wish berdasarkan saldo cash sekarang. Gaji belum diterima tidak membuat wish aman dibeli sekarang.",
         "Jangan gunakan emoji.",
       ].join("\n"),

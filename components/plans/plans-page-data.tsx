@@ -89,6 +89,7 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
       remainingBudgetTotal,
       upcomingIncomeTotal,
       salaryCycleProjection,
+      budgets,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
@@ -96,7 +97,7 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
     remainingBudgetTotal,
     upcomingIncomeTotal,
     upcomingIncomeCount,
-    { nextMonthPayPlanTotal, remainingBudgetNextMonth },
+    { nextMonthPayPlanTotal, remainingBudgetNextMonth, categoryBudgets: budgets },
   );
   const savingsOverview = buildSavingsOverview(savingsGoals, availableBalance);
 
@@ -129,6 +130,7 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
             upcomingIncomeTotal={upcomingIncomeTotal}
             upcomingIncomeCount={upcomingIncomeCount}
             remainingBudgetTotal={remainingBudgetTotal}
+            categoryBudgets={budgets}
             nextMonthPayPlanTotal={nextMonthPayPlanTotal}
             remainingBudgetNextMonth={remainingBudgetNextMonth}
             budgetImpacts={budgetImpacts}
