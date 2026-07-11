@@ -7,13 +7,13 @@
  */
 
 /** Hard cap for app pools (dev + prod). Never exceed via env override. */
-export const DATABASE_APP_CONNECTION_BUDGET = 10;
+export const DATABASE_APP_CONNECTION_BUDGET = 8;
 
 /** Per-process pool in local development. */
-export const DATABASE_POOL_MAX_DEVELOPMENT = 3;
+export const DATABASE_POOL_MAX_DEVELOPMENT = 2;
 
 /** Per-instance pool in production (serverless / multi-process). */
-export const DATABASE_POOL_MAX_PRODUCTION = 2;
+export const DATABASE_POOL_MAX_PRODUCTION = 1;
 
 export function resolveDatabasePoolMax(isDev: boolean): number {
   const override = process.env.DATABASE_POOL_MAX?.trim();
