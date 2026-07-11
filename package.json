@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build --webpack",
+    "build": "prisma generate && prisma migrate deploy && next build --webpack",
     "start": "next start",
     "lint": "biome check",
     "test": "vitest run",
@@ -19,6 +19,7 @@
     "db:reset": "ALLOW_DB_RESET=true npx tsx scripts/reset-dev-db.ts",
     "db:reset-clean": "ALLOW_DB_RESET=true SKIP_DEMO_SEED=true npx tsx scripts/reset-dev-db.ts",
     "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:release-connections": "node scripts/release-db-connections.mjs"
   },
