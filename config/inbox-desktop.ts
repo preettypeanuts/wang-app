@@ -1,9 +1,5 @@
 import { APP_GAP, APP_GUTTER } from "@/config/spacing";
 
-export function isInboxRoute(pathname: string): boolean {
-  return pathname === "/";
-}
-
 /**
  * Inbox outer shell (desktop) — no vertical padding; right gutter on SidebarInset.
  * Mobile: full-bleed via InboxMobileLayout.

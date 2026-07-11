@@ -9,22 +9,17 @@ import {
   INBOX_MOBILE_TOP_BAR_ROW,
   INBOX_MOBILE_TOP_BAR_TITLE,
 } from "@/config/inbox-mobile";
-import {
-  UI_LABEL_SEARCH_MESSAGES,
-  UI_LABEL_TODAY_SUMMARY,
-} from "@/config/ui-labels";
-import { ChartBarIcon, MagnifyingGlassIcon } from "@/lib/icons";
+import { UI_LABEL_TODAY_SUMMARY } from "@/config/ui-labels";
+import { ChartBarIcon } from "@/lib/icons";
 
 interface InboxMobileTopBarProps {
   onOpenSummary: () => void;
-  onOpenSearch: () => void;
   onRefresh: () => void;
   refreshing?: boolean;
 }
 
 export function InboxMobileTopBar({
   onOpenSummary,
-  onOpenSearch,
   onRefresh,
   refreshing = false,
 }: InboxMobileTopBarProps) {
@@ -36,14 +31,6 @@ export function InboxMobileTopBar({
         <p className={INBOX_MOBILE_TOP_BAR_TITLE}>Inbox</p>
 
         <div className={INBOX_MOBILE_TOP_BAR_ACTIONS}>
-          <button
-            type="button"
-            aria-label={UI_LABEL_SEARCH_MESSAGES}
-            className={INBOX_MOBILE_TOP_BAR_ORB}
-            onClick={onOpenSearch}
-          >
-            <MagnifyingGlassIcon aria-hidden="true" />
-          </button>
           <InboxMobileTopBarRefreshButton
             refreshing={refreshing}
             onRefresh={onRefresh}

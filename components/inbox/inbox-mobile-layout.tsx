@@ -1,10 +1,11 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 
 import { InboxSearchDrawer } from "@/components/chat/inbox-search-drawer";
 import { InboxMobileEdgeBlur } from "@/components/inbox/inbox-mobile-edge-blur";
 import { InboxMobileTopBar } from "@/components/inbox/inbox-mobile-top-bar";
+import { InboxSearchProvider } from "@/components/inbox/inbox-search-context";
 import { InboxTodaySummaryDrawer } from "@/components/inbox/inbox-today-summary-drawer";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
 import { MobileTabRefreshBar } from "@/components/shared/mobile-tab-refresh-bar";
@@ -42,48 +43,53 @@ export function InboxMobileLayout({
     [messages],
   );
 
+  const openSearch = useCallback(() => {
+    setSearchOpen(true);
+  }, []);
+
   function handleOpenSummary() {
     onOpenSummary?.();
     setSummaryOpen(true);
   }
 
   return (
-    <div
-      className={cn(
-        "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
-        INBOX_MOBILE_PAGE,
-      )}
-    >
-      <FixedViewportPortal>
-        <div className="md:hidden">
-          <MobileTabRefreshBar active={refreshing} />
-          <InboxMobileEdgeBlur />
-          <InboxMobileTopBar
-            onOpenSearch={() => setSearchOpen(true)}
-            onOpenSummary={handleOpenSummary}
-            onRefresh={() => onRefresh?.()}
-            refreshing={refreshing}
-          />
+    <InboxSearchProvider onOpen={openSearch}>
+      <div
+        className={cn(
+          "flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
+          INBOX_MOBILE_PAGE,
+        )}
+      >
+        <FixedViewportPortal>
+          <div className="md:hidden">
+            <MobileTabRefreshBar active={refreshing} />
+            <InboxMobileEdgeBlur />
+            <InboxMobileTopBar
+              onOpenSummary={handleOpenSummary}
+              onRefresh={() => onRefresh?.()}
+              refreshing={refreshing}
+            />
+          </div>
+        </FixedViewportPortal>
+
+        <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+          {children}
         </div>
-      </FixedViewportPortal>
 
-      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
-        {children}
+        <InboxTodaySummaryDrawer
+          dailySummary={dailySummary}
+          onOpenChange={setSummaryOpen}
+          open={summaryOpen}
+          summary={summary}
+        />
+
+        <InboxSearchDrawer
+          loadedMessageIds={loadedMessageIds}
+          onOpenChange={setSearchOpen}
+          onScrollToMessage={(messageId) => onFocusMessage?.(messageId)}
+          open={searchOpen}
+        />
       </div>
-
-      <InboxTodaySummaryDrawer
-        dailySummary={dailySummary}
-        onOpenChange={setSummaryOpen}
-        open={summaryOpen}
-        summary={summary}
-      />
-
-      <InboxSearchDrawer
-        loadedMessageIds={loadedMessageIds}
-        onOpenChange={setSearchOpen}
-        onScrollToMessage={(messageId) => onFocusMessage?.(messageId)}
-        open={searchOpen}
-      />
-    </div>
+    </InboxSearchProvider>
   );
 }

@@ -5,6 +5,8 @@ import { ChatCalculatorSheet } from "@/components/chat/chat-calculator-sheet";
 import { ChatCategoryMentionMenu } from "@/components/chat/chat-category-mention-menu";
 import { ChatInputHintBadges } from "@/components/chat/chat-input-hint-badges";
 import { ChatSlashMenu } from "@/components/chat/chat-slash-menu";
+import { useOptionalInboxSearch } from "@/components/inbox/inbox-search-context";
+import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,6 +26,7 @@ import {
 import { GLASS_SURFACE, GLASS_TILE_BASE, GLASS_FILL } from "@/config/glass";
 import { RECEIPT_ACCEPT_ATTRIBUTE } from "@/config/receipt";
 import { CONTROL_GAP } from "@/config/spacing";
+import { UI_LABEL_SEARCH_MESSAGES } from "@/config/ui-labels";
 import {
   detectCategoryMentionRange,
   filterCategoryMentionOptions,
@@ -32,6 +35,7 @@ import {
 import {
   ArrowUpIcon,
   CalculatorIcon,
+  MagnifyingGlassIcon,
   PlusIcon,
   ReceiptIcon,
 } from "@/lib/icons";
@@ -78,6 +82,7 @@ export function ChatInput({
   onDraftTextApplied,
   onSlashMenuOpenChange,
 }: ChatInputProps) {
+  const inboxSearch = useOptionalInboxSearch();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const receiptInputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState("");
@@ -129,10 +134,11 @@ export function ChatInput({
     ],
     [filteredPayPlanItems, filteredPlanItems, filteredSavingsItems],
   );
-  const mentionOptions = useMemo(
-    () => filterCategoryMentionOptions(mentionQuery),
-    [mentionQuery],
-  );
+  const { getMentionOptions } = useUserCategoryCatalog();
+  const mentionOptions = useMemo(() => {
+    const options = getMentionOptions("expense").concat(getMentionOptions("income"));
+    return filterCategoryMentionOptions(mentionQuery, options);
+  }, [getMentionOptions, mentionQuery]);
   const isPickerOpen = isSlashOpen || isMentionOpen;
 
   useEffect(() => {
@@ -429,11 +435,10 @@ export function ChatInput({
                 size="icon-sm"
                 aria-label="Menu"
                 className={cn(
-                  CONTROL_MIN_HEIGHT,
                   CHAT_INPUT_MENU_BUTTON,
                   GLASS_TILE_BASE,
                   GLASS_FILL,
-                  "shrink-0 rounded-full p-0",
+                  "rounded-full p-0",
                 )}
               />
             }
@@ -441,6 +446,12 @@ export function ChatInput({
             <PlusIcon className="size-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top" align="start" sideOffset={8}>
+            {inboxSearch ? (
+              <DropdownMenuItem onClick={() => inboxSearch.open()}>
+                <MagnifyingGlassIcon className="size-4" />
+                {UI_LABEL_SEARCH_MESSAGES}
+              </DropdownMenuItem>
+            ) : null}
             <DropdownMenuItem onClick={() => setIsCalculatorOpen(true)}>
               <CalculatorIcon className="size-4" />
               Kalkulator
