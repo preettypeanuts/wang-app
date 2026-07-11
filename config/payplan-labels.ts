@@ -1,7 +1,7 @@
 /** English labels for PayPlan page and planner tab views. */
 
-import { formatDayMonth } from "@/lib/finance/format-datetime";
 import {
+  formatDaysUntilLabel,
   UI_LABEL_ADD,
   UI_LABEL_APPLY,
   UI_LABEL_CANCEL,
@@ -16,8 +16,8 @@ import {
   UI_LABEL_TODAY,
   UI_LABEL_TOTAL,
   UI_LABEL_TYPE,
-  formatDaysUntilLabel,
 } from "@/config/ui-labels";
+import { formatDayMonth } from "@/lib/finance/format-datetime";
 
 export {
   UI_LABEL_ADD,
@@ -171,7 +171,9 @@ export function formatPayPlanDeleteConfirm(name: string): string {
   return `Remove "${name}" from PayPlan?`;
 }
 
-export function formatPayPlanDeleteBudgetConfirm(categoryLabel: string): string {
+export function formatPayPlanDeleteBudgetConfirm(
+  categoryLabel: string,
+): string {
   return `Delete ${categoryLabel} budget for this month?`;
 }
 
@@ -205,8 +207,64 @@ export function formatBudgetEmptyDayCountHint(dayCount: string): string {
   return `Leave day count empty to use days in this month (${dayCount} days).`;
 }
 
-export function formatBudgetRepeatNextMonthHint(nextMonthLabel: string): string {
+export function formatBudgetRepeatNextMonthHint(
+  nextMonthLabel: string,
+): string {
   return `This budget is automatically recreated in ${nextMonthLabel} with the same settings.`;
+}
+
+export const PAYPLAN_LABEL_BUDGET_DETAIL_DESC =
+  "Budget usage, daily pacing, and remaining allowance for this month.";
+export const PAYPLAN_LABEL_REMAINING_DAYS = "Remaining days";
+export const PAYPLAN_LABEL_ELAPSED_DAYS = "Days elapsed";
+export const PAYPLAN_LABEL_AVG_DAILY_SPENT = "Avg. daily spent";
+export const PAYPLAN_LABEL_PLANNED_DAILY = "Planned daily";
+export const PAYPLAN_LABEL_ADJUSTED_DAILY = "Adjusted daily budget";
+export const PAYPLAN_LABEL_DAILY_PACE = "Daily pace";
+export const PAYPLAN_LABEL_BUDGET_PACING = "Pacing";
+export const PAYPLAN_LABEL_BUDGET_PERIOD = "Period";
+export const PAYPLAN_LABEL_BUDGET_PACE_FAST = "Spending faster than plan";
+export const PAYPLAN_LABEL_BUDGET_PACE_ON_TRACK = "On track";
+export const PAYPLAN_LABEL_BUDGET_PACE_SLOW = "Spending slower than plan";
+export const PAYPLAN_LABEL_BUDGET_PACE_OVER = "Over monthly limit";
+export const PAYPLAN_LABEL_BUDGET_PACE_UNSET = "Pacing unavailable";
+
+export function formatBudgetRemainingDays(count: number): string {
+  return count === 1 ? "1 day left" : `${count} days left`;
+}
+
+export function formatBudgetElapsedDays(count: number): string {
+  return count === 1 ? "1 day elapsed" : `${count} days elapsed`;
+}
+
+export function formatBudgetDailyAmount(amountLabel: string): string {
+  return `${amountLabel}/day`;
+}
+
+export function formatBudgetAdjustedDailyHint(
+  adjustedLabel: string,
+  remainingDays: number,
+  plannedLabel: string,
+): string {
+  return `${adjustedLabel}/day for ${remainingDays} days left · planned ${plannedLabel}/day`;
+}
+
+export function formatBudgetAvgDailyHint(
+  avgLabel: string,
+  elapsedDays: number,
+): string {
+  return `${avgLabel}/day over ${elapsedDays} days`;
+}
+
+export function formatBudgetDailyDelta(
+  deltaLabel: string,
+  direction: "below" | "above",
+): string {
+  return `${deltaLabel}/day ${direction} plan`;
+}
+
+export function formatBudgetViewDetail(categoryLabel: string): string {
+  return `View ${categoryLabel} budget detail`;
 }
 
 export function formatPayPlanInstallmentEntry(index: number): string {

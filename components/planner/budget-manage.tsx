@@ -6,10 +6,12 @@ import {
   saveCategoryBudgetAction,
 } from "@/app/actions/budget";
 import { BudgetCard } from "@/components/planner/budget-card";
+import { BudgetDetailDrawer } from "@/components/planner/budget-detail-drawer";
 import { BudgetFormDialog } from "@/components/planner/budget-form-dialog";
 import { BudgetMonthHeader } from "@/components/planner/budget-month-header";
 import { PayplanAddFab } from "@/components/planner/payplan-add-fab";
 import { Button } from "@/components/ui/button";
+import { BUDGET_CARD_GRID } from "@/config/budget";
 import {
   formatPayPlanDeleteBudgetConfirm,
   PAYPLAN_LABEL_ADD_BUDGET,
@@ -18,8 +20,10 @@ import {
   PAYPLAN_LABEL_NO_CATEGORY_BUDGET,
   UI_LABEL_ADD,
 } from "@/config/payplan-labels";
-import { BUDGET_CARD_GRID } from "@/config/budget";
-import { PAYPLAN_BUDGET_MOBILE_END_SPACER, PAYPLAN_MANAGE_EMPTY_MOBILE } from "@/config/payplan-mobile";
+import {
+  PAYPLAN_BUDGET_MOBILE_END_SPACER,
+  PAYPLAN_MANAGE_EMPTY_MOBILE,
+} from "@/config/payplan-mobile";
 import { CONTROL_GAP, STACK_GAP } from "@/config/spacing";
 import { PlusIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -32,7 +36,9 @@ interface BudgetManageProps {
 
 export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState<BudgetStatus | null>(null);
+  const [detailStatus, setDetailStatus] = useState<BudgetStatus | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const usedCategories = budgets.map((entry) => entry.budget.category);
@@ -45,6 +51,11 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
   function openEdit(status: BudgetStatus) {
     setEditingStatus(status);
     setSheetOpen(true);
+  }
+
+  function openDetail(status: BudgetStatus) {
+    setDetailStatus(status);
+    setDetailOpen(true);
   }
 
   function handleDelete(status: BudgetStatus) {
@@ -73,10 +84,7 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
 
   return (
     <div
-      className={cn(
-        "flex min-h-0 flex-1 flex-col max-md:flex-none",
-        STACK_GAP,
-      )}
+      className={cn("flex min-h-0 flex-1 flex-col max-md:flex-none", STACK_GAP)}
     >
       <div
         className={cn(
@@ -127,8 +135,7 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
               key={status.budget.id}
               status={status}
               disabled={isPending}
-              onEdit={openEdit}
-              onDelete={handleDelete}
+              onViewDetail={openDetail}
             />
           ))}
         </div>
@@ -145,6 +152,15 @@ export function BudgetManage({ monthKey, budgets }: BudgetManageProps) {
         usedCategories={usedCategories}
         onOpenChange={setSheetOpen}
         onSubmit={handleSubmit}
+      />
+
+      <BudgetDetailDrawer
+        open={detailOpen}
+        status={detailStatus}
+        disabled={isPending}
+        onOpenChange={setDetailOpen}
+        onEdit={openEdit}
+        onDelete={handleDelete}
       />
     </div>
   );

@@ -1,4 +1,5 @@
 import { getCategoryLabel } from "@/config/categories";
+import { computeBudgetPace } from "@/lib/finance/compute-budget-pace";
 import { getDaysInMonth, parseMonthKey } from "@/lib/planner/calendar";
 import type { BudgetStatus, CategoryBudgetRecord } from "@/types/budget";
 
@@ -37,22 +38,29 @@ export function computeBudgetTotalLimit(
 export function buildBudgetStatus(
   budget: CategoryBudgetRecord,
   spent: number,
+  referenceDate: Date = new Date(),
 ): BudgetStatus {
   const totalLimit = computeBudgetTotalLimit(budget, budget.periodMonth);
   const remaining = totalLimit - spent;
   const usedPercent =
     totalLimit > 0 ? Math.min(100, Math.round((spent / totalLimit) * 100)) : 0;
   const remainingPercent = Math.max(0, 100 - usedPercent);
+  const dayCount = getBudgetDayCount(budget, budget.periodMonth);
 
-  return {
+  const base = {
     budget,
     categoryLabel: getCategoryLabel(budget.category),
     periodMonth: budget.periodMonth,
-    dayCount: getBudgetDayCount(budget, budget.periodMonth),
+    dayCount,
     totalLimit,
     spent,
     remaining,
     usedPercent,
     remainingPercent,
+  };
+
+  return {
+    ...base,
+    pace: computeBudgetPace(base, referenceDate),
   };
 }

@@ -1,5 +1,20 @@
 export type BudgetLimitMode = "daily" | "fixed";
 
+export type BudgetPaceStatus = "over" | "fast" | "on_track" | "slow" | "unset";
+
+export interface BudgetPace {
+  elapsedDays: number;
+  remainingDays: number;
+  isCurrentMonth: boolean;
+  isPastMonth: boolean;
+  isFutureMonth: boolean;
+  avgDailySpent: number | null;
+  plannedDailyBudget: number | null;
+  adjustedDailyBudget: number | null;
+  dailyDelta: number | null;
+  paceStatus: BudgetPaceStatus;
+}
+
 export interface CategoryBudgetRecord {
   id: string;
   category: string;
@@ -22,6 +37,7 @@ export interface BudgetStatus {
   remaining: number;
   usedPercent: number;
   remainingPercent: number;
+  pace: BudgetPace;
 }
 
 export interface CategoryBudgetFormInput {

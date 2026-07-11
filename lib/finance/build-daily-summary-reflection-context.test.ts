@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-
+import { computeBudgetPace } from "@/lib/finance/compute-budget-pace";
 import {
   type DailySummaryReflectionContext,
   formatDailyBudgetReflectionSnippet,
@@ -10,7 +10,7 @@ import type { BudgetStatus } from "@/types/budget";
 function makeMonthlyStatus(
   overrides: Partial<BudgetStatus> & Pick<BudgetStatus, "budget">,
 ): BudgetStatus {
-  return {
+  const base = {
     categoryLabel: "Makanan & Minum",
     periodMonth: "2026-07",
     dayCount: 31,
@@ -20,6 +20,11 @@ function makeMonthlyStatus(
     usedPercent: 23,
     remainingPercent: 77,
     ...overrides,
+  };
+
+  return {
+    ...base,
+    pace: overrides.pace ?? computeBudgetPace(base),
   };
 }
 

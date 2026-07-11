@@ -1,7 +1,16 @@
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
 import { BudgetCardMenu } from "@/components/planner/budget-card-menu";
 import {
+  BUDGET_PROGRESS_TRACK,
+  BUDGET_SUBTEXT,
+  getBudgetProgressColor,
+  getBudgetStatusBadge,
+} from "@/config/budget";
+import {
+  formatBudgetAdjustedDailyHint,
   formatBudgetDailyLimit,
+  formatBudgetRemainingDays,
+  formatBudgetViewDetail,
   PAYPLAN_LABEL_LIMIT,
   PAYPLAN_LABEL_MANUAL_TOTAL,
   PAYPLAN_LABEL_PER_DAY,
@@ -10,11 +19,10 @@ import {
   PAYPLAN_LABEL_USED,
 } from "@/config/payplan-labels";
 import {
-  BUDGET_PROGRESS_TRACK,
-  BUDGET_SUBTEXT,
-  getBudgetProgressColor,
-  getBudgetStatusBadge,
-} from "@/config/budget";
+  PAYPLAN_MANAGE_CARD_MOBILE,
+  PAYPLAN_MOBILE_SOLID_CARD,
+  PAYPLAN_MOBILE_SOLID_DIVIDER,
+} from "@/config/payplan-mobile";
 import {
   PLANNER_MANAGE_AMOUNT,
   PLANNER_MANAGE_CARD,
@@ -25,11 +33,6 @@ import {
   PLANNER_MANAGE_META_BETWEEN,
 } from "@/config/planner-manage";
 import { getPlanCategoryAccent } from "@/config/plans";
-import {
-  PAYPLAN_MANAGE_CARD_MOBILE,
-  PAYPLAN_MOBILE_SOLID_CARD,
-  PAYPLAN_MOBILE_SOLID_DIVIDER,
-} from "@/config/payplan-mobile";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import type { BudgetStatus } from "@/types/budget";
@@ -37,12 +40,8 @@ import type { BudgetStatus } from "@/types/budget";
 interface BudgetCardProps {
   status: BudgetStatus;
   disabled?: boolean;
-  onEdit: (status: BudgetStatus) => void;
-  onDelete: (status: BudgetStatus) => void;
+  onViewDetail: (status: BudgetStatus) => void;
 }
-
-const MODE_BADGE =
-  "inline-flex shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-semibold bg-black/6 text-muted-foreground dark:bg-white/10";
 
 function formatLimitModeLabel(status: BudgetStatus): string {
   if (status.budget.limitMode === "daily") {
@@ -55,16 +54,39 @@ function formatLimitModeLabel(status: BudgetStatus): string {
   return PAYPLAN_LABEL_MANUAL_TOTAL;
 }
 
+const MODE_BADGE =
+  "inline-flex shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-semibold bg-black/6 text-muted-foreground dark:bg-white/10";
+
+function formatPaceSummary(status: BudgetStatus): string | null {
+  const { pace } = status;
+
+  if (
+    !pace.isCurrentMonth ||
+    pace.adjustedDailyBudget === null ||
+    pace.plannedDailyBudget === null
+  ) {
+    return null;
+  }
+
+  return formatBudgetAdjustedDailyHint(
+    formatIdr(pace.adjustedDailyBudget),
+    pace.remainingDays,
+    formatIdr(pace.plannedDailyBudget),
+  );
+}
+
 export function BudgetCard({
   status,
   disabled = false,
-  onEdit,
-  onDelete,
+  onViewDetail,
 }: BudgetCardProps) {
   const progressWidth = Math.min(100, status.usedPercent);
   const categoryAccent = getPlanCategoryAccent(status.budget.category);
   const statusBadge = getBudgetStatusBadge(status.remainingPercent);
   const isOver = status.remaining < 0;
+  const paceSummary = formatPaceSummary(status);
+  const showRemainingDays =
+    status.pace.isCurrentMonth && status.pace.remainingDays > 0;
 
   return (
     <article
@@ -72,10 +94,22 @@ export function BudgetCard({
         PLANNER_MANAGE_CARD,
         PAYPLAN_MOBILE_SOLID_CARD,
         PAYPLAN_MANAGE_CARD_MOBILE,
+        "relative",
         disabled && "opacity-60",
+        !disabled &&
+          "transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]",
       )}
     >
-      <div className={PLANNER_MANAGE_CARD_BODY}>
+      {!disabled ? (
+        <button
+          type="button"
+          className="absolute inset-0 z-0 rounded-[inherit]"
+          aria-label={formatBudgetViewDetail(status.categoryLabel)}
+          onClick={() => onViewDetail(status)}
+        />
+      ) : null}
+
+      <div className={cn(PLANNER_MANAGE_CARD_BODY, "relative z-10")}>
         <div className="flex items-center gap-2.5">
           <div
             className={cn(
@@ -94,12 +128,13 @@ export function BudgetCard({
             {status.categoryLabel}
           </h3>
 
-          <BudgetCardMenu
-            status={status}
-            disabled={disabled}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
+          <div className="relative z-20">
+            <BudgetCardMenu
+              status={status}
+              disabled={disabled}
+              onViewDetail={onViewDetail}
+            />
+          </div>
         </div>
 
         <div className={PLANNER_MANAGE_META_BETWEEN}>
@@ -110,7 +145,14 @@ export function BudgetCard({
                 : PAYPLAN_LABEL_MANUAL_TOTAL}
             </span>
             {status.budget.repeatNextMonth ? (
-              <span className={MODE_BADGE}>{PAYPLAN_LABEL_REPEAT_NEXT_MONTH}</span>
+              <span className={MODE_BADGE}>
+                {PAYPLAN_LABEL_REPEAT_NEXT_MONTH}
+              </span>
+            ) : null}
+            {showRemainingDays ? (
+              <span className={MODE_BADGE}>
+                {formatBudgetRemainingDays(status.pace.remainingDays)}
+              </span>
             ) : null}
           </div>
           <span
@@ -142,6 +184,18 @@ export function BudgetCard({
               {formatLimitModeLabel(status)} · {PAYPLAN_LABEL_LIMIT}{" "}
               {formatIdr(status.totalLimit)}
             </p>
+            {paceSummary ? (
+              <p
+                className={cn(
+                  "mt-1 text-[11px] leading-snug",
+                  status.pace.paceStatus === "fast"
+                    ? "text-[#FF9500]"
+                    : "text-muted-foreground",
+                )}
+              >
+                {paceSummary}
+              </p>
+            ) : null}
           </div>
 
           <div>
