@@ -28,42 +28,37 @@ import {
 } from "@/config/ui-labels";
 import type { TransactionType } from "@/types/transaction";
 
-export function getDefaultCategoryForType(
-  type: TransactionType,
-): TransactionCategoryId {
+export function getDefaultCategoryForType(type: TransactionType): string {
   const match = TRANSACTION_CATEGORIES.find((category) =>
     type === "income"
       ? isIncomeCategory(category.id as TransactionCategoryId)
       : !isIncomeCategory(category.id as TransactionCategoryId),
   );
 
-  return (match?.id ?? "other") as TransactionCategoryId;
+  return match?.id ?? "other";
 }
 
 export function resolveCategoryForEntry(
   type: TransactionType,
   category: string,
-): TransactionCategoryId {
-  const normalized = category as TransactionCategoryId;
-  const isIncome = isIncomeCategory(normalized);
-
-  if ((type === "income" && isIncome) || (type === "expense" && !isIncome)) {
-    return normalized;
+): string {
+  if (isIncomeCategory(category as TransactionCategoryId)) {
+    return type === "income" ? category : getDefaultCategoryForType(type);
   }
 
-  return getDefaultCategoryForType(type);
+  return type === "expense" ? category : getDefaultCategoryForType(type);
 }
 
 interface JournalEntryFormFieldsProps {
   type: TransactionType;
-  category: TransactionCategoryId;
+  category: string;
   occurredAtText: string;
   amountDefault?: string;
   descriptionDefault?: string;
   rawInputDefault?: string;
   showRawInput?: boolean;
   onTypeChange: (type: TransactionType) => void;
-  onCategoryChange: (category: TransactionCategoryId) => void;
+  onCategoryChange: (category: string) => void;
   onOccurredAtTextChange: (value: string) => void;
 }
 

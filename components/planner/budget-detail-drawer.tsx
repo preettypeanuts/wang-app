@@ -38,7 +38,6 @@ import {
   PAYPLAN_LABEL_REPEAT_NEXT_MONTH,
   PAYPLAN_LABEL_USED,
 } from "@/config/payplan-labels";
-import { getPlanCategoryAccent } from "@/config/plans";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { buildBudgetDetailExplanation } from "@/lib/finance/build-budget-detail-explanation";
 import { formatIdr } from "@/lib/finance/format-currency";
@@ -80,7 +79,6 @@ export function BudgetDetailDrawer({
 
   const currentStatus = status;
   const { pace } = currentStatus;
-  const categoryAccent = getPlanCategoryAccent(currentStatus.budget.category);
   const statusBadge = getBudgetStatusBadge(currentStatus.remainingPercent);
   const paceBadge = getBudgetPaceBadge(pace.paceStatus);
   const progressWidth = Math.min(100, currentStatus.usedPercent);
@@ -118,18 +116,11 @@ export function BudgetDetailDrawer({
 
       <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
         <div className="flex items-center gap-3 px-1 pb-1">
-          <div
-            className={cn(
-              "flex size-10 shrink-0 items-center justify-center rounded-xl",
-              categoryAccent.iconSurface,
-            )}
-          >
-            <JournalCategoryIcon
-              category={currentStatus.budget.category}
-              type="expense"
-              className={cn("size-5", categoryAccent.iconColor)}
-            />
-          </div>
+          <JournalCategoryIcon
+            category={currentStatus.budget.category}
+            type="expense"
+            className="size-10 [&_svg]:size-[1.15rem]"
+          />
           <div className="flex min-w-0 flex-wrap items-center gap-1.5">
             <span className={MODE_BADGE}>
               {currentStatus.budget.limitMode === "daily"

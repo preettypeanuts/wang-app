@@ -19,7 +19,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import type { TransactionCategoryId } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
 } from "@/config/form-dialog";
@@ -46,7 +45,7 @@ export function JournalEntryCreateDialog({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [type, setType] = useState<TransactionType>("expense");
-  const [category, setCategory] = useState<TransactionCategoryId>("food");
+  const [category, setCategory] = useState<string>("food");
   const [occurredAtText, setOccurredAtText] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [formKey, setFormKey] = useState(0);

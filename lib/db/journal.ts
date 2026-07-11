@@ -13,6 +13,10 @@ import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insig
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
+import {
+  resolveCategoryForTransaction,
+  resolveUserCategoryCatalog,
+} from "@/lib/finance/resolve-user-categories";
 import type { DayFlowTotals } from "@/lib/finance/get-day-flow-totals";
 import { buildJournalTransactionWhere } from "@/lib/journal/build-transaction-where";
 import type {
@@ -312,9 +316,11 @@ export async function updateTransactionCategoryQuick(
   }
 
   const nextType = type ?? existing.type;
-  const nextCategory = resolveCategoryForType(
-    normalizeCategory(category),
+  const catalog = await resolveUserCategoryCatalog(userId);
+  const nextCategory = resolveCategoryForTransaction(
+    category,
     nextType,
+    catalog,
   );
 
   const updated = await prisma.transaction.updateMany({

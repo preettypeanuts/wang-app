@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
+import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
 import { FormDatePicker } from "@/components/shared/form-date-picker";
 import {
@@ -25,11 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  isIncomeCategory,
-  TRANSACTION_CATEGORIES,
-  type TransactionCategoryId,
-} from "@/config/categories";
-import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_FIELD_DATE,
   FORM_FIELD_GRID_ROW,
@@ -48,6 +44,7 @@ import {
   PLANNER_SELECT_ITEM,
   PLANNER_SELECT_TRIGGER,
 } from "@/config/planner-manage";
+import { resolveCategoryForTransaction } from "@/lib/finance/user-category-catalog";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import { toDateInputValue } from "@/lib/validations/planned-item";
@@ -64,35 +61,11 @@ interface ReceiptConfirmDialogProps {
   onConfirm: (input: {
     type: TransactionType;
     amount: string;
-    category: TransactionCategoryId;
+    category: string;
     description: string;
     merchant: string;
     occurredAt: string;
   }) => Promise<void>;
-}
-
-function getDefaultCategoryForType(
-  type: TransactionType,
-): TransactionCategoryId {
-  const match = TRANSACTION_CATEGORIES.find((category) =>
-    type === "income"
-      ? isIncomeCategory(category.id as TransactionCategoryId)
-      : !isIncomeCategory(category.id as TransactionCategoryId),
-  );
-
-  return (match?.id ?? "other") as TransactionCategoryId;
-}
-
-function resolveCategoryForDraft(
-  type: TransactionType,
-  category: TransactionCategoryId,
-): TransactionCategoryId {
-  const isIncome = isIncomeCategory(category);
-  if ((type === "income" && isIncome) || (type === "expense" && !isIncome)) {
-    return category;
-  }
-
-  return getDefaultCategoryForType(type);
 }
 
 export function ReceiptConfirmDialog({
@@ -107,7 +80,8 @@ export function ReceiptConfirmDialog({
   const [isPending, startTransition] = useTransition();
   const [type, setType] = useState<TransactionType>("expense");
   const [amountDraft, setAmountDraft] = useState("");
-  const [category, setCategory] = useState<TransactionCategoryId>("food");
+  const [category, setCategory] = useState<string>("food");
+  const { catalog, getMentionOptions } = useUserCategoryCatalog();
   const [description, setDescription] = useState("");
   const [merchant, setMerchant] = useState("");
   const [occurredAtText, setOccurredAtText] = useState("");
@@ -119,27 +93,26 @@ export function ReceiptConfirmDialog({
 
     setType(draft.type);
     setAmountDraft(String(draft.amount));
-    setCategory(resolveCategoryForDraft(draft.type, draft.category));
+    setCategory(
+      resolveCategoryForTransaction(draft.category, draft.type, catalog),
+    );
     setDescription(draft.description);
     setMerchant(draft.merchant);
     setOccurredAtText(toDateInputValue(new Date(draft.occurredAt)));
-  }, [draft, open]);
+  }, [catalog, draft, open]);
 
   const categoryOptions = useMemo(
-    () =>
-      TRANSACTION_CATEGORIES.filter((entry) =>
-        type === "income"
-          ? isIncomeCategory(entry.id as TransactionCategoryId)
-          : !isIncomeCategory(entry.id as TransactionCategoryId),
-      ),
-    [type],
+    () => getMentionOptions(type),
+    [getMentionOptions, type],
   );
 
   const previewAmount = Number.parseInt(amountDraft, 10) || 0;
 
   function handleTypeChange(nextType: TransactionType) {
     setType(nextType);
-    setCategory((current) => resolveCategoryForDraft(nextType, current));
+    setCategory((current) =>
+      resolveCategoryForTransaction(current, nextType, catalog),
+    );
   }
 
   function handleConfirm() {
@@ -304,9 +277,11 @@ export function ReceiptConfirmDialog({
             <FormDialogField label="Kategori" htmlFor="receipt-category">
               <Select
                 value={category}
-                onValueChange={(value) =>
-                  setCategory(value as TransactionCategoryId)
-                }
+                onValueChange={(value) => {
+                  if (value) {
+                    setCategory(value);
+                  }
+                }}
               >
                 <SelectTrigger
                   id="receipt-category"
@@ -323,7 +298,7 @@ export function ReceiptConfirmDialog({
                     >
                       <span className="flex items-center gap-2">
                         <JournalCategoryIcon
-                          category={entry.id as TransactionCategoryId}
+                          category={entry.id}
                           type={type}
                           className="size-4"
                         />

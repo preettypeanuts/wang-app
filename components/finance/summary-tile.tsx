@@ -1,39 +1,16 @@
 "use client";
 
-import {
-  ArrowDownIcon,
-  ArrowUpIcon,
-  CarIcon,
-  CoinsIcon,
-  DotsThreeIcon,
-  ForkKnifeIcon,
-  ReceiptIcon,
-  ShoppingBagIcon,
-  WalletIcon,
-  type Icon,
-} from "@/lib/icons";
-
+import { CATEGORY_ICON_COMPONENTS } from "@/components/shared/category-icon-map";
+import type { CategoryIconId } from "@/config/category-icons";
 import type { SummaryTileIcon } from "@/config/summary-tiles";
 import { SEPARATED_SURFACE } from "@/config/shape";
 import { cn } from "@/lib/utils";
-
-const TILE_ICONS: Record<SummaryTileIcon, Icon> = {
-  "arrow-down": ArrowDownIcon,
-  "arrow-up": ArrowUpIcon,
-  wallet: WalletIcon,
-  "fork-knife": ForkKnifeIcon,
-  car: CarIcon,
-  "shopping-bag": ShoppingBagIcon,
-  receipt: ReceiptIcon,
-  "dots-three": DotsThreeIcon,
-  coins: CoinsIcon,
-};
 
 interface SummaryTileProps {
   label: string;
   value: string;
   subtitle?: string;
-  icon: SummaryTileIcon;
+  icon: SummaryTileIcon | CategoryIconId;
   surfaceClassName: string;
   iconClassName: string;
   labelClassName?: string;
@@ -56,7 +33,7 @@ export function SummaryTile({
   variant = "default",
   className,
 }: SummaryTileProps) {
-  const IconComponent = TILE_ICONS[icon];
+  const IconComponent = CATEGORY_ICON_COMPONENTS[icon];
   const isCompact = variant === "compact";
 
   return (

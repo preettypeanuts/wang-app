@@ -16,14 +16,14 @@ export const FORM_DIALOG_CONTENT = `flex max-h-[min(calc(100dvh-var(--mobile-saf
 export const FORM_DIALOG_CONTENT_WIDE = `flex max-h-[min(calc(100dvh-var(--mobile-safe-top)-var(--mobile-safe-bottom)-2rem),56rem)] flex-col gap-0 p-0 ${FORM_DIALOG_SURFACE} sm:max-w-[34rem] ${FORM_DIALOG_MOBILE_VIEWPORT}`;
 
 export const FORM_DIALOG_HEADER =
-  "shrink-0 border-b border-black/8 pl-6 pr-14 pt-5 pb-3.5 dark:border-white/10";
+  "shrink-0 border-b border-black/8 pl-6 pr-14 pt-5 pb-4 dark:border-white/10";
 
 export const FORM_DIALOG_BODY =
-  "flex max-h-[min(75vh,36rem)] flex-col gap-4 overflow-y-auto px-5 pb-5";
+  "flex max-h-[min(75vh,36rem)] flex-col gap-4 overflow-y-auto px-5 pt-4 pb-5";
 
 /** Scrollable body — keeps modal within viewport. */
 export const FORM_DIALOG_BODY_SCROLL =
-  "flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-6 py-4";
+  "flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto overscroll-contain px-6 pt-5 pb-4";
 
 export const FORM_DIALOG_FOOTER =
   "flex shrink-0 gap-2 border-t border-black/8 bg-black/2 px-6 py-4 max-md:pb-[calc(1rem+var(--mobile-safe-bottom))] dark:border-white/10 dark:bg-white/3";

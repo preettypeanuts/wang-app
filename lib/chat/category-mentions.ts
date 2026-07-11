@@ -1,14 +1,16 @@
 import {
   isIncomeCategory,
+  isTransactionCategory,
   normalizeCategory,
   resolveCategoryForType,
-  type TransactionCategoryId,
 } from "@/config/categories";
 import {
   CATEGORY_MENTION_OPTIONS,
   type CategoryMentionOption,
 } from "@/config/category-mentions";
 import type { TransactionType } from "@/types/transaction";
+
+export type { CategoryMentionOption };
 
 export interface CategoryMentionRange {
   query: string;
@@ -17,7 +19,7 @@ export interface CategoryMentionRange {
 }
 
 export interface ExplicitCategoryExtraction {
-  category: TransactionCategoryId | null;
+  category: string | null;
   cleanedText: string;
 }
 
@@ -76,8 +78,8 @@ export function getCategoryMentionOptionsForType(
 ): CategoryMentionOption[] {
   return CATEGORY_MENTION_OPTIONS.filter((option) =>
     type === "income"
-      ? isIncomeCategory(option.id)
-      : !isIncomeCategory(option.id),
+      ? isIncomeCategory(option.id as never)
+      : !isIncomeCategory(option.id as never),
   );
 }
 
@@ -120,14 +122,17 @@ export function insertCategoryMention(
   return { nextText, nextCursor };
 }
 
-function resolveMentionToken(token: string): TransactionCategoryId | null {
+function resolveMentionToken(
+  token: string,
+  options: CategoryMentionOption[] = CATEGORY_MENTION_OPTIONS,
+): string | null {
   const normalized = normalizeQuery(token);
 
   if (!normalized) {
     return null;
   }
 
-  for (const option of CATEGORY_MENTION_OPTIONS) {
+  for (const option of options) {
     if (option.token === normalized || option.id === normalized) {
       return option.id;
     }
@@ -137,7 +142,7 @@ function resolveMentionToken(token: string): TransactionCategoryId | null {
     }
   }
 
-  const prefixMatches = CATEGORY_MENTION_OPTIONS.filter(
+  const prefixMatches = options.filter(
     (option) =>
       option.token.startsWith(normalized) || option.id.startsWith(normalized),
   );
@@ -151,14 +156,15 @@ function resolveMentionToken(token: string): TransactionCategoryId | null {
 
 export function extractExplicitCategoryFromText(
   text: string,
+  options: CategoryMentionOption[] = CATEGORY_MENTION_OPTIONS,
 ): ExplicitCategoryExtraction {
   const trimmed = text.trim();
-  let category: TransactionCategoryId | null = null;
+  let category: string | null = null;
   let cleanedText = trimmed;
 
   for (const match of trimmed.matchAll(MENTION_PATTERN)) {
     const token = match[1];
-    const resolved = resolveMentionToken(token);
+    const resolved = resolveMentionToken(token, options);
 
     if (!resolved) {
       continue;
@@ -179,18 +185,33 @@ export function extractExplicitCategoryFromText(
 export function resolveExplicitCategoryForType(
   text: string,
   type: TransactionType,
+  options: CategoryMentionOption[] = CATEGORY_MENTION_OPTIONS,
 ): {
-  category: TransactionCategoryId | null;
+  category: string | null;
   cleanedText: string;
 } {
-  const { category, cleanedText } = extractExplicitCategoryFromText(text);
+  const { category, cleanedText } = extractExplicitCategoryFromText(
+    text,
+    options,
+  );
 
   if (!category) {
     return { category: null, cleanedText };
   }
 
-  return {
-    category: resolveCategoryForType(normalizeCategory(category), type),
-    cleanedText,
-  };
+  if (options !== CATEGORY_MENTION_OPTIONS) {
+    const match = options.find((option) => option.id === category);
+    if (match) {
+      return { category: match.id, cleanedText };
+    }
+  }
+
+  if (isTransactionCategory(category)) {
+    return {
+      category: resolveCategoryForType(normalizeCategory(category), type),
+      cleanedText,
+    };
+  }
+
+  return { category, cleanedText };
 }

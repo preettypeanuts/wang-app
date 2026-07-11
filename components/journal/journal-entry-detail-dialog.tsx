@@ -9,6 +9,7 @@ import {
 } from "@/app/actions/journal";
 import { patchInboxBootstrapOnTransactionDeleted } from "@/lib/inbox/patch-inbox-on-transaction-deleted";
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
+import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import {
   JournalEntryFormFields,
   resolveCategoryForEntry,
@@ -34,10 +35,6 @@ import { formatIdr } from "@/lib/finance/format-currency";
 import { PencilSimpleIcon, TrashIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import { toDateInputValue } from "@/lib/validations/planned-item";
-import {
-  getCategoryLabel,
-  type TransactionCategoryId,
-} from "@/config/categories";
 import type { JournalEntry } from "@/types/journal";
 import type { TransactionType } from "@/types/transaction";
 
@@ -55,10 +52,11 @@ export function JournalEntryDetailDialog({
   onOpenChange,
 }: JournalEntryDetailDialogProps) {
   const router = useRouter();
+  const { getLabel } = useUserCategoryCatalog();
   const [isPending, startTransition] = useTransition();
   const [mode, setMode] = useState<DialogMode>("view");
   const [type, setType] = useState<TransactionType>("expense");
-  const [category, setCategory] = useState<TransactionCategoryId>("food");
+  const [category, setCategory] = useState<string>("food");
   const [occurredAtText, setOccurredAtText] = useState("");
 
   const isEdit = mode === "edit";
@@ -81,7 +79,7 @@ export function JournalEntryDetailDialog({
   const currentEntry = entry;
   const isIncome = currentEntry.type === "income";
   const title = currentEntry.rawInput.trim() || currentEntry.description;
-  const categoryLabel = getCategoryLabel(currentEntry.category);
+  const categoryLabel = getLabel(currentEntry.category);
   const showDescription =
     currentEntry.description.trim().length > 0 &&
     currentEntry.description.trim() !== currentEntry.rawInput.trim();

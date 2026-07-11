@@ -70,7 +70,7 @@ function resolveOccurredAt(
 async function toParsedTransaction(
   payload: GeminiTransactionPayload,
   fallbackDescription: string,
-  explicitCategory: TransactionCategoryId | null,
+  explicitCategory: string | null,
   fallbackOccurredAt: Date,
   userId?: string,
 ): Promise<ParsedTransaction> {
@@ -102,7 +102,7 @@ async function toParsedTransaction(
         userId,
       );
 
-  if (!isTransactionCategory(category)) {
+  if (!isTransactionCategory(category) && !category.startsWith("custom_")) {
     throw new TransactionParseError("Kategori transaksi tidak dikenali.");
   }
 

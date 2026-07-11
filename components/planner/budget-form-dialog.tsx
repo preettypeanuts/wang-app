@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
+import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import { BudgetRepeatNextMonthField } from "@/components/planner/budget-repeat-next-month-field";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
 import {
@@ -69,7 +70,6 @@ import { SEPARATED_CONTROL } from "@/config/shape";
 import { getBudgetDayCount } from "@/lib/finance/compute-budget-status";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
-import { getBudgetCategoryOptions } from "@/lib/validations/budget";
 import type { BudgetLimitMode, BudgetStatus } from "@/types/budget";
 
 interface BudgetFormDialogProps {
@@ -89,6 +89,7 @@ export function BudgetFormDialog({
   onOpenChange,
   onSubmit,
 }: BudgetFormDialogProps) {
+  const { getExpenseOptions } = useUserCategoryCatalog();
   const [isPending, startTransition] = useTransition();
   const [limitMode, setLimitMode] = useState<BudgetLimitMode>("daily");
   const [category, setCategory] = useState("food");
@@ -97,7 +98,14 @@ export function BudgetFormDialog({
   const [fixedLimit, setFixedLimit] = useState("1500000");
   const [repeatNextMonth, setRepeatNextMonth] = useState(false);
 
-  const categoryOptions = useMemo(() => getBudgetCategoryOptions(), []);
+  const categoryOptions = useMemo(
+    () =>
+      getExpenseOptions().map((entry) => ({
+        id: entry.id,
+        label: entry.label,
+      })),
+    [getExpenseOptions],
+  );
   const defaultDayCount = useMemo(
     () =>
       String(

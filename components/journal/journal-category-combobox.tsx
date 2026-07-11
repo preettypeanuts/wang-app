@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
 import { JournalCategoryOptionList } from "@/components/journal/journal-category-option-list";
+import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import {
   Drawer,
   DrawerContent,
@@ -16,15 +17,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import type { TransactionCategoryId } from "@/config/categories";
 import { FORM_FIELD_SELECT } from "@/config/form-dialog";
 import { MOBILE_BOTTOM_DRAWER_POPUP } from "@/config/mobile-layout";
 import { PLANNER_SELECT_TRIGGER } from "@/config/planner-manage";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
-import {
-  filterCategoryMentionOptionsForType,
-  getCategoryMentionOptionsForType,
-} from "@/lib/chat/category-mentions";
+import { filterCategoryMentionOptions } from "@/lib/chat/category-mentions";
 import { CaretDownIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type { TransactionType } from "@/types/transaction";
@@ -32,8 +29,8 @@ import type { TransactionType } from "@/types/transaction";
 interface JournalCategoryComboboxProps {
   id?: string;
   type: TransactionType;
-  value: TransactionCategoryId;
-  onChange: (value: TransactionCategoryId) => void;
+  value: string;
+  onChange: (value: string) => void;
   className?: string;
 }
 
@@ -43,6 +40,7 @@ function JournalCategoryTrigger({
   open,
   selectedLabel,
   selectedCategoryId,
+  selectedIcon,
   transactionType,
   onClick,
 }: {
@@ -50,7 +48,8 @@ function JournalCategoryTrigger({
   className?: string;
   open: boolean;
   selectedLabel?: string;
-  selectedCategoryId?: TransactionCategoryId;
+  selectedCategoryId?: string;
+  selectedIcon?: string;
   transactionType: TransactionType;
   onClick?: () => void;
 }) {
@@ -68,6 +67,7 @@ function JournalCategoryTrigger({
           <JournalCategoryIcon
             category={selectedCategoryId}
             type={transactionType}
+            iconOverride={selectedIcon as never}
             className="size-6 shrink-0 rounded-lg"
           />
           <span className="truncate">{selectedLabel}</span>
@@ -88,17 +88,18 @@ export function JournalCategoryCombobox({
   className,
 }: JournalCategoryComboboxProps) {
   const isMobile = useIsMobileViewport();
+  const { getMentionOptions } = useUserCategoryCatalog();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
   const typeOptions = useMemo(
-    () => getCategoryMentionOptionsForType(type),
-    [type],
+    () => getMentionOptions(type),
+    [getMentionOptions, type],
   );
 
   const filteredOptions = useMemo(
-    () => filterCategoryMentionOptionsForType(search, type),
-    [search, type],
+    () => filterCategoryMentionOptions(search, typeOptions),
+    [search, typeOptions],
   );
 
   const selectedOption = typeOptions.find((option) => option.id === value);
@@ -110,7 +111,7 @@ export function JournalCategoryCombobox({
     }
   }
 
-  function handleSelect(optionId: TransactionCategoryId) {
+  function handleSelect(optionId: string) {
     onChange(optionId);
     setOpen(false);
     setSearch("");
@@ -137,6 +138,7 @@ export function JournalCategoryCombobox({
           open={open}
           selectedLabel={selectedOption?.label}
           selectedCategoryId={selectedOption?.id}
+          selectedIcon={undefined}
           transactionType={type}
           onClick={() => setOpen(true)}
         />

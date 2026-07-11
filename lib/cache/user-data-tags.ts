@@ -6,4 +6,5 @@ export const userDataTags = {
   plannedItems: (userId: string) => `user-${userId}-planned-items`,
   budgets: (userId: string) => `user-${userId}-budgets`,
   inbox: (userId: string) => `user-${userId}-inbox`,
+  categories: (userId: string) => `user-${userId}-categories`,
 } as const;

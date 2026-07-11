@@ -1,19 +1,30 @@
 "use client";
 
 import {
+  sfAirplane,
   sfArrowClockwise,
   sfArrowDown,
   sfArrowLeft,
   sfArrowUp,
   sfArrowUturnLeft,
   sfBagFill,
+  sfBasketFill,
   sfBellFill,
   sfBanknoteFill,
+  sfBicycle,
+  sfBirthdayCakeFill,
+  sfBitcoinsignCircleFill,
+  sfBoltFill,
   sfBookFill,
+  sfBriefcaseFill,
   sfBubbleLeftAndBubbleRightFill,
+  sfBuilding2Fill,
+  sfBusFill,
   sfCalendar,
+  sfCameraFill,
   sfCarFill,
   sfCartFill,
+  sfChartLineUptrendXyaxis,
   sfCheckmark,
   sfCheckmarkCircleFill,
   sfCloudBoltFill,
@@ -26,32 +37,66 @@ import {
   sfCreditcardFill,
   sfDesktopcomputer,
   sfDollarsignCircleFill,
+  sfDropFill,
+  sfDumbbellFill,
   sfEllipsis,
   sfExclamationmarkTriangleFill,
   sfEyeFill,
   sfEyeSlashFill,
   sfCupAndSaucerFill,
+  sfFigure2AndChildHoldinghands,
+  sfFilmFill,
+  sfFuelpumpFill,
+  sfGamecontrollerFill,
   sfGearshapeFill,
+  sfGiftFill,
+  sfGlobeAmericasFill,
+  sfGraduationcapFill,
   sfHeartFill,
+  sfHouseFill,
   sfInfinity,
+  sfIphone,
+  sfLaptopcomputer,
+  sfLeafFill,
   sfLine3Horizontal,
   sfLine3HorizontalDecrease,
   sfMagnifyingglass,
   sfMoonFill,
+  sfMusicNote,
+  sfPaintbrushFill,
+  sfPartyPopperFill,
+  sfPawprintFill,
   sfPencil,
+  sfPercent,
   sfPersonCircleFill,
+  sfPillsFill,
   sfPlus,
   sfReceiptFill,
+  sfScissors,
+  sfShippingboxFill,
   sfSidebarLeft,
   sfShieldFill,
+  sfSofaFill,
   sfSparkles,
   sfSquareAndArrowUpFill,
   sfSquareGrid2x2Fill,
+  sfStarFill,
+  sfStorefrontFill,
   sfSum,
   sfSunMaxFill,
   sfTablecellsFill,
+  sfTagFill,
+  sfTakeoutbagAndCupAndStrawFill,
+  sfTicketFill,
+  sfTramFill,
   sfTrashFill,
+  sfTrophyFill,
+  sfTshirtFill,
+  sfTvFill,
   sfWalletBifoldFill,
+  sfWifi,
+  sfWineglassFill,
+  sfWrenchAdjustableFill,
   sfXmark,
   sfXmarkCircleFill,
 } from "@bradleyhodges/sfsymbols";
@@ -184,6 +229,78 @@ export const UserCircleIcon = createSFIcon(
 export const WalletIcon = createSFIcon(sfWalletBifoldFill, "WalletIcon");
 export const XCircleIcon = createSFIcon(sfXmarkCircleFill, "XCircleIcon");
 export const XIcon = createSFIcon(sfXmark, "XIcon");
+
+/** Extra SF Symbols available as user category icons. */
+export const AirplaneIcon = createSFIcon(sfAirplane, "AirplaneIcon");
+export const BasketIcon = createSFIcon(sfBasketFill, "BasketIcon");
+export const BicycleIcon = createSFIcon(sfBicycle, "BicycleIcon");
+export const BirthdayCakeIcon = createSFIcon(
+  sfBirthdayCakeFill,
+  "BirthdayCakeIcon",
+);
+export const BitcoinIcon = createSFIcon(
+  sfBitcoinsignCircleFill,
+  "BitcoinIcon",
+);
+export const BoltIcon = createSFIcon(sfBoltFill, "BoltIcon");
+export const BriefcaseIcon = createSFIcon(sfBriefcaseFill, "BriefcaseIcon");
+export const BuildingIcon = createSFIcon(sfBuilding2Fill, "BuildingIcon");
+export const BusIcon = createSFIcon(sfBusFill, "BusIcon");
+export const CameraIcon = createSFIcon(sfCameraFill, "CameraIcon");
+export const CartIcon = createSFIcon(sfCartFill, "CartIcon");
+export const ChartUptrendIcon = createSFIcon(
+  sfChartLineUptrendXyaxis,
+  "ChartUptrendIcon",
+);
+export const DropIcon = createSFIcon(sfDropFill, "DropIcon");
+export const DumbbellIcon = createSFIcon(sfDumbbellFill, "DumbbellIcon");
+export const FamilyIcon = createSFIcon(
+  sfFigure2AndChildHoldinghands,
+  "FamilyIcon",
+);
+export const FilmIcon = createSFIcon(sfFilmFill, "FilmIcon");
+export const FuelPumpIcon = createSFIcon(sfFuelpumpFill, "FuelPumpIcon");
+export const GameControllerIcon = createSFIcon(
+  sfGamecontrollerFill,
+  "GameControllerIcon",
+);
+export const GiftIcon = createSFIcon(sfGiftFill, "GiftIcon");
+export const GlobeIcon = createSFIcon(sfGlobeAmericasFill, "GlobeIcon");
+export const GraduationCapIcon = createSFIcon(
+  sfGraduationcapFill,
+  "GraduationCapIcon",
+);
+export const HouseIcon = createSFIcon(sfHouseFill, "HouseIcon");
+export const LaptopIcon = createSFIcon(sfLaptopcomputer, "LaptopIcon");
+export const LeafIcon = createSFIcon(sfLeafFill, "LeafIcon");
+export const MusicNoteIcon = createSFIcon(sfMusicNote, "MusicNoteIcon");
+export const PaintbrushIcon = createSFIcon(sfPaintbrushFill, "PaintbrushIcon");
+export const PartyPopperIcon = createSFIcon(sfPartyPopperFill, "PartyPopperIcon");
+export const PawPrintIcon = createSFIcon(sfPawprintFill, "PawPrintIcon");
+export const PercentIcon = createSFIcon(sfPercent, "PercentIcon");
+export const PillsIcon = createSFIcon(sfPillsFill, "PillsIcon");
+export const ScissorsIcon = createSFIcon(sfScissors, "ScissorsIcon");
+export const ShippingBoxIcon = createSFIcon(
+  sfShippingboxFill,
+  "ShippingBoxIcon",
+);
+export const SmartphoneIcon = createSFIcon(sfIphone, "SmartphoneIcon");
+export const SofaIcon = createSFIcon(sfSofaFill, "SofaIcon");
+export const StarIcon = createSFIcon(sfStarFill, "StarIcon");
+export const StorefrontIcon = createSFIcon(sfStorefrontFill, "StorefrontIcon");
+export const TagIcon = createSFIcon(sfTagFill, "TagIcon");
+export const TakeoutBagIcon = createSFIcon(
+  sfTakeoutbagAndCupAndStrawFill,
+  "TakeoutBagIcon",
+);
+export const TicketIcon = createSFIcon(sfTicketFill, "TicketIcon");
+export const TrainIcon = createSFIcon(sfTramFill, "TrainIcon");
+export const TrophyIcon = createSFIcon(sfTrophyFill, "TrophyIcon");
+export const TshirtIcon = createSFIcon(sfTshirtFill, "TshirtIcon");
+export const TvIcon = createSFIcon(sfTvFill, "TvIcon");
+export const WifiIcon = createSFIcon(sfWifi, "WifiIcon");
+export const WineGlassIcon = createSFIcon(sfWineglassFill, "WineGlassIcon");
+export const WrenchIcon = createSFIcon(sfWrenchAdjustableFill, "WrenchIcon");
 
 /** Filled SF Symbols for mobile bottom nav (iOS liquid glass). */
 export const MobileNavOverviewIcon = createSFIcon(

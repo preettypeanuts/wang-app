@@ -25,8 +25,8 @@ const QUICK_CORRECT_INCOME_CATEGORY_IDS: TransactionCategoryId[] = [
 
 export function getQuickCorrectCategories(
   type: TransactionType,
-  excludeCategory?: TransactionCategoryId,
-): Array<{ id: TransactionCategoryId; label: string }> {
+  excludeCategory?: string,
+): Array<{ id: string; label: string }> {
   const ids =
     type === "income"
       ? QUICK_CORRECT_INCOME_CATEGORY_IDS

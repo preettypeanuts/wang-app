@@ -1,4 +1,7 @@
+"use client";
+
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
+import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import {
   JOURNAL_LIST_AMOUNT_EXPENSE,
   JOURNAL_LIST_AMOUNT_INCOME,
@@ -8,7 +11,6 @@ import {
   JOURNAL_LIST_ROW_META,
   JOURNAL_LIST_ROW_TITLE,
 } from "@/config/journal-table";
-import { getCategoryLabel } from "@/config/categories";
 import { formatJournalTime } from "@/lib/finance/format-datetime";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
@@ -20,9 +22,10 @@ interface JournalEntryRowProps {
 }
 
 export function JournalEntryRow({ item, onClick }: JournalEntryRowProps) {
+  const { getLabel } = useUserCategoryCatalog();
   const isIncome = item.type === "income";
   const title = item.rawInput.trim() || item.description;
-  const categoryLabel = getCategoryLabel(item.category);
+  const categoryLabel = getLabel(item.category);
 
   const content = (
     <>
@@ -42,7 +45,7 @@ export function JournalEntryRow({ item, onClick }: JournalEntryRowProps) {
           isIncome ? JOURNAL_LIST_AMOUNT_INCOME : JOURNAL_LIST_AMOUNT_EXPENSE,
         )}
       >
-        {isIncome ? "+" : "−"}
+        {isIncome ? "+" : "-"}
         {formatIdr(item.amount)}
       </p>
     </>
@@ -53,15 +56,7 @@ export function JournalEntryRow({ item, onClick }: JournalEntryRowProps) {
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        JOURNAL_LIST_ROW,
-        "w-full text-left transition-colors",
-        "hover:bg-black/3 active:bg-black/5 dark:hover:bg-white/5 dark:active:bg-white/8",
-      )}
-    >
+    <button type="button" onClick={onClick} className={JOURNAL_LIST_ROW}>
       {content}
     </button>
   );

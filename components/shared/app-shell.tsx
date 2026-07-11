@@ -3,6 +3,7 @@
 import { Suspense } from "react";
 import { usePathname } from "next/navigation";
 
+import { UserCategoryCatalogProvider } from "@/components/providers/user-category-catalog-provider";
 import { AppContentSurface } from "@/components/shared/app-content-surface";
 import { DesktopAppSidebar } from "@/components/shared/desktop-app-sidebar";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
@@ -61,7 +62,8 @@ export function AppShell({ children, initialSidebarOpen }: AppShellProps) {
             {children}
           </div>
         ) : (
-          <PersistentSidebarProvider
+          <UserCategoryCatalogProvider>
+            <PersistentSidebarProvider
             initialOpen={initialSidebarOpen}
             className="relative z-10 h-full min-h-0 flex-1 overflow-hidden bg-transparent md:min-h-svh"
             style={
@@ -98,6 +100,7 @@ export function AppShell({ children, initialSidebarOpen }: AppShellProps) {
               <NotificationBannerStack />
             </FixedViewportPortal>
           </PersistentSidebarProvider>
+          </UserCategoryCatalogProvider>
         )}
       </div>
     </WallpaperProvider>

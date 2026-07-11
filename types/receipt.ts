@@ -1,10 +1,9 @@
-import type { TransactionCategoryId } from "@/config/categories";
 import type { TransactionType } from "@/types/transaction";
 
 export interface ReceiptDraft {
   type: TransactionType;
   amount: number;
-  category: TransactionCategoryId;
+  category: string;
   description: string;
   merchant: string;
   occurredAt: string;
@@ -18,7 +17,7 @@ export type ParseReceiptResult =
 export interface ConfirmedReceiptTransaction {
   type: TransactionType;
   amount: number;
-  category: TransactionCategoryId;
+  category: string;
   description: string;
   merchant: string;
   occurredAt: string;

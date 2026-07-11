@@ -1,12 +1,10 @@
-import type { TransactionCategoryId } from "@/config/categories";
-
 export type TransactionType = "income" | "expense";
 
 export interface ParsedTransaction {
   id?: string;
   type: TransactionType;
   amount: number;
-  category: TransactionCategoryId;
+  category: string;
   description: string;
   occurredAt: string;
 }

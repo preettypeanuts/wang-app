@@ -10,6 +10,7 @@ import {
   deleteCategoryBudget,
   updateCategoryBudget,
 } from "@/lib/db/budgets";
+import { resolveUserCategoryCatalog } from "@/lib/finance/resolve-user-categories";
 import { parseCategoryBudgetFormData } from "@/lib/validations/budget";
 import type { CategoryBudgetRecord } from "@/types/budget";
 
@@ -36,7 +37,8 @@ export async function saveCategoryBudgetAction(
   formData: FormData,
 ): Promise<BudgetActionResult> {
   const userId = await requireUserId();
-  const parsed = parseCategoryBudgetFormData(formData);
+  const catalog = await resolveUserCategoryCatalog(userId);
+  const parsed = parseCategoryBudgetFormData(formData, catalog);
 
   if (!parsed.ok) {
     return parsed;

@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 
-import { type TransactionCategoryId } from "@/config/categories";
 import { buildWarmTransactionReply } from "@/lib/ai/build-inbox-transaction-reply";
 import { requireUserId } from "@/lib/auth/session";
 import {
@@ -19,6 +18,7 @@ import {
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
 import { getBudgetStatusForExpense } from "@/lib/finance/build-budget-reply";
+import { resolveUserCategoryCatalog } from "@/lib/finance/resolve-user-categories";
 import { saveUserCategoryOverride } from "@/lib/finance/user-category-override";
 import { parseJournalEntryFormData } from "@/lib/validations/journal-entry";
 import type { JournalEntry } from "@/types/journal";
@@ -63,7 +63,8 @@ export async function saveJournalEntryAction(
     return { ok: false, error: "Transaksi tidak ditemukan." };
   }
 
-  const parsed = parseJournalEntryFormData(formData);
+  const catalog = await resolveUserCategoryCatalog(userId);
+  const parsed = parseJournalEntryFormData(formData, catalog);
 
   if (!parsed.ok) {
     return parsed;
@@ -79,7 +80,8 @@ export async function createJournalEntryAction(
   formData: FormData,
 ): Promise<JournalActionResult> {
   const userId = await requireUserId();
-  const parsed = parseJournalEntryFormData(formData);
+  const catalog = await resolveUserCategoryCatalog(userId);
+  const parsed = parseJournalEntryFormData(formData, catalog);
 
   if (!parsed.ok) {
     return parsed;
@@ -108,7 +110,7 @@ export type UpdateTransactionCategoryResult =
 
 export async function updateTransactionCategoryAction(input: {
   transactionId: string;
-  category: TransactionCategoryId;
+  category: string;
   type?: TransactionType;
   assistantMessageId?: string;
 }): Promise<UpdateTransactionCategoryResult> {

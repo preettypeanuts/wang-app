@@ -1,12 +1,18 @@
 import {
+  getCategoryLabel,
   isTransactionCategory,
   normalizeCategory,
   resolveCategoryForType,
-  getCategoryLabel,
 } from "@/config/categories";
+import {
+  getCategoryLabelFromCatalog,
+  isCategoryInCatalog,
+  resolveCategoryForTransaction,
+} from "@/lib/finance/user-category-catalog";
 import { parseAmount } from "@/lib/finance/parse-amount";
 import { parseDateOnlyInput } from "@/lib/finance/day-range";
 import { isValidDateInput } from "@/lib/validations/planned-item";
+import type { ResolvedCategory } from "@/types/user-category";
 import type { JournalEntryFormInput } from "@/types/journal";
 import type { TransactionType } from "@/types/transaction";
 
@@ -27,6 +33,7 @@ function parseOccurredAtDateInput(dateInput: string): Date | null {
 
 export function parseJournalEntryFormData(
   formData: FormData,
+  catalog?: ResolvedCategory[],
 ): { ok: true; data: JournalEntryFormInput } | { ok: false; error: string } {
   const typeRaw = readString(formData, "type");
 
@@ -46,16 +53,25 @@ export function parseJournalEntryFormData(
 
   const descriptionInput = readString(formData, "description");
 
-  const category = resolveCategoryForType(
-    normalizeCategory(readString(formData, "category")),
-    type,
-  );
+  const categoryRaw = readString(formData, "category");
+  const category = catalog
+    ? resolveCategoryForTransaction(categoryRaw, type, catalog)
+    : resolveCategoryForType(
+        normalizeCategory(categoryRaw),
+        type,
+      );
 
-  if (!isTransactionCategory(category)) {
+  if (catalog) {
+    if (!isCategoryInCatalog(catalog, category, type)) {
+      return { ok: false, error: "Kategori tidak valid." };
+    }
+  } else if (!isTransactionCategory(category)) {
     return { ok: false, error: "Kategori tidak valid." };
   }
 
-  const description = descriptionInput || getCategoryLabel(category);
+  const description =
+    descriptionInput ||
+    (catalog ? getCategoryLabelFromCatalog(catalog, category) : getCategoryLabel(category));
   const rawInput = readString(formData, "rawInput") || description;
   const occurredAt = parseOccurredAtDateInput(
     readString(formData, "occurredAt"),

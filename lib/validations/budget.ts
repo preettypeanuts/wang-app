@@ -2,8 +2,12 @@ import {
   isIncomeCategory,
   normalizeCategory,
   TRANSACTION_CATEGORIES,
-  type TransactionCategoryId,
 } from "@/config/categories";
+import {
+  isExpenseCategoryId,
+  resolveCategoryForTransaction,
+} from "@/lib/finance/user-category-catalog";
+import type { ResolvedCategory } from "@/types/user-category";
 import { parseAmount } from "@/lib/finance/parse-amount";
 import { parseMonthKey } from "@/lib/planner/calendar";
 import type { BudgetLimitMode, CategoryBudgetFormInput } from "@/types/budget";
@@ -24,15 +28,26 @@ function parsePositiveInteger(value: string): number | null {
   return parsed;
 }
 
-function isExpenseCategory(category: string): boolean {
+function isExpenseCategory(
+  category: string,
+  catalog?: ResolvedCategory[],
+): boolean {
+  if (catalog) {
+    return isExpenseCategoryId(category, catalog);
+  }
+
   const normalized = normalizeCategory(category);
-  return !isIncomeCategory(normalized as TransactionCategoryId);
+  return !isIncomeCategory(normalized as never);
 }
 
 export function parseCategoryBudgetFormData(
   formData: FormData,
+  catalog?: ResolvedCategory[],
 ): { ok: true; data: CategoryBudgetFormInput } | { ok: false; error: string } {
-  const category = normalizeCategory(readString(formData, "category"));
+  const categoryRaw = readString(formData, "category");
+  const category = catalog
+    ? resolveCategoryForTransaction(categoryRaw, "expense", catalog)
+    : normalizeCategory(categoryRaw);
   const periodMonth = readString(formData, "periodMonth");
   const limitMode = readString(formData, "limitMode") as BudgetLimitMode;
   const dailyAmountText = readString(formData, "dailyAmount");
@@ -41,7 +56,7 @@ export function parseCategoryBudgetFormData(
   const note = readString(formData, "note");
   const repeatNextMonth = readString(formData, "repeatNextMonth") === "true";
 
-  if (!isExpenseCategory(category)) {
+  if (!isExpenseCategory(category, catalog)) {
     return { ok: false, error: "Kategori budget tidak valid." };
   }
 
@@ -98,8 +113,20 @@ export function parseCategoryBudgetFormData(
   };
 }
 
-export function getBudgetCategoryOptions() {
+export function getBudgetCategoryOptions(catalog?: ResolvedCategory[]) {
+  if (catalog) {
+    return catalog
+      .filter((entry) => entry.type === "expense")
+      .map((entry) => ({
+        id: entry.id,
+        label: entry.label,
+      }));
+  }
+
   return TRANSACTION_CATEGORIES.filter(
-    (category) => !isIncomeCategory(category.id as TransactionCategoryId),
-  );
+    (category) => !isIncomeCategory(category.id as never),
+  ).map((category) => ({
+    id: category.id,
+    label: category.label,
+  }));
 }

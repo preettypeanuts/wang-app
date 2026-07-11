@@ -30,7 +30,7 @@ export const CATEGORY_MENTION_TOKENS: Record<TransactionCategoryId, string> = {
 };
 
 export interface CategoryMentionOption {
-  id: TransactionCategoryId;
+  id: string;
   label: string;
   token: string;
   searchTerms: string[];

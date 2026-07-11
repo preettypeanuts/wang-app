@@ -7,7 +7,6 @@ import { CHAT_BUBBLE_STYLES } from "@/config/chat-bubbles";
 import { SEPARATED_SURFACE } from "@/config/shape";
 import { isUncertainTransactionType } from "@/lib/chat/low-confidence-transaction";
 import { cn } from "@/lib/utils";
-import type { TransactionCategoryId } from "@/config/categories";
 import type { ParsedTransaction, TransactionType } from "@/types/transaction";
 
 const QUICK_CORRECT_SHELL = cn(
@@ -35,7 +34,7 @@ interface TransactionQuickCorrectProps {
   userInput: string;
   disabled?: boolean;
   onCorrect: (input: {
-    category: TransactionCategoryId;
+    category: string;
     type: TransactionType;
   }) => void;
 }
@@ -54,7 +53,7 @@ export function TransactionQuickCorrect({
     setPendingType(type);
   }
 
-  function handleCategorySelect(category: TransactionCategoryId) {
+  function handleCategorySelect(category: string) {
     onCorrect({ category, type: pendingType });
   }
 
