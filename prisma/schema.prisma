@@ -31,6 +31,7 @@ model User {
   appNotifications  AppNotification[]
   aiInsightCaches                AiInsightCache[]
   categoryOverrides              UserCategoryOverride[]
+  userCategories                 UserCategory[]
   recurringSuggestionDismissals  RecurringSuggestionDismissal[]
 
   @@unique([email])
@@ -344,6 +345,30 @@ model UserCategoryOverride {
 
   @@unique([userId, keyword, type])
   @@index([userId])
+  @@schema("monmon_whethertie")
+}
+
+model UserCategory {
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  slug           String
+  label          String
+  icon           String
+  iconIsCustom   Boolean         @default(false)
+  accentLight    String?
+  accentDark     String?
+  colorIsCustom  Boolean         @default(false)
+  type           TransactionType
+  baseCategoryId String?
+  hidden         Boolean         @default(false)
+  sortOrder      Int             @default(0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([userId, slug])
+  @@index([userId])
+  @@map("user_category")
   @@schema("monmon_whethertie")
 }
 

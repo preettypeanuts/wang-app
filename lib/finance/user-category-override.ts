@@ -11,7 +11,7 @@ export async function saveUserCategoryOverride(
   userId: string,
   description: string,
   type: TransactionType,
-  category: TransactionCategoryId,
+  category: string,
 ): Promise<void> {
   const keyword = extractCategoryKeyword(description);
   if (!keyword) {
