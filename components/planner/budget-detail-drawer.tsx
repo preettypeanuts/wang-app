@@ -79,7 +79,10 @@ export function BudgetDetailDrawer({
 
   const currentStatus = status;
   const { pace } = currentStatus;
-  const statusBadge = getBudgetStatusBadge(currentStatus.remainingPercent);
+  const statusBadge = getBudgetStatusBadge(
+    currentStatus.remainingPercent,
+    pace,
+  );
   const paceBadge = getBudgetPaceBadge(pace.paceStatus);
   const progressWidth = Math.min(100, currentStatus.usedPercent);
   const isOver = currentStatus.remaining < 0;

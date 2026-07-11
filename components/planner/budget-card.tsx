@@ -82,7 +82,10 @@ export function BudgetCard({
 }: BudgetCardProps) {
   const progressWidth = Math.min(100, status.usedPercent);
   const categoryAccent = getPlanCategoryAccent(status.budget.category);
-  const statusBadge = getBudgetStatusBadge(status.remainingPercent);
+  const statusBadge = getBudgetStatusBadge(
+    status.remainingPercent,
+    status.pace,
+  );
   const isOver = status.remaining < 0;
   const paceSummary = formatPaceSummary(status);
   const showRemainingDays =
