@@ -6,7 +6,10 @@ import {
   setCachedAiInsight,
   todayDateKey,
 } from "@/lib/db/ai-insight-cache";
-import { buildFallbackPlansInsight } from "@/lib/finance/build-plans-overview";
+import {
+  buildFallbackPlansInsight,
+  computePlansSalaryCycleProjection,
+} from "@/lib/finance/build-plans-overview";
 import type { PlanBudgetImpact, PlanRecord } from "@/types/plan";
 
 function groupWishNamesByCategory(
@@ -36,6 +39,8 @@ export async function generatePlansInsight(
   remainingBudgetTotal: number,
   budgetImpacts: PlanBudgetImpact[],
   upcomingIncomeTotal = 0,
+  nextMonthPayPlanTotal = 0,
+  remainingBudgetNextMonth = 0,
 ): Promise<string> {
   const dateKey = todayDateKey();
   const cached = await getCachedAiInsight<string>(
@@ -54,6 +59,18 @@ export async function generatePlansInsight(
     (impact) => impact.status !== "aman",
   );
   const wishNamesByCategory = groupWishNamesByCategory(activePlans);
+  const salaryCycleProjection =
+    upcomingIncomeTotal > 0
+      ? computePlansSalaryCycleProjection(
+          availableBalance,
+          estimatedCost,
+          upcomingPayPlanTotal,
+          remainingBudgetTotal,
+          upcomingIncomeTotal,
+          nextMonthPayPlanTotal,
+          remainingBudgetNextMonth,
+        )
+      : null;
 
   if (isGeminiConfigured()) {
     try {
@@ -64,6 +81,9 @@ export async function generatePlansInsight(
         upcomingPayPlanTotal,
         upcomingIncomeTotal,
         remainingBudgetTotal,
+        nextMonthPayPlanTotal,
+        remainingBudgetNextMonth,
+        salaryCycleProjection,
         planNames: activePlans.map((plan) => plan.name),
         riskyBudgetImpacts,
         wishNamesByCategory,
@@ -77,6 +97,7 @@ export async function generatePlansInsight(
         upcomingPayPlanTotal,
         remainingBudgetTotal,
         upcomingIncomeTotal,
+        salaryCycleProjection,
       );
     }
   }
@@ -87,5 +108,6 @@ export async function generatePlansInsight(
     upcomingPayPlanTotal,
     remainingBudgetTotal,
     upcomingIncomeTotal,
+    salaryCycleProjection,
   );
 }

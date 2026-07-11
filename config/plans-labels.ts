@@ -70,7 +70,11 @@ export const PLANS_AI_METRIC_BALANCE_PREFIX = "balance";
 export const PLANS_AI_PAYPLAN_THIS_MONTH = "PayPlan bills this month";
 export const PLANS_AI_REMAINING_BUDGET_THIS_MONTH =
   "Remaining PayPlan budget this month";
-export const PLANS_AI_PROJECTED_REMAINING = "Projected remaining";
+export const PLANS_AI_PROJECTED_REMAINING = "Remaining after obligations";
+export const PLANS_AI_UPCOMING_INCOME_THIS_MONTH =
+  "Scheduled income this month (not received)";
+export const PLANS_AI_SALARY_CYCLE_PROJECTION =
+  "After salary, reserved for next month";
 export const PLANS_AI_BUDGET_IMPACT = "Budget impact";
 export const PLANS_AI_BUDGET_OVER_BY = "over by";
 export const PLANS_AI_BUDGET_REMAINING = "left";

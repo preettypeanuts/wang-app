@@ -32,6 +32,7 @@ import { STACK_GAP } from "@/config/spacing";
 import {
   buildFallbackPlansInsight,
   buildPlansOverview,
+  computePlansSalaryCycleProjection,
 } from "@/lib/finance/build-plans-overview";
 import { PlusIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -62,6 +63,18 @@ function buildLocalOverview(
 ): PlansOverview {
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
+  const salaryCycleProjection =
+    base.upcomingIncomeTotal > 0
+      ? computePlansSalaryCycleProjection(
+          base.availableBalance,
+          estimatedCost,
+          base.upcomingPayPlanTotal,
+          base.remainingBudgetTotal,
+          base.upcomingIncomeTotal,
+          base.nextMonthPayPlanTotal,
+          base.remainingBudgetNextMonth,
+        )
+      : null;
 
   return buildPlansOverview(
     plans,
@@ -71,11 +84,19 @@ function buildLocalOverview(
       base.availableBalance,
       base.upcomingPayPlanTotal,
       base.remainingBudgetTotal,
+      base.upcomingIncomeTotal,
+      salaryCycleProjection,
     ),
     base.upcomingPayPlanTotal,
     base.upcomingPayPlanCount,
     base.budgetImpacts,
     base.remainingBudgetTotal,
+    base.upcomingIncomeTotal,
+    base.upcomingIncomeCount,
+    {
+      nextMonthPayPlanTotal: base.nextMonthPayPlanTotal,
+      remainingBudgetNextMonth: base.remainingBudgetNextMonth,
+    },
   );
 }
 

@@ -29,6 +29,7 @@ import { buildOverviewAlerts } from "@/lib/finance/build-overview-alerts";
 import {
   buildFallbackPlansInsight,
   buildPlansOverview,
+  computePlansSalaryCycleProjection,
 } from "@/lib/finance/build-plans-overview";
 import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
 import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
@@ -58,6 +59,7 @@ import {
 } from "@/lib/planner/calendar";
 import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
 import { sumUpcomingIncomeThisMonth } from "@/lib/planner/sum-upcoming-income-this-month";
+import { getPlansNextMonthObligations } from "@/lib/planner/get-plans-next-month-obligations";
 import type { JournalFilters } from "@/types/journal";
 import type {
   OverviewFilterContext,
@@ -368,6 +370,20 @@ export async function getOverviewPageData(
     .filter((plan) => plan.status === "active")
     .reduce((sum, plan) => sum + plan.amount, 0);
   const remainingBudgetTotal = sumRemainingBudgetTotal(budgets);
+  const { nextMonthPayPlanTotal, remainingBudgetNextMonth } =
+    await getPlansNextMonthObligations(userId, plannedItemsForIncome, now);
+  const salaryCycleProjection =
+    upcomingIncomeTotal > 0
+      ? computePlansSalaryCycleProjection(
+          availableBalance,
+          activePlanCost,
+          upcomingPayPlanTotal,
+          remainingBudgetTotal,
+          upcomingIncomeTotal,
+          nextMonthPayPlanTotal,
+          remainingBudgetNextMonth,
+        )
+      : null;
   const plansOverview = buildPlansOverview(
     plans,
     availableBalance,
@@ -377,6 +393,7 @@ export async function getOverviewPageData(
       upcomingPayPlanTotal,
       remainingBudgetTotal,
       upcomingIncomeTotal,
+      salaryCycleProjection,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
@@ -384,6 +401,7 @@ export async function getOverviewPageData(
     remainingBudgetTotal,
     upcomingIncomeTotal,
     upcomingIncomeCount,
+    { nextMonthPayPlanTotal, remainingBudgetNextMonth },
   );
 
   const savingsOverview = buildSavingsOverview(savingsGoals, availableBalance);

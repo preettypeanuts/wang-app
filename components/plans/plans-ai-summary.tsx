@@ -16,6 +16,8 @@ import {
   PLANS_AI_PAYPLAN_THIS_MONTH,
   PLANS_AI_PROJECTED_REMAINING,
   PLANS_AI_REMAINING_BUDGET_THIS_MONTH,
+  PLANS_AI_SALARY_CYCLE_PROJECTION,
+  PLANS_AI_UPCOMING_INCOME_THIS_MONTH,
 } from "@/config/plans-labels";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import { cn } from "@/lib/utils";
@@ -104,7 +106,8 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
 
         {overview.estimatedCost > 0 ||
         overview.upcomingPayPlanTotal > 0 ||
-        overview.remainingBudgetTotal > 0 ? (
+        overview.remainingBudgetTotal > 0 ||
+        overview.upcomingIncomeTotal > 0 ? (
           <div className={cn("mt-2.5 space-y-1 text-xs", style.subtitleColor)}>
             {overview.estimatedCost > 0 ? (
               <p>
@@ -135,12 +138,28 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
                 </span>
               </p>
             ) : null}
+            {overview.upcomingIncomeTotal > 0 ? (
+              <p>
+                {PLANS_AI_UPCOMING_INCOME_THIS_MONTH}{" "}
+                <span className={cn("font-semibold", style.metricBalance)}>
+                  {formatAmount(overview.upcomingIncomeTotal)}
+                </span>
+              </p>
+            ) : null}
             <p>
               {PLANS_AI_PROJECTED_REMAINING}{" "}
               <span className={cn("font-semibold", style.metricRemaining)}>
                 {formatAmount(overview.projectedBalance)}
               </span>
             </p>
+            {overview.salaryCycleProjection !== null ? (
+              <p>
+                {PLANS_AI_SALARY_CYCLE_PROJECTION}{" "}
+                <span className={cn("font-semibold", style.metricBalance)}>
+                  {formatAmount(overview.salaryCycleProjection)}
+                </span>
+              </p>
+            ) : null}
           </div>
         ) : null}
 
