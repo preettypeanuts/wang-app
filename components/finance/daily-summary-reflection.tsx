@@ -1,4 +1,5 @@
 import {
+  FINANCE_REFLECTION_CONTENT,
   FINANCE_REFLECTION_SHELL,
   getFinanceConditionWeatherStyle,
 } from "@/config/finance-condition-weather";
@@ -33,23 +34,23 @@ export function DailySummaryReflection({
       >
         <div
           className={cn(
-            "absolute -right-4 -top-4 size-24 rounded-full blur-3xl",
+            "absolute -right-6 -top-6 size-20 rounded-full opacity-70 blur-2xl",
             style.glowOrb,
           )}
         />
         <div
           className={cn(
-            "absolute -bottom-4 -left-4 size-20 rounded-full blur-3xl",
+            "absolute -bottom-5 -left-5 size-16 rounded-full opacity-60 blur-2xl",
             style.secondaryOrb,
           )}
         />
       </div>
 
-      <div className="relative flex flex-col p-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className={FINANCE_REFLECTION_CONTENT}>
+        <div className="flex items-center justify-between gap-2">
           <p
             className={cn(
-              "text-[10px] font-semibold uppercase tracking-[0.14em]",
+              "text-xs font-semibold leading-tight",
               style.labelColor,
             )}
           >
@@ -58,19 +59,22 @@ export function DailySummaryReflection({
 
           <span
             className={cn(
-              "inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold",
+              "inline-flex shrink-0 items-center gap-0.5 rounded-full px-2 py-0.5 text-[10px] font-semibold",
               style.badgeSurface,
               style.subtitleColor,
             )}
           >
-            <FinanceConditionBadgeIcon label={condition.label} />
+            <FinanceConditionBadgeIcon
+              label={condition.label}
+              className="size-2.5"
+            />
             {condition.label}
           </span>
         </div>
 
         <p
           className={cn(
-            "mt-3.5 min-w-0 text-[13px] leading-[1.6] tracking-[-0.01em]",
+            "mt-2 min-w-0 text-xs leading-[1.55] font-medium",
             style.textColor,
           )}
         >

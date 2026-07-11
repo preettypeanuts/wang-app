@@ -1,6 +1,8 @@
 /** Solid iOS-style widget tiles — subtle same-hue gradients, no glass blur. */
-const TILE_HIGHLIGHT =
+export const SOLID_WIDGET_TILE_SHADOW =
   "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.28),0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_1px_3px_rgba(0,0,0,0.35)]";
+
+const TILE_HIGHLIGHT = SOLID_WIDGET_TILE_SHADOW;
 
 export interface SolidWidgetTileStyle {
   surface: string;
