@@ -228,6 +228,7 @@ export const PAYPLAN_LABEL_BUDGET_PACE_ON_TRACK = "On track";
 export const PAYPLAN_LABEL_BUDGET_PACE_SLOW = "Spending slower than plan";
 export const PAYPLAN_LABEL_BUDGET_PACE_OVER = "Over monthly limit";
 export const PAYPLAN_LABEL_BUDGET_PACE_UNSET = "Pacing unavailable";
+export const PAYPLAN_LABEL_BUDGET_EXPLANATION = "Penjelasan";
 
 export function formatBudgetRemainingDays(count: number): string {
   return count === 1 ? "1 day left" : `${count} days left`;

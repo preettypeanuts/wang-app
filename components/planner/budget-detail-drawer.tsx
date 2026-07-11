@@ -33,6 +33,7 @@ import {
   PAYPLAN_LABEL_ADJUSTED_DAILY,
   PAYPLAN_LABEL_AVG_DAILY_SPENT,
   PAYPLAN_LABEL_BUDGET_DETAIL_DESC,
+  PAYPLAN_LABEL_BUDGET_EXPLANATION,
   PAYPLAN_LABEL_BUDGET_PACING,
   PAYPLAN_LABEL_BUDGET_PERIOD,
   PAYPLAN_LABEL_CLOSE,
@@ -55,6 +56,7 @@ import {
 } from "@/config/planner-manage";
 import { getPlanCategoryAccent } from "@/config/plans";
 import { SEPARATED_CONTROL } from "@/config/shape";
+import { buildBudgetDetailExplanation } from "@/lib/finance/build-budget-detail-explanation";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { PencilSimpleIcon, TrashIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -133,6 +135,15 @@ export function BudgetDetailDrawer({
   const showPacing =
     pace.plannedDailyBudget !== null &&
     (pace.isCurrentMonth || pace.isPastMonth);
+  const explanation = buildBudgetDetailExplanation(currentStatus);
+  const explanationTone =
+    currentStatus.remaining < 0 || pace.paceStatus === "fast"
+      ? "border-[#FF9500]/25 bg-[#FF9500]/8 text-[#FF9500] dark:border-[#FF9500]/30 dark:bg-[#FF9500]/10"
+      : currentStatus.remainingPercent <= 20
+        ? "border-[#FF9500]/25 bg-[#FF9500]/8 text-foreground/90 dark:border-[#FF9500]/30 dark:bg-[#FF9500]/10"
+        : pace.paceStatus === "slow"
+          ? "border-[#007AFF]/25 bg-[#007AFF]/8 text-foreground/90 dark:border-[#007AFF]/30 dark:bg-[#007AFF]/10"
+          : "border-black/8 bg-black/[0.03] text-foreground/90 dark:border-white/10 dark:bg-white/[0.04]";
 
   function handleEdit() {
     onOpenChange(false);
@@ -248,6 +259,15 @@ export function BudgetDetailDrawer({
               style={{ width: `${progressWidth}%` }}
             />
           </div>
+        </div>
+
+        <div
+          className={cn("mx-1 rounded-2xl border px-4 py-3", explanationTone)}
+        >
+          <p className="text-[10px] font-semibold uppercase tracking-widest opacity-80">
+            {PAYPLAN_LABEL_BUDGET_EXPLANATION}
+          </p>
+          <p className="mt-1.5 text-[13px] leading-relaxed">{explanation}</p>
         </div>
 
         {showPacing ? (
