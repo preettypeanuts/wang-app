@@ -6,6 +6,7 @@ import {
   JOURNAL_LIST_AMOUNT_EXPENSE,
   JOURNAL_LIST_AMOUNT_INCOME,
   JOURNAL_LIST_ROW,
+  JOURNAL_LIST_ROW_BUTTON,
   JOURNAL_LIST_ROW_AMOUNT,
   JOURNAL_LIST_ROW_CONTENT,
   JOURNAL_LIST_ROW_META,
@@ -56,7 +57,11 @@ export function JournalEntryRow({ item, onClick }: JournalEntryRowProps) {
   }
 
   return (
-    <button type="button" onClick={onClick} className={JOURNAL_LIST_ROW}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(JOURNAL_LIST_ROW, JOURNAL_LIST_ROW_BUTTON)}
+    >
       {content}
     </button>
   );

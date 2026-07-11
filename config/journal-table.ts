@@ -38,9 +38,15 @@ export const JOURNAL_LIST_ICON =
   "flex size-8 shrink-0 items-center justify-center rounded-[0.55rem]";
 
 export const JOURNAL_LIST_ROW =
-  "flex items-center gap-2.5 px-3 py-2.5";
+  "flex w-full items-center gap-2.5 px-3 py-2.5 text-left";
 
-export const JOURNAL_LIST_ROW_CONTENT = "min-w-0 flex-1 self-center";
+export const JOURNAL_LIST_ROW_BUTTON = [
+  "border-0 bg-transparent transition-colors",
+  "hover:bg-black/3 active:bg-black/5",
+  "dark:hover:bg-white/5 dark:active:bg-white/8",
+].join(" ");
+
+export const JOURNAL_LIST_ROW_CONTENT = "min-w-0 flex-1 self-center text-left";
 
 export const JOURNAL_LIST_ROW_TITLE =
   "truncate text-[13px] font-semibold leading-tight text-foreground/92";
