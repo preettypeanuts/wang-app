@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import { PlansInsightBadgeIcon } from "@/components/shared/ai-summary-badge-icon";
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
 import { PlanIcon } from "@/components/plans/plan-icon";
@@ -12,19 +14,34 @@ import {
   PLANS_AI_BUDGET_IMPACT,
   PLANS_AI_BUDGET_OVER_BY,
   PLANS_AI_BUDGET_REMAINING,
+  PLANS_AI_HIDE_DETAILS,
   PLANS_AI_METRIC_BALANCE_PREFIX,
   PLANS_AI_PAYPLAN_THIS_MONTH,
   PLANS_AI_PROJECTED_REMAINING,
   PLANS_AI_REMAINING_BUDGET_THIS_MONTH,
   PLANS_AI_SALARY_CYCLE_PROJECTION,
+  PLANS_AI_SHOW_DETAILS,
   PLANS_AI_UPCOMING_INCOME_THIS_MONTH,
 } from "@/config/plans-labels";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
+import { CaretDownIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type { PlansOverview } from "@/types/plan";
 
 interface PlansAiSummaryProps {
   overview: PlansOverview;
+}
+
+function hasPlansAiBreakdown(overview: PlansOverview): boolean {
+  return (
+    overview.estimatedCost > 0 ||
+    overview.upcomingPayPlanTotal > 0 ||
+    overview.remainingBudgetTotal > 0 ||
+    overview.upcomingIncomeTotal > 0 ||
+    overview.budgetImpacts.some(
+      (impact) => impact.status === "waspada" || impact.status === "over",
+    )
+  );
 }
 
 export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
@@ -34,6 +51,11 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
   const riskyBudgetImpacts = overview.budgetImpacts.filter(
     (impact) => impact.status === "waspada" || impact.status === "over",
   );
+  const hasOverBudget = overview.budgetImpacts.some(
+    (impact) => impact.status === "over",
+  );
+  const showBreakdown = hasPlansAiBreakdown(overview);
+  const [detailsOpen, setDetailsOpen] = useState(hasOverBudget);
 
   return (
     <div className={PLANS_AI_SUMMARY_SHELL}>
@@ -97,120 +119,148 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
 
         <p
           className={cn(
-            "mt-3 text-[13px] leading-[1.6] tracking-[-0.01em]",
+            "mt-3 text-base font-semibold leading-snug tracking-[-0.01em]",
             style.textColor,
           )}
         >
           {overview.insight}
         </p>
 
-        {overview.estimatedCost > 0 ||
-        overview.upcomingPayPlanTotal > 0 ||
-        overview.remainingBudgetTotal > 0 ||
-        overview.upcomingIncomeTotal > 0 ? (
-          <div className={cn("mt-2.5 space-y-1 text-xs", style.subtitleColor)}>
-            {overview.estimatedCost > 0 ? (
-              <p>
-                Spend{" "}
-                <span className={cn("font-semibold", style.metricSpend)}>
-                  {formatAmount(overview.estimatedCost)}
-                </span>
-                {" · "}
-                {PLANS_AI_METRIC_BALANCE_PREFIX}{" "}
-                <span className={cn("font-semibold", style.metricBalance)}>
-                  {formatAmount(overview.availableBalance)}
-                </span>
-              </p>
-            ) : null}
-            {overview.upcomingPayPlanTotal > 0 ? (
-              <p>
-                {PLANS_AI_PAYPLAN_THIS_MONTH}{" "}
-                <span className={cn("font-semibold", style.metricSpend)}>
-                  {formatAmount(overview.upcomingPayPlanTotal)}
-                </span>
-              </p>
-            ) : null}
-            {overview.remainingBudgetTotal > 0 ? (
-              <p>
-                {PLANS_AI_REMAINING_BUDGET_THIS_MONTH}{" "}
-                <span className={cn("font-semibold", style.metricSpend)}>
-                  {formatAmount(overview.remainingBudgetTotal)}
-                </span>
-              </p>
-            ) : null}
-            {overview.upcomingIncomeTotal > 0 ? (
-              <p>
-                {PLANS_AI_UPCOMING_INCOME_THIS_MONTH}{" "}
-                <span className={cn("font-semibold", style.metricBalance)}>
-                  {formatAmount(overview.upcomingIncomeTotal)}
-                </span>
-              </p>
-            ) : null}
-            <p>
-              {PLANS_AI_PROJECTED_REMAINING}{" "}
-              <span className={cn("font-semibold", style.metricRemaining)}>
-                {formatAmount(overview.projectedBalance)}
-              </span>
-            </p>
-            {overview.salaryCycleProjection !== null ? (
-              <p>
-                {PLANS_AI_SALARY_CYCLE_PROJECTION}{" "}
-                <span className={cn("font-semibold", style.metricBalance)}>
-                  {formatAmount(overview.salaryCycleProjection)}
-                </span>
-              </p>
-            ) : null}
-          </div>
-        ) : null}
+        {showBreakdown ? (
+          <>
+            <button
+              type="button"
+              aria-expanded={detailsOpen}
+              onClick={() => setDetailsOpen((open) => !open)}
+              className={cn(
+                "mt-2 inline-flex items-center gap-1 text-xs font-medium transition-colors",
+                style.subtitleColor,
+                "hover:opacity-80",
+              )}
+            >
+              {detailsOpen ? PLANS_AI_HIDE_DETAILS : PLANS_AI_SHOW_DETAILS}
+              <CaretDownIcon
+                className={cn(
+                  "size-3.5 transition-transform",
+                  detailsOpen && "rotate-180",
+                )}
+              />
+            </button>
 
-        {riskyBudgetImpacts.length > 0 ? (
-          <div className={cn("mt-3 space-y-1.5", style.subtitleColor)}>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.12em]">
-              {PLANS_AI_BUDGET_IMPACT}
-            </p>
-            {riskyBudgetImpacts.map((impact) => {
-              const badge = getPlanBudgetImpactBadge(impact.status);
-              const overAmount = impact.projectedSpent - impact.budgetLimit;
-
-              return (
-                <div
-                  key={impact.category}
-                  className="flex items-start justify-between gap-2 text-xs"
-                >
-                  <p className="min-w-0 leading-snug">
-                    <span className="font-medium">{impact.categoryLabel}</span>
-                    {impact.status === "over" ? (
-                      <>
-                        {" "}
-                        {PLANS_AI_BUDGET_OVER_BY}{" "}
-                        <span className="font-semibold text-[#FF3B30]">
-                          {formatAmount(overAmount)}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        {" "}
-                        {PLANS_AI_BUDGET_REMAINING}{" "}
-                        <span className="font-semibold text-[#FF9500]">
-                          {formatAmount(
-                            Math.max(0, impact.budgetLimit - impact.projectedSpent),
-                          )}
-                        </span>
-                      </>
-                    )}
+            {detailsOpen ? (
+              <div className={cn("mt-2.5 space-y-3", style.subtitleColor)}>
+                <div className="space-y-1 text-xs">
+                  {overview.estimatedCost > 0 ? (
+                    <p>
+                      Spend{" "}
+                      <span className={cn("font-semibold", style.metricSpend)}>
+                        {formatAmount(overview.estimatedCost)}
+                      </span>
+                      {" · "}
+                      {PLANS_AI_METRIC_BALANCE_PREFIX}{" "}
+                      <span className={cn("font-semibold", style.metricBalance)}>
+                        {formatAmount(overview.availableBalance)}
+                      </span>
+                    </p>
+                  ) : null}
+                  {overview.upcomingPayPlanTotal > 0 ? (
+                    <p>
+                      {PLANS_AI_PAYPLAN_THIS_MONTH}{" "}
+                      <span className={cn("font-semibold", style.metricSpend)}>
+                        {formatAmount(overview.upcomingPayPlanTotal)}
+                      </span>
+                    </p>
+                  ) : null}
+                  {overview.remainingBudgetTotal > 0 ? (
+                    <p>
+                      {PLANS_AI_REMAINING_BUDGET_THIS_MONTH}{" "}
+                      <span className={cn("font-semibold", style.metricSpend)}>
+                        {formatAmount(overview.remainingBudgetTotal)}
+                      </span>
+                    </p>
+                  ) : null}
+                  {overview.upcomingIncomeTotal > 0 ? (
+                    <p>
+                      {PLANS_AI_UPCOMING_INCOME_THIS_MONTH}{" "}
+                      <span className={cn("font-semibold", style.metricBalance)}>
+                        {formatAmount(overview.upcomingIncomeTotal)}
+                      </span>
+                    </p>
+                  ) : null}
+                  <p>
+                    {PLANS_AI_PROJECTED_REMAINING}{" "}
+                    <span className={cn("font-semibold", style.metricRemaining)}>
+                      {formatAmount(overview.projectedBalance)}
+                    </span>
                   </p>
-                  <span
-                    className={cn(
-                      "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                      badge.className,
-                    )}
-                  >
-                    {badge.label}
-                  </span>
+                  {overview.salaryCycleProjection !== null ? (
+                    <p>
+                      {PLANS_AI_SALARY_CYCLE_PROJECTION}{" "}
+                      <span className={cn("font-semibold", style.metricBalance)}>
+                        {formatAmount(overview.salaryCycleProjection)}
+                      </span>
+                    </p>
+                  ) : null}
                 </div>
-              );
-            })}
-          </div>
+
+                {riskyBudgetImpacts.length > 0 ? (
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em]">
+                      {PLANS_AI_BUDGET_IMPACT}
+                    </p>
+                    {riskyBudgetImpacts.map((impact) => {
+                      const badge = getPlanBudgetImpactBadge(impact.status);
+                      const overAmount =
+                        impact.projectedSpent - impact.budgetLimit;
+
+                      return (
+                        <div
+                          key={impact.category}
+                          className="flex items-start justify-between gap-2 text-xs"
+                        >
+                          <p className="min-w-0 leading-snug">
+                            <span className="font-medium">
+                              {impact.categoryLabel}
+                            </span>
+                            {impact.status === "over" ? (
+                              <>
+                                {" "}
+                                {PLANS_AI_BUDGET_OVER_BY}{" "}
+                                <span className="font-semibold text-[#FF3B30]">
+                                  {formatAmount(overAmount)}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                {" "}
+                                {PLANS_AI_BUDGET_REMAINING}{" "}
+                                <span className="font-semibold text-[#FF9500]">
+                                  {formatAmount(
+                                    Math.max(
+                                      0,
+                                      impact.budgetLimit - impact.projectedSpent,
+                                    ),
+                                  )}
+                                </span>
+                              </>
+                            )}
+                          </p>
+                          <span
+                            className={cn(
+                              "inline-flex shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                              badge.className,
+                            )}
+                          >
+                            {badge.label}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </>
         ) : null}
       </div>
     </div>

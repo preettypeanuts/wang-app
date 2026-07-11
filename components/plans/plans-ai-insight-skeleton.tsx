@@ -3,11 +3,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PLANS_AI_SUMMARY_SHELL } from "@/config/plans";
 import { cn } from "@/lib/utils";
 
-/** Matches plans-ai-summary body: text-[13px] leading-[1.6] × 2 lines. */
-const PLANS_AI_SUMMARY_TEXT_LINE = "h-[1.3rem]";
+/** Matches plans-ai-summary headline: text-base leading-snug. */
+const PLANS_AI_SUMMARY_HEADLINE = "h-[1.35rem]";
 
 interface PlansAiInsightSkeletonProps {
-  /** Reserve metrics row when active wishes have estimated spend. */
+  /** Reserve breakdown toggle when metrics are available. */
   showMetrics?: boolean;
 }
 
@@ -37,18 +37,15 @@ export function PlansAiInsightSkeleton({
 
         <div
           aria-hidden
-          className="mt-3 min-h-[2.6rem] text-[13px] leading-[1.6] tracking-[-0.01em]"
+          className="mt-3 min-h-[1.35rem] text-base font-semibold leading-snug tracking-[-0.01em]"
         >
           <Skeleton
-            className={cn(PLANS_AI_SUMMARY_TEXT_LINE, "w-full rounded-sm")}
-          />
-          <Skeleton
-            className={cn(PLANS_AI_SUMMARY_TEXT_LINE, "w-[82%] rounded-sm")}
+            className={cn(PLANS_AI_SUMMARY_HEADLINE, "w-[88%] rounded-sm")}
           />
         </div>
 
         {showMetrics ? (
-          <Skeleton className="mt-2.5 h-4 w-full max-w-md rounded-sm" />
+          <Skeleton className="mt-2 h-4 w-24 rounded-sm" />
         ) : null}
       </div>
     </div>

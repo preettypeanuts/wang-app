@@ -70,6 +70,8 @@ export const PLANS_AI_METRIC_BALANCE_PREFIX = "balance";
 export const PLANS_AI_PAYPLAN_THIS_MONTH = "PayPlan bills this month";
 export const PLANS_AI_REMAINING_BUDGET_THIS_MONTH =
   "Remaining PayPlan budget this month";
+export const PLANS_AI_SHOW_DETAILS = "Lihat rincian";
+export const PLANS_AI_HIDE_DETAILS = "Sembunyikan rincian";
 export const PLANS_AI_PROJECTED_REMAINING = "Remaining after obligations";
 export const PLANS_AI_UPCOMING_INCOME_THIS_MONTH =
   "Scheduled income this month (not received)";

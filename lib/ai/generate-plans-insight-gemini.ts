@@ -121,24 +121,12 @@ export async function generatePlansInsightWithGemini(
         )
       : "Dampak wish ke budget kategori: (tidak ada yang waspada/over)",
     "",
-    "Tulis 1-2 kalimat Bahasa Indonesia: apakah oke spend estimasi wish ini dengan saldo cash sekarang setelah memperhitungkan tagihan PayPlan dan sisa budget bulan ini, plus saran singkat.",
-    input.upcomingPayPlanTotal > 0
-      ? 'Sebut tagihan PayPlan bulan ini di insight jika relevan, misalnya: "Selain wish ini, ada tagihan PayPlan Rp1.900.000 bulan ini — sisa cash setelah wish dan tagihan cuma Rp200.000."'
-      : "",
-    input.remainingBudgetTotal > 0
-      ? 'Sebut sisa budget PayPlan bulan ini di insight jika relevan, misalnya: "Masih ada sisa budget makan Rp1.300.000 yang perlu dipakai — sisa cash setelah wish dan tagihan tipis."'
-      : "",
+    'Tulis MAKSIMAL 1 kalimat pendek (maks 20 kata), fokus HANYA ke kesimpulan dan 1 saran aksi konkret. JANGAN sebutkan ulang angka estimasi wish, tagihan PayPlan, sisa budget, atau proyeksi satu-satu — angka detail itu sudah ditampilkan terpisah di UI. Contoh gaya: "Belum aman, kurang Rp114.763 — tunda salah satu wish dulu." atau "Aman, masih ada ruang Rp2.100.000."',
     input.upcomingIncomeTotal > 0
-      ? 'Jika ada gaji belum diterima, jelaskan bahwa gaji itu dianggarkan untuk tagihan bulan depan, bukan untuk membuat wish aman dibeli sekarang. Contoh: "Gaji Rp6.300.000 masuk tanggal 28 belum diterima — dianggarkan untuk tagihan bulan depan, bukan untuk belanja wish sekarang."'
-      : "",
-    input.salaryCycleProjection !== null
-      ? 'Sebut proyeksi setelah gaji jika relevan, misalnya: "Setelah gaji masuk dan sisihkan tagihan bulan depan, proyeksi sisa sekitar Rp850.000."'
-      : "",
-    input.riskyBudgetImpacts.length > 0
-      ? 'Sebut dampak budget kategori yang waspada/over jika relevan, misalnya: "Wish Sepatu (Belanja & Fashion) bakal bikin budget kategori itu kebobol Rp150.000 kalau jadi dibeli."'
+      ? "Kalau ada gaji terjadwal belum diterima, cukup tegaskan belum bisa dipakai sekarang — tanpa sebut nominal gaji."
       : "",
     insightMeta.tone === "tight" || insightMeta.tone === "unsafe"
-      ? "Tekankan bahwa sisa cash tipis atau berisiko — hati-hati tambah wish, tagihan, atau pengeluaran besar. Jangan bilang aman hanya karena gaji belum diterima."
+      ? "Tekankan risiko atau sisa tipis — jangan bilang aman hanya karena gaji belum diterima."
       : "",
   ]
     .filter(Boolean)
@@ -152,7 +140,8 @@ export async function generatePlansInsightWithGemini(
         GEMINI_WANG_APP_CONTEXT,
         "Kamu asisten keuangan Wang untuk halaman Wish (wishlist belanja).",
         "Jawab singkat, ramah, objektif, tanpa mengarang angka di luar data.",
-        "Nilai keamanan wish berdasarkan saldo cash sekarang setelah tagihan PayPlan dan sisa budget bulan ini. Gaji belum diterima tidak membuat wish aman dibeli sekarang — anggap gaji untuk tagihan bulan depan.",
+        "Tulis maksimal 1 kalimat pendek: kesimpulan + 1 saran aksi. Jangan ulangi breakdown angka — UI sudah menampilkannya.",
+        "Nilai keamanan wish berdasarkan saldo cash sekarang. Gaji belum diterima tidak membuat wish aman dibeli sekarang.",
         "Jangan gunakan emoji.",
       ].join("\n"),
       maxOutputTokens: GEMINI_DAILY_INSIGHT_MAX_OUTPUT_TOKENS,

@@ -206,7 +206,7 @@ export function buildFallbackPlansInsight(
   upcomingPayPlanTotal: number,
   remainingBudgetTotal: number,
   upcomingIncomeTotal = 0,
-  salaryCycleProjection: number | null = null,
+  _salaryCycleProjection: number | null = null,
 ): string {
   if (
     estimatedCost <= 0 &&
@@ -222,74 +222,33 @@ export function buildFallbackPlansInsight(
     upcomingPayPlanTotal,
     remainingBudgetTotal,
   );
-  const incomeNote =
-    upcomingIncomeTotal > 0
-      ? ` Gaji terjadwal ${formatIdr(upcomingIncomeTotal)} belum diterima — dianggarkan untuk tagihan bulan depan, bukan untuk belanja sekarang.`
-      : "";
-  const salaryCycleNote =
-    salaryCycleProjection !== null
-      ? ` Proyeksi setelah gaji masuk dan sisihkan tagihan bulan depan: ${formatIdr(salaryCycleProjection)}.`
-      : "";
-  const spendLabel = formatIdr(estimatedCost);
-  const balanceLabel = formatIdr(availableBalance);
-  const payPlanLabel = formatIdr(upcomingPayPlanTotal);
-  const budgetLabel = formatIdr(remainingBudgetTotal);
   const safeThreshold = resolveSafeThreshold(
     estimatedCost,
     upcomingPayPlanTotal,
     remainingBudgetTotal,
   );
-
-  if (
-    upcomingPayPlanTotal > 0 &&
-    estimatedCost <= 0 &&
-    remainingBudgetTotal <= 0
-  ) {
-    if (spendableBalance >= upcomingPayPlanTotal) {
-      return `Saldo ${balanceLabel} cukup untuk tagihan PayPlan bulan ini (${payPlanLabel}). Sisa ${formatIdr(spendableBalance)}.${incomeNote}${salaryCycleNote}`;
-    }
-
-    if (spendableBalance >= 0) {
-      return `Tagihan PayPlan bulan ini ${payPlanLabel} dari saldo ${balanceLabel} — sisa tipis (${formatIdr(spendableBalance)}).${incomeNote}${salaryCycleNote}`;
-    }
-
-    return `Tagihan PayPlan bulan ini ${payPlanLabel} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(spendableBalance))}.${incomeNote}${salaryCycleNote}`;
-  }
-
-  if (
-    remainingBudgetTotal > 0 &&
-    estimatedCost <= 0 &&
-    upcomingPayPlanTotal <= 0
-  ) {
-    if (spendableBalance >= safeThreshold) {
-      return `Saldo ${balanceLabel} cukup setelah sisihkan sisa budget PayPlan ${budgetLabel} bulan ini. Sisa ${formatIdr(spendableBalance)}.${incomeNote}${salaryCycleNote}`;
-    }
-
-    if (spendableBalance >= 0) {
-      return `Sisa budget PayPlan ${budgetLabel} bulan ini perlu dipakai — sisa saldo tipis (${formatIdr(spendableBalance)}). Hati-hati pengeluaran besar.${incomeNote}${salaryCycleNote}`;
-    }
-
-    return `Sisa budget PayPlan ${budgetLabel} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(spendableBalance))}.${incomeNote}${salaryCycleNote}`;
-  }
-
-  const payPlanNote =
-    upcomingPayPlanTotal > 0
-      ? ` Selain wish, ada tagihan PayPlan ${payPlanLabel} bulan ini —`
-      : "";
-  const budgetNote =
-    remainingBudgetTotal > 0
-      ? ` sisa budget PayPlan ${budgetLabel} masih perlu dipakai —`
-      : "";
+  const incomeHint =
+    upcomingIncomeTotal > 0 ? " Gaji terjadwal belum bisa dipakai sekarang." : "";
 
   if (spendableBalance >= safeThreshold) {
-    return `Oke belanja ${spendLabel} dengan saldo ${balanceLabel}.${payPlanNote}${budgetNote} Sisa masih longgar (${formatIdr(spendableBalance)}).${incomeNote}${salaryCycleNote}`;
+    return `Aman — masih ada ruang ${formatIdr(spendableBalance)}.${incomeHint}`;
   }
 
   if (spendableBalance >= 0) {
-    return `Cukup untuk ${spendLabel} dari saldo ${balanceLabel},${payPlanNote}${budgetNote} tapi sisa tipis (${formatIdr(spendableBalance)}). Hati-hati tambah wish, tagihan, atau pengeluaran besar.${incomeNote}${salaryCycleNote}`;
+    const action =
+      estimatedCost > 0
+        ? "Hati-hati tambah wish lagi."
+        : "Hati-hati pengeluaran besar.";
+    return `Cukup tipis, sisa ${formatIdr(spendableBalance)} — ${action}${incomeHint}`;
   }
 
-  return `Belum aman. Estimasi ${spendLabel}${upcomingPayPlanTotal > 0 ? ` plus PayPlan ${payPlanLabel}` : ""}${remainingBudgetTotal > 0 ? ` plus sisa budget ${budgetLabel}` : ""} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(spendableBalance))}. Tunda atau kurangi wishlist.${incomeNote}${salaryCycleNote}`;
+  const shortfall = Math.abs(spendableBalance);
+  const action =
+    estimatedCost > 0
+      ? "Tunda atau kurangi wishlist."
+      : "Periksa tagihan dan budget bulan ini.";
+
+  return `Belum aman, kurang ${formatIdr(shortfall)} — ${action}${incomeHint}`;
 }
 
 export function isPlansInsightTone(value: string): value is PlansInsightTone {

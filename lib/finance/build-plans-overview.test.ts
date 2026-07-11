@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildFallbackPlansInsight,
   computePlansProjectedBalance,
   computePlansSalaryCycleProjection,
   computePlansSpendableBalance,
@@ -93,5 +94,22 @@ describe("resolvePlansInsightMeta", () => {
     );
 
     expect(meta.tone).toBe("safe");
+  });
+});
+
+describe("buildFallbackPlansInsight", () => {
+  it("returns a short verdict without repeating breakdown numbers", () => {
+    const insight = buildFallbackPlansInsight(
+      500_000,
+      1_861_553,
+      2_646_640,
+      1_183_676,
+      8_010_000,
+    );
+
+    expect(insight).toContain("Belum aman, kurang");
+    expect(insight).not.toContain("PayPlan");
+    expect(insight).not.toContain("sisa budget");
+    expect(insight).toContain("Gaji terjadwal belum bisa dipakai sekarang.");
   });
 });
