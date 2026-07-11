@@ -38,6 +38,11 @@ function recyclePrismaResources(): void {
   void pool?.end();
 }
 
+/** Dev/ops — release local pool (e.g. before `db:release-connections`). */
+export async function releasePrismaConnections(): Promise<void> {
+  recyclePrismaResources();
+}
+
 function getConnectionPool(): Pool {
   const cached = globalForPrisma.prismaPool;
 
@@ -55,7 +60,7 @@ function getConnectionPool(): Pool {
     connectionString,
     max: POOL_MAX,
     min: 0,
-    idleTimeoutMillis: IS_DEV ? 5_000 : 20_000,
+    idleTimeoutMillis: IS_DEV ? 2_000 : 20_000,
     connectionTimeoutMillis: 10_000,
     allowExitOnIdle: IS_DEV,
   });

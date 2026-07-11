@@ -1,5 +1,9 @@
 "use client";
 
+import {
+  PWA_SERVICE_WORKER_ENABLED,
+  PWA_SERVICE_WORKER_URL,
+} from "@/config/pwa";
 import { SerwistProvider } from "@serwist/next/react";
 
 interface SerwistProviderShellProps {
@@ -10,8 +14,8 @@ interface SerwistProviderShellProps {
 export function SerwistProviderShell({ children }: SerwistProviderShellProps) {
   return (
     <SerwistProvider
-      swUrl="/sw.js"
-      disable={process.env.NODE_ENV === "development"}
+      swUrl={PWA_SERVICE_WORKER_URL}
+      disable={!PWA_SERVICE_WORKER_ENABLED}
       cacheOnNavigation={false}
       reloadOnOnline
     >

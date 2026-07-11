@@ -8,6 +8,10 @@ import {
   PUSH_ERROR_SERVICE_WORKER,
   PUSH_ERROR_UNSUPPORTED,
 } from "@/config/settings-labels";
+import {
+  PWA_SERVICE_WORKER_ENABLED,
+  PWA_SERVICE_WORKER_URL,
+} from "@/config/pwa";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -23,11 +27,17 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export async function registerPushServiceWorker(): Promise<ServiceWorkerRegistration | null> {
-  if (!("serviceWorker" in navigator)) {
+  if (!("serviceWorker" in navigator) || !PWA_SERVICE_WORKER_ENABLED) {
     return null;
   }
 
-  return navigator.serviceWorker.register("/sw.js", { scope: "/" });
+  try {
+    return await navigator.serviceWorker.register(PWA_SERVICE_WORKER_URL, {
+      scope: "/",
+    });
+  } catch {
+    return null;
+  }
 }
 
 export async function getPushPermission(): Promise<NotificationPermission | "unsupported"> {
