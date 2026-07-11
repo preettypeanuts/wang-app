@@ -17,6 +17,9 @@ import {
   SIDEBAR_APP_ICON_GLYPH,
   SIDEBAR_APP_ICON_GRADIENTS,
   SIDEBAR_APP_ICON_SHELL,
+  SIDEBAR_APP_LOGO_DOCK_IMAGE_SIZE,
+  SIDEBAR_APP_LOGO_DOCK_INSET,
+  SIDEBAR_APP_LOGO_DOCK_SHELL,
 } from "@/config/sidebar";
 import { SidebarIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -117,7 +120,11 @@ export function SidebarCollapsedDock() {
     <SidebarDock>
       <SidebarDockItem index={index++}>
         <DockAppButton href="/" label={APP_NAME} bare>
-          <SidebarAppLogo className="size-9" size={36} alt="" />
+          <SidebarAppLogo
+            className={cn(SIDEBAR_APP_LOGO_DOCK_SHELL, SIDEBAR_APP_LOGO_DOCK_INSET)}
+            size={SIDEBAR_APP_LOGO_DOCK_IMAGE_SIZE}
+            alt=""
+          />
         </DockAppButton>
       </SidebarDockItem>
 

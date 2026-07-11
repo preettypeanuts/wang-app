@@ -4,7 +4,12 @@ import Link from "next/link";
 import { SidebarAppLogo } from "@/components/shared/sidebar-app-logo";
 import { SidebarMenuButton } from "@/components/ui/sidebar";
 import { APP_NAME, APP_TAGLINE } from "@/config/app";
-import { SEPARATED_MENU_ITEM } from "@/config/sidebar";
+import {
+  SEPARATED_MENU_ITEM,
+  SIDEBAR_APP_LOGO_DOCK_IMAGE_SIZE,
+  SIDEBAR_APP_LOGO_DOCK_INSET,
+  SIDEBAR_APP_LOGO_DOCK_SHELL,
+} from "@/config/sidebar";
 import { cn } from "@/lib/utils";
 
 interface SidebarBrandButtonProps {
@@ -22,7 +27,10 @@ export function SidebarBrandButton({ className }: SidebarBrandButtonProps) {
       )}
       render={<Link href="/" />}
     >
-      <SidebarAppLogo className="size-8" size={32} />
+      <SidebarAppLogo
+        className={cn(SIDEBAR_APP_LOGO_DOCK_SHELL, SIDEBAR_APP_LOGO_DOCK_INSET)}
+        size={SIDEBAR_APP_LOGO_DOCK_IMAGE_SIZE}
+      />
       <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
         <span className="truncate font-semibold">{APP_NAME}</span>
         <span className="truncate text-xs text-muted-foreground">
