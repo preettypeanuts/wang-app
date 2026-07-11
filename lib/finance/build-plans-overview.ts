@@ -29,6 +29,56 @@ export function computePlansProjectedBalance(
   );
 }
 
+/** Cash-only projection — unreceived income is excluded. */
+export function computePlansSpendableBalance(
+  availableBalance: number,
+  estimatedCost: number,
+  upcomingPayPlanTotal: number,
+  remainingBudgetTotal: number,
+): number {
+  return computePlansProjectedBalance(
+    availableBalance,
+    estimatedCost,
+    upcomingPayPlanTotal,
+    remainingBudgetTotal,
+    0,
+  );
+}
+
+/**
+ * Forward projection when salary is still expected this month.
+ * Salary is earmarked for next month's PayPlan bills and remaining budget,
+ * while this month's obligations must be covered by current cash.
+ */
+export function computePlansSalaryCycleProjection(
+  availableBalance: number,
+  estimatedCost: number,
+  upcomingPayPlanTotal: number,
+  remainingBudgetTotal: number,
+  upcomingIncomeTotal: number,
+  nextMonthPayPlanTotal = 0,
+  remainingBudgetNextMonth = 0,
+): number {
+  if (upcomingIncomeTotal <= 0) {
+    return computePlansSpendableBalance(
+      availableBalance,
+      estimatedCost,
+      upcomingPayPlanTotal,
+      remainingBudgetTotal,
+    );
+  }
+
+  return (
+    availableBalance +
+    upcomingIncomeTotal -
+    estimatedCost -
+    upcomingPayPlanTotal -
+    remainingBudgetTotal -
+    nextMonthPayPlanTotal -
+    remainingBudgetNextMonth
+  );
+}
+
 function resolveSafeThreshold(
   estimatedCost: number,
   upcomingPayPlanTotal: number,
@@ -54,7 +104,7 @@ export function resolvePlansInsightMeta(
   availableBalance: number,
   upcomingPayPlanTotal: number,
   remainingBudgetTotal: number,
-  upcomingIncomeTotal = 0,
+  _upcomingIncomeTotal = 0,
 ): PlansInsightMeta {
   if (
     estimatedCost <= 0 &&
@@ -64,12 +114,11 @@ export function resolvePlansInsightMeta(
     return { tone: "empty", label: UI_LABEL_PLANS_INSIGHT_EMPTY };
   }
 
-  const projectedBalance = computePlansProjectedBalance(
+  const spendableBalance = computePlansSpendableBalance(
     availableBalance,
     estimatedCost,
     upcomingPayPlanTotal,
     remainingBudgetTotal,
-    upcomingIncomeTotal,
   );
   const safeThreshold = resolveSafeThreshold(
     estimatedCost,
@@ -77,15 +126,20 @@ export function resolvePlansInsightMeta(
     remainingBudgetTotal,
   );
 
-  if (projectedBalance >= safeThreshold) {
+  if (spendableBalance >= safeThreshold) {
     return { tone: "safe", label: UI_LABEL_PLANS_INSIGHT_SAFE };
   }
 
-  if (projectedBalance >= 0) {
+  if (spendableBalance >= 0) {
     return { tone: "tight", label: UI_LABEL_PLANS_INSIGHT_TIGHT };
   }
 
   return { tone: "unsafe", label: UI_LABEL_PLANS_INSIGHT_UNSAFE };
+}
+
+export interface BuildPlansOverviewOptions {
+  nextMonthPayPlanTotal?: number;
+  remainingBudgetNextMonth?: number;
 }
 
 export function buildPlansOverview(
@@ -98,16 +152,28 @@ export function buildPlansOverview(
   remainingBudgetTotal = 0,
   upcomingIncomeTotal = 0,
   upcomingIncomeCount = 0,
+  options: BuildPlansOverviewOptions = {},
 ): PlansOverview {
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
-  const projectedBalance = computePlansProjectedBalance(
+  const projectedBalance = computePlansSpendableBalance(
     availableBalance,
     estimatedCost,
     upcomingPayPlanTotal,
     remainingBudgetTotal,
-    upcomingIncomeTotal,
   );
+  const salaryCycleProjection =
+    upcomingIncomeTotal > 0
+      ? computePlansSalaryCycleProjection(
+          availableBalance,
+          estimatedCost,
+          upcomingPayPlanTotal,
+          remainingBudgetTotal,
+          upcomingIncomeTotal,
+          options.nextMonthPayPlanTotal ?? 0,
+          options.remainingBudgetNextMonth ?? 0,
+        )
+      : null;
 
   return {
     activeCount: activePlans.length,
@@ -118,7 +184,10 @@ export function buildPlansOverview(
     upcomingIncomeTotal,
     upcomingIncomeCount,
     remainingBudgetTotal,
+    nextMonthPayPlanTotal: options.nextMonthPayPlanTotal ?? 0,
+    remainingBudgetNextMonth: options.remainingBudgetNextMonth ?? 0,
     projectedBalance,
+    salaryCycleProjection,
     budgetImpacts,
     insight,
     insightMeta: resolvePlansInsightMeta(
@@ -137,6 +206,7 @@ export function buildFallbackPlansInsight(
   upcomingPayPlanTotal: number,
   remainingBudgetTotal: number,
   upcomingIncomeTotal = 0,
+  salaryCycleProjection: number | null = null,
 ): string {
   if (
     estimatedCost <= 0 &&
@@ -146,16 +216,19 @@ export function buildFallbackPlansInsight(
     return "Belum ada wish aktif. Tambahkan wishlist untuk melihat estimasi belanja.";
   }
 
-  const projectedBalance = computePlansProjectedBalance(
+  const spendableBalance = computePlansSpendableBalance(
     availableBalance,
     estimatedCost,
     upcomingPayPlanTotal,
     remainingBudgetTotal,
-    upcomingIncomeTotal,
   );
   const incomeNote =
     upcomingIncomeTotal > 0
-      ? ` Sudah termasuk perkiraan pemasukan ${formatIdr(upcomingIncomeTotal)} bulan ini.`
+      ? ` Gaji terjadwal ${formatIdr(upcomingIncomeTotal)} belum diterima — dianggarkan untuk tagihan bulan depan, bukan untuk belanja sekarang.`
+      : "";
+  const salaryCycleNote =
+    salaryCycleProjection !== null
+      ? ` Proyeksi setelah gaji masuk dan sisihkan tagihan bulan depan: ${formatIdr(salaryCycleProjection)}.`
       : "";
   const spendLabel = formatIdr(estimatedCost);
   const balanceLabel = formatIdr(availableBalance);
@@ -172,15 +245,15 @@ export function buildFallbackPlansInsight(
     estimatedCost <= 0 &&
     remainingBudgetTotal <= 0
   ) {
-    if (projectedBalance >= upcomingPayPlanTotal) {
-      return `Saldo ${balanceLabel} cukup untuk tagihan PayPlan bulan ini (${payPlanLabel}). Proyeksi sisa ${formatIdr(projectedBalance)}.`;
+    if (spendableBalance >= upcomingPayPlanTotal) {
+      return `Saldo ${balanceLabel} cukup untuk tagihan PayPlan bulan ini (${payPlanLabel}). Sisa ${formatIdr(spendableBalance)}.${incomeNote}${salaryCycleNote}`;
     }
 
-    if (projectedBalance >= 0) {
-      return `Tagihan PayPlan bulan ini ${payPlanLabel} dari saldo ${balanceLabel} — sisa tipis (${formatIdr(projectedBalance)}).`;
+    if (spendableBalance >= 0) {
+      return `Tagihan PayPlan bulan ini ${payPlanLabel} dari saldo ${balanceLabel} — sisa tipis (${formatIdr(spendableBalance)}).${incomeNote}${salaryCycleNote}`;
     }
 
-    return `Tagihan PayPlan bulan ini ${payPlanLabel} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(projectedBalance))}.`;
+    return `Tagihan PayPlan bulan ini ${payPlanLabel} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(spendableBalance))}.${incomeNote}${salaryCycleNote}`;
   }
 
   if (
@@ -188,15 +261,15 @@ export function buildFallbackPlansInsight(
     estimatedCost <= 0 &&
     upcomingPayPlanTotal <= 0
   ) {
-    if (projectedBalance >= safeThreshold) {
-      return `Saldo ${balanceLabel} cukup setelah sisihkan sisa budget PayPlan ${budgetLabel} bulan ini. Proyeksi sisa ${formatIdr(projectedBalance)}.`;
+    if (spendableBalance >= safeThreshold) {
+      return `Saldo ${balanceLabel} cukup setelah sisihkan sisa budget PayPlan ${budgetLabel} bulan ini. Sisa ${formatIdr(spendableBalance)}.${incomeNote}${salaryCycleNote}`;
     }
 
-    if (projectedBalance >= 0) {
-      return `Sisa budget PayPlan ${budgetLabel} bulan ini perlu dipakai — proyeksi sisa saldo tipis (${formatIdr(projectedBalance)}). Hati-hati pengeluaran besar.`;
+    if (spendableBalance >= 0) {
+      return `Sisa budget PayPlan ${budgetLabel} bulan ini perlu dipakai — sisa saldo tipis (${formatIdr(spendableBalance)}). Hati-hati pengeluaran besar.${incomeNote}${salaryCycleNote}`;
     }
 
-    return `Sisa budget PayPlan ${budgetLabel} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(projectedBalance))}.`;
+    return `Sisa budget PayPlan ${budgetLabel} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(spendableBalance))}.${incomeNote}${salaryCycleNote}`;
   }
 
   const payPlanNote =
@@ -208,15 +281,15 @@ export function buildFallbackPlansInsight(
       ? ` sisa budget PayPlan ${budgetLabel} masih perlu dipakai —`
       : "";
 
-  if (projectedBalance >= safeThreshold) {
-    return `Oke belanja ${spendLabel} dengan saldo ${balanceLabel}.${payPlanNote}${budgetNote} Proyeksi sisa masih longgar (${formatIdr(projectedBalance)}).${incomeNote}`;
+  if (spendableBalance >= safeThreshold) {
+    return `Oke belanja ${spendLabel} dengan saldo ${balanceLabel}.${payPlanNote}${budgetNote} Sisa masih longgar (${formatIdr(spendableBalance)}).${incomeNote}${salaryCycleNote}`;
   }
 
-  if (projectedBalance >= 0) {
-    return `Cukup untuk ${spendLabel} dari saldo ${balanceLabel},${payPlanNote}${budgetNote} tapi proyeksi sisa tipis (${formatIdr(projectedBalance)}). Hati-hati tambah wish, tagihan, atau pengeluaran besar.${incomeNote}`;
+  if (spendableBalance >= 0) {
+    return `Cukup untuk ${spendLabel} dari saldo ${balanceLabel},${payPlanNote}${budgetNote} tapi sisa tipis (${formatIdr(spendableBalance)}). Hati-hati tambah wish, tagihan, atau pengeluaran besar.${incomeNote}${salaryCycleNote}`;
   }
 
-  return `Belum aman. Estimasi ${spendLabel}${upcomingPayPlanTotal > 0 ? ` plus PayPlan ${payPlanLabel}` : ""}${remainingBudgetTotal > 0 ? ` plus sisa budget ${budgetLabel}` : ""} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(projectedBalance))}. Tunda atau kurangi wishlist.${incomeNote}`;
+  return `Belum aman. Estimasi ${spendLabel}${upcomingPayPlanTotal > 0 ? ` plus PayPlan ${payPlanLabel}` : ""}${remainingBudgetTotal > 0 ? ` plus sisa budget ${budgetLabel}` : ""} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(spendableBalance))}. Tunda atau kurangi wishlist.${incomeNote}${salaryCycleNote}`;
 }
 
 export function isPlansInsightTone(value: string): value is PlansInsightTone {

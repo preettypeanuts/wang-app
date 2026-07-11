@@ -28,6 +28,7 @@ import { buildOverviewBrief } from "@/lib/finance/build-overview-brief";
 import {
   buildFallbackPlansInsight,
   buildPlansOverview,
+  computePlansSalaryCycleProjection,
 } from "@/lib/finance/build-plans-overview";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
 import { buildWeeklySummaryTitle } from "@/lib/finance/build-weekly-summary-message";
@@ -46,6 +47,7 @@ import { getCurrentMonthKey } from "@/lib/planner/calendar";
 import { listUpcomingIncomePayPlanEntries } from "@/lib/planner/list-upcoming-income-payplan";
 import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
 import { sumUpcomingIncomeThisMonth } from "@/lib/planner/sum-upcoming-income-this-month";
+import { getPlansNextMonthObligations } from "@/lib/planner/get-plans-next-month-obligations";
 import type { NotificationDraft } from "@/types/notification";
 
 function firstLine(text: string): string {
@@ -159,6 +161,20 @@ export async function buildUserNotificationDrafts(
   const { upcomingIncomeTotal, upcomingIncomeCount } =
     sumUpcomingIncomeThisMonth(plannedItems, referenceDate);
   const remainingBudgetTotal = sumRemainingBudgetTotal(budgets);
+  const { nextMonthPayPlanTotal, remainingBudgetNextMonth } =
+    await getPlansNextMonthObligations(userId, plannedItems, referenceDate);
+  const salaryCycleProjection =
+    upcomingIncomeTotal > 0
+      ? computePlansSalaryCycleProjection(
+          availableBalance,
+          estimatedCost,
+          upcomingPayPlanTotal,
+          remainingBudgetTotal,
+          upcomingIncomeTotal,
+          nextMonthPayPlanTotal,
+          remainingBudgetNextMonth,
+        )
+      : null;
   const plansOverview = buildPlansOverview(
     plans,
     availableBalance,
@@ -168,6 +184,7 @@ export async function buildUserNotificationDrafts(
       upcomingPayPlanTotal,
       remainingBudgetTotal,
       upcomingIncomeTotal,
+      salaryCycleProjection,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
@@ -175,6 +192,7 @@ export async function buildUserNotificationDrafts(
     remainingBudgetTotal,
     upcomingIncomeTotal,
     upcomingIncomeCount,
+    { nextMonthPayPlanTotal, remainingBudgetNextMonth },
   );
 
   const drafts: NotificationDraft[] = [];

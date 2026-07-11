@@ -38,7 +38,14 @@ export interface PlansOverview {
   upcomingIncomeCount: number;
   /** Positive remaining budget across all PayPlan categories this month. */
   remainingBudgetTotal: number;
+  /** Unpaid PayPlan bills due next month — reserved against scheduled salary. */
+  nextMonthPayPlanTotal: number;
+  /** Positive remaining budget across all PayPlan categories next month. */
+  remainingBudgetNextMonth: number;
+  /** Cash-only projection after wishes, PayPlan, and budget this month. */
   projectedBalance: number;
+  /** After this month's salary, minus next month's PayPlan and budget. */
+  salaryCycleProjection: number | null;
   budgetImpacts: PlanBudgetImpact[];
   insight: string;
   insightMeta: PlansInsightMeta;
@@ -65,6 +72,8 @@ export interface PlansInsightInputs {
   upcomingIncomeTotal: number;
   upcomingIncomeCount: number;
   remainingBudgetTotal: number;
+  nextMonthPayPlanTotal: number;
+  remainingBudgetNextMonth: number;
   budgetImpacts: PlanBudgetImpact[];
 }
 

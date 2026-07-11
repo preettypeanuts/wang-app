@@ -117,7 +117,7 @@ export function buildOverviewAlerts({
       title: UI_LABEL_OVERVIEW_ALERT_THIN_WISH_BUFFER,
       segments: [
         text(
-          "Projected remaining after wishes, PayPlan, and remaining budget this month ",
+          "Remaining after wishes, PayPlan, and budget this month (cash only) ",
         ),
         amount(plansOverview.projectedBalance),
         text("."),
