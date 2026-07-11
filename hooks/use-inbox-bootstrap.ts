@@ -105,10 +105,9 @@ function seedBootstrapCache(payload: InboxBootstrapPayload | null | undefined) {
 
 export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
   const enabled = options.enabled ?? true;
-  const [state, setState] = useState<InboxBootstrapState>(() => {
-    const seeded = seedBootstrapCache(options.initialBootstrap ?? null);
-    return toBootstrapState(seeded, Boolean(seeded));
-  });
+  const [state, setState] = useState<InboxBootstrapState>(() =>
+    toBootstrapState(options.initialBootstrap ?? null, Boolean(options.initialBootstrap)),
+  );
   const [dailySummary, setDailySummary] = useState<DailySummarySnapshot | null>(
     null,
   );
@@ -117,6 +116,38 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
   const [isSyncing, setIsSyncing] = useState(false);
   const prevEnabledRef = useRef<boolean | null>(null);
   const syncInFlightRef = useRef(false);
+  const hydratedCacheRef = useRef(false);
+
+  // Restore session cache after hydration — never in useState (SSR/client mismatch).
+  useEffect(() => {
+    if (hydratedCacheRef.current) {
+      return;
+    }
+
+    hydratedCacheRef.current = true;
+    const seeded = seedBootstrapCache(options.initialBootstrap ?? null);
+
+    if (!seeded) {
+      return;
+    }
+
+    setState((current) => {
+      const next = toBootstrapState(seeded, true);
+
+      if (
+        current.ready === next.ready &&
+        current.hasMoreMessages === next.hasMoreMessages &&
+        current.messages.length === next.messages.length &&
+        current.messages.every(
+          (message, index) => message.id === next.messages[index]?.id,
+        )
+      ) {
+        return current;
+      }
+
+      return next;
+    });
+  }, [options.initialBootstrap]);
 
   const applyBootstrapPayload = useCallback(
     (payload: InboxBootstrapPayload, mode: "merge" | "force") => {
