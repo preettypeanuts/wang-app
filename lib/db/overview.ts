@@ -50,12 +50,14 @@ import {
   resolveJournalDateRangeBounds,
 } from "@/lib/journal/journal-date-range";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
+import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
 import {
   formatPlannerMonthLabel,
   getCurrentMonthKey,
   getMonthRange,
 } from "@/lib/planner/calendar";
 import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
+import { sumUpcomingIncomeThisMonth } from "@/lib/planner/sum-upcoming-income-this-month";
 import type { JournalFilters } from "@/types/journal";
 import type {
   OverviewFilterContext,
@@ -230,6 +232,7 @@ export async function getOverviewPageData(
     filteredActivityRows,
     filteredTransactionCount,
     aiBriefTransactionRows,
+    plannedItemsForIncome,
   ] = await Promise.all([
     getAvailableBalance(userId, now),
     getAvailableBalance(userId, yesterday),
@@ -277,6 +280,7 @@ export async function getOverviewPageData(
           OVERVIEW_AI_BRIEF_TRANSACTION_LIMIT,
         )
       : Promise.resolve(null),
+    getPlannedItemsForExpansion(userId),
   ]);
 
   const activityRows = filtersActive
@@ -358,6 +362,8 @@ export async function getOverviewPageData(
 
   const { upcomingPayPlanTotal, upcomingPayPlanCount } =
     sumUpcomingPayPlanThisMonth(upcomingImpact, now);
+  const { upcomingIncomeTotal, upcomingIncomeCount } =
+    sumUpcomingIncomeThisMonth(plannedItemsForIncome, now);
   const activePlanCost = plans
     .filter((plan) => plan.status === "active")
     .reduce((sum, plan) => sum + plan.amount, 0);
@@ -370,11 +376,14 @@ export async function getOverviewPageData(
       availableBalance,
       upcomingPayPlanTotal,
       remainingBudgetTotal,
+      upcomingIncomeTotal,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
     [],
     remainingBudgetTotal,
+    upcomingIncomeTotal,
+    upcomingIncomeCount,
   );
 
   const savingsOverview = buildSavingsOverview(savingsGoals, availableBalance);

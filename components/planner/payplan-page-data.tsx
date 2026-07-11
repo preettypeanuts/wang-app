@@ -3,7 +3,14 @@ import { requireUserId } from "@/lib/auth/session";
 import { listBudgetsForMonth } from "@/lib/db/budgets";
 import { listPlannedItems } from "@/lib/db/planned-items";
 import { getPlannerMonthData } from "@/lib/db/planner";
-import { pickDefaultDayKey } from "@/lib/planner/calendar";
+import {
+  getMonthRange,
+  parseMonthKey,
+  pickDefaultDayKey,
+  shiftMonthKey,
+} from "@/lib/planner/calendar";
+import { expandPlannedItems } from "@/lib/planner/expand-planned-items";
+import { summarizePlannedCashFlow } from "@/lib/planner/summarize-cash-flow";
 import { parsePlannerSearchParams } from "@/lib/validations/planner";
 
 interface PayplanPageDataProps {
@@ -22,6 +29,16 @@ export async function PayplanPageData({ searchParams }: PayplanPageDataProps) {
     getPlannerMonthData(userId, monthKey, plannedItems),
     listBudgetsForMonth(userId, monthKey),
   ]);
+
+  const nextMonthKey = shiftMonthKey(monthKey, 1);
+  const nextParsed = parseMonthKey(nextMonthKey) ?? {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth() + 1,
+  };
+  const nextRange = getMonthRange(nextParsed.year, nextParsed.month);
+  const nextMonthCashFlow = summarizePlannedCashFlow(
+    expandPlannedItems(plannedItems, nextRange.start, nextRange.end),
+  );
 
   const initialDayKey = pickDefaultDayKey(data.monthKey, data.marks);
   const monthOccurrences = data.items.map((item) => ({
@@ -47,6 +64,8 @@ export async function PayplanPageData({ searchParams }: PayplanPageDataProps) {
       monthOccurrences={monthOccurrences}
       plannedItemRecords={plannedItemRecords}
       budgets={budgets}
+      nextMonthKey={nextMonthKey}
+      nextMonthCashFlow={nextMonthCashFlow}
     />
   );
 }

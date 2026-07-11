@@ -1,7 +1,7 @@
 import { PAYPLAN_FILTER_UNPAID } from "@/config/payplan-labels";
 import { getPlannedItemPaymentStatus } from "@/lib/planner/installment-progress";
 import {
-  canMarkPlannedItemPaid,
+  canMarkPlannedItemDone,
   getPlannedItemPaymentIndex,
 } from "@/lib/planner/item-payment";
 import type { UnpaidPayPlanChatItem } from "@/types/chat";
@@ -11,7 +11,7 @@ export function listUnpaidPayPlanChatItems(
   items: PlannedItemRecord[],
 ): UnpaidPayPlanChatItem[] {
   return items
-    .filter(canMarkPlannedItemPaid)
+    .filter(canMarkPlannedItemDone)
     .map((item) => ({
       id: item.id,
       name: item.name,
@@ -20,6 +20,7 @@ export function listUnpaidPayPlanChatItems(
       statusLabel:
         getPlannedItemPaymentStatus(item)?.label ?? PAYPLAN_FILTER_UNPAID,
       installmentIndex: getPlannedItemPaymentIndex(item),
+      flowType: item.flowType,
     }))
     .sort((left, right) => left.name.localeCompare(right.name, "id"));
 }

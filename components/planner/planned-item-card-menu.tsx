@@ -25,8 +25,8 @@ import {
 } from "@/config/payplan-labels";
 import { PLANNER_SELECT_ITEM } from "@/config/planner-manage";
 import {
-  canMarkPlannedItemPaid,
-  getMarkPlannedItemPaidLabel,
+  canMarkPlannedItemDone,
+  getMarkPlannedItemActionLabel,
   getPlannedItemPaymentIndex,
 } from "@/lib/planner/item-payment";
 import type { PlannedItemRecord } from "@/types/planner";
@@ -46,8 +46,8 @@ export function PlannedItemCardMenu({
 }: PlannedItemCardMenuProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const canPay = canMarkPlannedItemPaid(item) && !disabled;
-  const payLabel = getMarkPlannedItemPaidLabel();
+  const canPay = canMarkPlannedItemDone(item) && !disabled;
+  const payLabel = getMarkPlannedItemActionLabel(item);
 
   function handleMarkPaid() {
     if (!canPay) {

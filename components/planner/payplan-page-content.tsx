@@ -13,6 +13,7 @@ import { PlannerCalendarTabBar } from "@/components/planner/planner-calendar-tab
 import { PlannerShell } from "@/components/planner/planner-shell";
 import { PlannerTabBar } from "@/components/planner/planner-tab-bar";
 import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
+import type { PlannedCashFlowSummary } from "@/lib/planner/summarize-cash-flow";
 import {
   PAYPLAN_MOBILE_COMBINED_LIST,
   PAYPLAN_MOBILE_PAGE_INSET_X,
@@ -61,6 +62,8 @@ interface PayplanPagePanelsProps {
   monthOccurrences: Array<Omit<PlannedOccurrence, "dueAt"> & { dueAt: string }>;
   plannedItemRecords: PlannedItemRecordSerialized[];
   budgets: BudgetStatus[];
+  nextMonthKey: string;
+  nextMonthCashFlow: PlannedCashFlowSummary;
 }
 
 function PayplanPagePanels({
@@ -74,6 +77,8 @@ function PayplanPagePanels({
   plannedItemRecords,
   monthKey,
   budgets,
+  nextMonthKey,
+  nextMonthCashFlow,
 }: PayplanPagePanelsProps) {
   const tabContext = usePayplanPageTab();
   const tab = tabContext?.tab ?? "calendar";
@@ -149,6 +154,8 @@ function PayplanPagePanels({
                 initialDayKey={initialDayKey}
                 items={monthOccurrences}
                 plannedItems={plannedItemRecords}
+                nextMonthKey={nextMonthKey}
+                nextMonthCashFlow={nextMonthCashFlow}
               />
             </div>
 

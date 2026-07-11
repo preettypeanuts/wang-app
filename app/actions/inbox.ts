@@ -36,7 +36,7 @@ import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import { detectRecurringPattern } from "@/lib/finance/detect-recurring-transaction";
 import { formatIdr } from "@/lib/finance/format-currency";
 import {
-  canMarkPlannedItemPaid,
+  canMarkPlannedItemDone,
   getPlannedItemPaymentIndex,
 } from "@/lib/planner/item-payment";
 import { executeSavingsInboxCommand } from "@/lib/savings/execute-savings-inbox-command";
@@ -367,18 +367,19 @@ export async function payPayPlanFromInboxAction(
     throw new Error("PayPlan tidak ditemukan.");
   }
 
-  const userContent = `Bayar ${item.name}`;
+  const isIncome = item.flowType === "income";
+  const userContent = `${isIncome ? "Terima" : "Bayar"} ${item.name}`;
   const userMessage = await createInboxMessage({
     userId,
     role: "user",
     content: userContent,
   });
 
-  if (!canMarkPlannedItemPaid(item)) {
+  if (!canMarkPlannedItemDone(item)) {
     const assistantMessage = await createInboxMessage({
       userId,
       role: "assistant",
-      content: `${item.name} sudah dibayar atau tidak bisa ditandai dari chat.`,
+      content: `${item.name} ${isIncome ? "sudah diterima" : "sudah dibayar"} atau tidak bisa ditandai dari chat.`,
     });
 
     return {
@@ -396,7 +397,7 @@ export async function payPayPlanFromInboxAction(
     const assistantMessage = await createInboxMessage({
       userId,
       role: "assistant",
-      content: `${item.name} (${formatIdr(item.amount)}) ditandai sudah dibayar.`,
+      content: `${item.name} (${formatIdr(item.amount)}) ditandai sudah ${isIncome ? "diterima" : "dibayar"}.`,
     });
 
     revalidateUserPlannedItems(userId);
@@ -415,7 +416,7 @@ export async function payPayPlanFromInboxAction(
     const assistantMessage = await createInboxMessage({
       userId,
       role: "assistant",
-      content: `Gagal menandai ${item.name} sudah dibayar. Coba lagi.`,
+      content: `Gagal menandai ${item.name} sudah ${isIncome ? "diterima" : "dibayar"}. Coba lagi.`,
     });
 
     return {

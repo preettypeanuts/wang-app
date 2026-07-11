@@ -20,7 +20,8 @@ export function buildPlannedItemPaymentRawInput(
   item: PlannedItemRecord,
   installmentIndex: number,
 ): string {
-  return `Bayar ${item.name} ${payplanPaymentMarker(item.id, installmentIndex)}`;
+  const verb = item.flowType === "income" ? "Terima" : "Bayar";
+  return `${verb} ${item.name} ${payplanPaymentMarker(item.id, installmentIndex)}`;
 }
 
 export async function hasPlannedItemPaymentTransaction(
@@ -38,16 +39,12 @@ export async function hasPlannedItemPaymentTransaction(
   return count > 0;
 }
 
-/** Records PayPlan payment as journal transaction — skips if already recorded. */
+/** Records PayPlan payment/receipt as journal transaction — skips if already recorded. */
 export async function recordPlannedItemPayment(
   userId: string,
   item: PlannedItemRecord,
   installmentIndex: number,
 ): Promise<boolean> {
-  if (item.flowType !== "expense") {
-    return false;
-  }
-
   if (
     await hasPlannedItemPaymentTransaction(userId, item.id, installmentIndex)
   ) {
@@ -56,7 +53,7 @@ export async function recordPlannedItemPayment(
 
   const category = resolveCategoryForType(
     normalizeCategory(item.category),
-    "expense",
+    item.flowType,
   ) as TransactionCategoryId;
   const dueAt = getDueDateForInstallmentIndex(item, installmentIndex);
 
@@ -64,7 +61,7 @@ export async function recordPlannedItemPayment(
     userId,
     rawInput: buildPlannedItemPaymentRawInput(item, installmentIndex),
     transaction: {
-      type: "expense",
+      type: item.flowType,
       amount: item.amount,
       category,
       description: item.name,

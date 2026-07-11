@@ -18,9 +18,11 @@ export function computePlansProjectedBalance(
   estimatedCost: number,
   upcomingPayPlanTotal: number,
   remainingBudgetTotal: number,
+  upcomingIncomeTotal = 0,
 ): number {
   return (
-    availableBalance -
+    availableBalance +
+    upcomingIncomeTotal -
     estimatedCost -
     upcomingPayPlanTotal -
     remainingBudgetTotal
@@ -52,6 +54,7 @@ export function resolvePlansInsightMeta(
   availableBalance: number,
   upcomingPayPlanTotal: number,
   remainingBudgetTotal: number,
+  upcomingIncomeTotal = 0,
 ): PlansInsightMeta {
   if (
     estimatedCost <= 0 &&
@@ -66,6 +69,7 @@ export function resolvePlansInsightMeta(
     estimatedCost,
     upcomingPayPlanTotal,
     remainingBudgetTotal,
+    upcomingIncomeTotal,
   );
   const safeThreshold = resolveSafeThreshold(
     estimatedCost,
@@ -92,6 +96,8 @@ export function buildPlansOverview(
   upcomingPayPlanCount: number,
   budgetImpacts: PlanBudgetImpact[] = [],
   remainingBudgetTotal = 0,
+  upcomingIncomeTotal = 0,
+  upcomingIncomeCount = 0,
 ): PlansOverview {
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
@@ -100,6 +106,7 @@ export function buildPlansOverview(
     estimatedCost,
     upcomingPayPlanTotal,
     remainingBudgetTotal,
+    upcomingIncomeTotal,
   );
 
   return {
@@ -108,6 +115,8 @@ export function buildPlansOverview(
     availableBalance,
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
+    upcomingIncomeTotal,
+    upcomingIncomeCount,
     remainingBudgetTotal,
     projectedBalance,
     budgetImpacts,
@@ -117,6 +126,7 @@ export function buildPlansOverview(
       availableBalance,
       upcomingPayPlanTotal,
       remainingBudgetTotal,
+      upcomingIncomeTotal,
     ),
   };
 }
@@ -126,6 +136,7 @@ export function buildFallbackPlansInsight(
   availableBalance: number,
   upcomingPayPlanTotal: number,
   remainingBudgetTotal: number,
+  upcomingIncomeTotal = 0,
 ): string {
   if (
     estimatedCost <= 0 &&
@@ -140,7 +151,12 @@ export function buildFallbackPlansInsight(
     estimatedCost,
     upcomingPayPlanTotal,
     remainingBudgetTotal,
+    upcomingIncomeTotal,
   );
+  const incomeNote =
+    upcomingIncomeTotal > 0
+      ? ` Sudah termasuk perkiraan pemasukan ${formatIdr(upcomingIncomeTotal)} bulan ini.`
+      : "";
   const spendLabel = formatIdr(estimatedCost);
   const balanceLabel = formatIdr(availableBalance);
   const payPlanLabel = formatIdr(upcomingPayPlanTotal);
@@ -193,14 +209,14 @@ export function buildFallbackPlansInsight(
       : "";
 
   if (projectedBalance >= safeThreshold) {
-    return `Oke belanja ${spendLabel} dengan saldo ${balanceLabel}.${payPlanNote}${budgetNote} Proyeksi sisa masih longgar (${formatIdr(projectedBalance)}).`;
+    return `Oke belanja ${spendLabel} dengan saldo ${balanceLabel}.${payPlanNote}${budgetNote} Proyeksi sisa masih longgar (${formatIdr(projectedBalance)}).${incomeNote}`;
   }
 
   if (projectedBalance >= 0) {
-    return `Cukup untuk ${spendLabel} dari saldo ${balanceLabel},${payPlanNote}${budgetNote} tapi proyeksi sisa tipis (${formatIdr(projectedBalance)}). Hati-hati tambah wish, tagihan, atau pengeluaran besar.`;
+    return `Cukup untuk ${spendLabel} dari saldo ${balanceLabel},${payPlanNote}${budgetNote} tapi proyeksi sisa tipis (${formatIdr(projectedBalance)}). Hati-hati tambah wish, tagihan, atau pengeluaran besar.${incomeNote}`;
   }
 
-  return `Belum aman. Estimasi ${spendLabel}${upcomingPayPlanTotal > 0 ? ` plus PayPlan ${payPlanLabel}` : ""}${remainingBudgetTotal > 0 ? ` plus sisa budget ${budgetLabel}` : ""} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(projectedBalance))}. Tunda atau kurangi wishlist.`;
+  return `Belum aman. Estimasi ${spendLabel}${upcomingPayPlanTotal > 0 ? ` plus PayPlan ${payPlanLabel}` : ""}${remainingBudgetTotal > 0 ? ` plus sisa budget ${budgetLabel}` : ""} melebihi saldo ${balanceLabel} sebesar ${formatIdr(Math.abs(projectedBalance))}. Tunda atau kurangi wishlist.${incomeNote}`;
 }
 
 export function isPlansInsightTone(value: string): value is PlansInsightTone {

@@ -49,6 +49,19 @@ export const PAYPLAN_LABEL_PAID = "Paid";
 export const PAYPLAN_LABEL_NO_BILLS = "No bills";
 export const PAYPLAN_LABEL_NO_PAYMENTS_YET = "No payments yet";
 
+export const PAYPLAN_LABEL_NEXT_MONTH_FLOW = "Next month";
+export const PAYPLAN_LABEL_FLOW_INCOME = "Income";
+export const PAYPLAN_LABEL_FLOW_EXPENSE = "Expense";
+export const PAYPLAN_LABEL_FLOW_NET = "Net";
+export const PAYPLAN_LABEL_FLOW_SURPLUS = "Surplus";
+export const PAYPLAN_LABEL_FLOW_DEFICIT = "Deficit";
+export const PAYPLAN_LABEL_FLOW_BALANCED = "Balanced";
+export const PAYPLAN_LABEL_NO_PLANNED_FLOW = "No scheduled cash flow";
+
+export function formatPayPlanFlowItemCount(count: number): string {
+  return count === 1 ? "1 item" : `${count} items`;
+}
+
 export const PAYPLAN_LABEL_NO_MATCHING_SCHEDULE = "No matching schedules";
 export const PAYPLAN_LABEL_NO_SCHEDULE_YET = "No schedules yet";
 export const PAYPLAN_LABEL_FILTER_RESET_HINT =
@@ -71,7 +84,9 @@ export const PAYPLAN_LABEL_SAVING = "Saving...";
 export const PAYPLAN_LABEL_DELETE = "Delete";
 export const PAYPLAN_LABEL_EDIT = "Edit";
 export const PAYPLAN_LABEL_MARK_PAID = "Mark as paid";
+export const PAYPLAN_LABEL_MARK_RECEIVED = "Mark as received";
 export const PAYPLAN_LABEL_ALREADY_PAID = "Already paid";
+export const PAYPLAN_LABEL_ALREADY_RECEIVED = "Already received";
 
 export const PAYPLAN_LABEL_SELECTED_SCHEDULE = "Selected schedule";
 export const PAYPLAN_LABEL_SCHEDULES = "Schedules";
@@ -110,6 +125,8 @@ export const PAYPLAN_LABEL_NOTE = "Note";
 export const PAYPLAN_LABEL_INSTALLMENT_SCHEDULE = "Installment schedule";
 export const PAYPLAN_LABEL_STATUS_PAID = "Paid";
 export const PAYPLAN_LABEL_STATUS_UNPAID = "Unpaid";
+export const PAYPLAN_LABEL_STATUS_RECEIVED = "Received";
+export const PAYPLAN_LABEL_STATUS_EXPECTED = "Expected";
 export const PAYPLAN_LABEL_REPEAT_FOREVER = "Repeats forever";
 
 export const PAYPLAN_LABEL_EDIT_PAY_PLAN = "Edit Pay Plan";
@@ -304,6 +321,30 @@ export function formatPayPlanDueInDays(daysUntil: number): string {
   return `Due ${Math.abs(daysUntil)} days ago`;
 }
 
+export function formatPayPlanExpectedInDays(daysUntil: number): string {
+  if (daysUntil > 0) {
+    return `Expected in ${daysUntil} days`;
+  }
+
+  if (daysUntil === 0) {
+    return "Expected today";
+  }
+
+  return `Expected ${Math.abs(daysUntil)} days ago`;
+}
+
+export function formatPayPlanExpectedInDaysLower(daysUntil: number): string {
+  if (daysUntil > 0) {
+    return `expected in ${daysUntil} days`;
+  }
+
+  if (daysUntil === 0) {
+    return "expected today";
+  }
+
+  return `expected ${Math.abs(daysUntil)} days ago`;
+}
+
 export function formatPayPlanDueInDaysLower(daysUntil: number): string {
   if (daysUntil > 0) {
     return `due in ${daysUntil} days`;
@@ -318,6 +359,24 @@ export function formatPayPlanDueInDaysLower(daysUntil: number): string {
 
 export function formatPayPlanPaidOn(date: Date | string): string {
   return `Paid on ${formatDayMonth(date)}`;
+}
+
+export function formatPayPlanReceivedOn(date: Date | string): string {
+  return `Received on ${formatDayMonth(date)}`;
+}
+
+export function formatPayPlanReceivedOnWithNext(
+  date: Date | string,
+  daysUntil: number,
+): string {
+  return `Received on ${formatDayMonth(date)}, next ${formatDaysUntilLabel(daysUntil)}`;
+}
+
+export function formatPayPlanReceivedOnWithDue(
+  date: Date | string,
+  dueLabel: string,
+): string {
+  return `Received on ${formatDayMonth(date)}, ${dueLabel}`;
 }
 
 export function formatPayPlanPaidOnWithNext(
@@ -336,6 +395,10 @@ export function formatPayPlanPaidOnWithDue(
 
 export function formatPayPlanInstallmentPaid(number: number): string {
   return `Paid installment #${number}`;
+}
+
+export function formatPayPlanInstallmentReceived(number: number): string {
+  return `Received #${number}`;
 }
 
 export function formatPayPlanAlreadyPaidCount(count: number): string {

@@ -16,6 +16,7 @@ interface PlansInsightInput {
   estimatedCost: number;
   availableBalance: number;
   upcomingPayPlanTotal: number;
+  upcomingIncomeTotal: number;
   remainingBudgetTotal: number;
   planNames: string[];
   riskyBudgetImpacts: PlanBudgetImpact[];
@@ -50,12 +51,14 @@ export async function generatePlansInsightWithGemini(
     input.estimatedCost,
     input.upcomingPayPlanTotal,
     input.remainingBudgetTotal,
+    input.upcomingIncomeTotal,
   );
   const insightMeta = resolvePlansInsightMeta(
     input.estimatedCost,
     input.availableBalance,
     input.upcomingPayPlanTotal,
     input.remainingBudgetTotal,
+    input.upcomingIncomeTotal,
   );
   const names =
     input.planNames.length > 0
@@ -66,6 +69,11 @@ export async function generatePlansInsightWithGemini(
     input.upcomingPayPlanTotal > 0
       ? `Tagihan PayPlan bulan ini: ${formatIdr(input.upcomingPayPlanTotal)}`
       : "Tagihan PayPlan bulan ini: (tidak ada)";
+
+  const incomeLine =
+    input.upcomingIncomeTotal > 0
+      ? `Perkiraan pemasukan terjadwal bulan ini (belum diterima): ${formatIdr(input.upcomingIncomeTotal)}`
+      : "Pemasukan terjadwal bulan ini: (tidak ada)";
 
   const budgetLine =
     input.remainingBudgetTotal > 0
@@ -82,9 +90,10 @@ export async function generatePlansInsightWithGemini(
     `Wishlist: ${names}`,
     `Estimasi wish: ${formatIdr(input.estimatedCost)}`,
     payPlanLine,
+    incomeLine,
     budgetLine,
     `Saldo tersedia: ${formatIdr(input.availableBalance)}`,
-    `Proyeksi sisa setelah wish, PayPlan, dan sisa budget bulan ini: ${formatIdr(projectedBalance)}`,
+    `Proyeksi sisa setelah wish, PayPlan, pemasukan terjadwal, dan sisa budget bulan ini: ${formatIdr(projectedBalance)}`,
     `Status keamanan: ${insightMeta.label}`,
     budgetLines.length > 0
       ? ["Dampak wish ke budget kategori (waspada/over):", ...budgetLines].join(
@@ -98,6 +107,9 @@ export async function generatePlansInsightWithGemini(
       : "",
     input.remainingBudgetTotal > 0
       ? 'Sebut sisa budget PayPlan bulan ini di insight jika relevan, misalnya: "Masih ada sisa budget makan Rp1.300.000 yang perlu dipakai — proyeksi sisa saldo setelah wish dan tagihan cuma Rp600.000."'
+      : "",
+    input.upcomingIncomeTotal > 0
+      ? 'Sebut perkiraan pemasukan terjadwal bulan ini jika relevan, misalnya: "Masih ada perkiraan gaji Rp5.000.000 masuk bulan ini, jadi proyeksi saldo akhir bulan lebih lega."'
       : "",
     input.riskyBudgetImpacts.length > 0
       ? 'Sebut dampak budget kategori yang waspada/over jika relevan, misalnya: "Wish Sepatu (Belanja & Fashion) bakal bikin budget kategori itu kebobol Rp150.000 kalau jadi dibeli."'
@@ -117,7 +129,7 @@ export async function generatePlansInsightWithGemini(
         GEMINI_WANG_APP_CONTEXT,
         "Kamu asisten keuangan Wang untuk halaman Wish (wishlist belanja).",
         "Jawab singkat, ramah, objektif, tanpa mengarang angka di luar data.",
-        "Perhitungkan tagihan PayPlan bulan ini, sisa budget PayPlan bulan ini, dan dampak wish ke budget kategori saat menilai apakah wish aman dibeli.",
+        "Perhitungkan tagihan PayPlan bulan ini, perkiraan pemasukan terjadwal bulan ini, sisa budget PayPlan bulan ini, dan dampak wish ke budget kategori saat menilai apakah wish aman dibeli.",
         "Jangan gunakan emoji.",
       ].join("\n"),
       maxOutputTokens: GEMINI_DAILY_INSIGHT_MAX_OUTPUT_TOKENS,

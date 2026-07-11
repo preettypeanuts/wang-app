@@ -16,9 +16,11 @@ import {
 import { buildPlansBudgetImpact } from "@/lib/finance/build-plans-budget-impact";
 import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
+import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
 import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
 import { getCurrentMonthKey } from "@/lib/planner/calendar";
 import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
+import { sumUpcomingIncomeThisMonth } from "@/lib/planner/sum-upcoming-income-this-month";
 
 interface PlansPageDataProps {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -39,13 +41,14 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
 
   const monthKey = getCurrentMonthKey();
 
-  const [plans, savingsGoals, availableBalance, upcomingImpact, budgets] =
+  const [plans, savingsGoals, availableBalance, upcomingImpact, budgets, plannedItems] =
     await Promise.all([
       listPlans(userId),
       listSavingsGoals(userId),
       getAvailableBalance(userId),
       getPlansUpcomingImpact(userId),
       listBudgetsForMonth(userId, monthKey),
+      getPlannedItemsForExpansion(userId),
     ]);
 
   const activePlans = plans.filter((plan) => plan.status === "active");
@@ -53,6 +56,8 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
   const remainingBudgetTotal = sumRemainingBudgetTotal(budgets);
   const { upcomingPayPlanTotal, upcomingPayPlanCount } =
     sumUpcomingPayPlanThisMonth(upcomingImpact);
+  const { upcomingIncomeTotal, upcomingIncomeCount } =
+    sumUpcomingIncomeThisMonth(plannedItems);
   const budgetImpacts = await buildPlansBudgetImpact(
     userId,
     activePlans,
@@ -66,11 +71,14 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
       availableBalance,
       upcomingPayPlanTotal,
       remainingBudgetTotal,
+      upcomingIncomeTotal,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
     budgetImpacts,
     remainingBudgetTotal,
+    upcomingIncomeTotal,
+    upcomingIncomeCount,
   );
   const savingsOverview = buildSavingsOverview(savingsGoals, availableBalance);
 
@@ -100,6 +108,8 @@ export async function PlansPageData({ searchParams }: PlansPageDataProps) {
             availableBalance={availableBalance}
             upcomingPayPlanTotal={upcomingPayPlanTotal}
             upcomingPayPlanCount={upcomingPayPlanCount}
+            upcomingIncomeTotal={upcomingIncomeTotal}
+            upcomingIncomeCount={upcomingIncomeCount}
             remainingBudgetTotal={remainingBudgetTotal}
             budgetImpacts={budgetImpacts}
           />

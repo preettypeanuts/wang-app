@@ -62,8 +62,8 @@ export function ChatSlashMenu({
     <div className={CHAT_SLASH_MENU} role="listbox" aria-label="Slash commands">
       {payPlanItems.length > 0 ? (
         <SlashMenuSection
-          title="PayPlan belum dibayar"
-          description="Tandai tagihan sudah dibayar."
+          title="PayPlan"
+          description="Tandai tagihan dibayar atau pemasukan diterima."
         >
           {payPlanItems.map((item) => {
             const entryIndex = entries.findIndex(
@@ -73,6 +73,8 @@ export function ChatSlashMenu({
             if (entryIndex === -1) {
               return null;
             }
+
+            const isIncome = item.flowType === "income";
 
             return (
               <button
@@ -87,15 +89,32 @@ export function ChatSlashMenu({
                 onMouseEnter={() => onHighlight(entryIndex)}
                 onClick={() => onSelect({ kind: "payplan", item })}
               >
-                <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-[#FF9500]/15 text-[#FF9500] dark:bg-[#FF9500]/20">
-                  <ReceiptIcon className="size-4" />
+                <span
+                  className={cn(
+                    "mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl",
+                    isIncome
+                      ? "bg-[#34C759]/15 text-[#34C759] dark:bg-[#34C759]/20"
+                      : "bg-[#FF9500]/15 text-[#FF9500] dark:bg-[#FF9500]/20",
+                  )}
+                >
+                  {isIncome ? (
+                    <WalletIcon className="size-4" />
+                  ) : (
+                    <ReceiptIcon className="size-4" />
+                  )}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center justify-between gap-2">
                     <span className="truncate text-sm font-semibold text-foreground/90">
                       {item.name}
                     </span>
-                    <span className="shrink-0 text-sm font-semibold tabular-nums text-foreground">
+                    <span
+                      className={cn(
+                        "shrink-0 text-sm font-semibold tabular-nums",
+                        isIncome ? "text-[#34C759]" : "text-foreground",
+                      )}
+                    >
+                      {isIncome ? "+" : ""}
                       {formatIdr(item.amount)}
                     </span>
                   </span>

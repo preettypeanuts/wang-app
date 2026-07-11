@@ -7,7 +7,8 @@ import { markInstallmentPaidAction } from "@/app/actions/planner";
 import { Button } from "@/components/ui/button";
 import { getCategoryLabel } from "@/config/categories";
 import {
-  PAYPLAN_LABEL_ALREADY_PAID,
+  PAYPLAN_LABEL_MARK_PAID,
+  PAYPLAN_LABEL_MARK_RECEIVED,
   PAYPLAN_LABEL_SAVING,
 } from "@/config/payplan-labels";
 import {
@@ -18,7 +19,7 @@ import {
 import { formatJournalTime } from "@/lib/finance/format-datetime";
 import { formatIdr } from "@/lib/finance/format-currency";
 import {
-  canMarkOccurrencePaid,
+  canMarkOccurrenceDone,
   getOccurrencePaymentStatus,
 } from "@/lib/planner/installment-occurrence";
 import { cn } from "@/lib/utils";
@@ -38,7 +39,10 @@ export function PlannerCalendarDayItem({
   const isIncome = item.type === "income";
   const categoryLabel = getCategoryLabel(item.category);
   const paymentStatus = getOccurrencePaymentStatus(item);
-  const canPay = canMarkOccurrencePaid(item);
+  const canPay = canMarkOccurrenceDone(item);
+  const markLabel = isIncome
+    ? PAYPLAN_LABEL_MARK_RECEIVED
+    : PAYPLAN_LABEL_MARK_PAID;
 
   function handleMarkPaid() {
     if (!canPay || item.installmentIndex === null) {
@@ -126,7 +130,7 @@ export function PlannerCalendarDayItem({
           disabled={isPending}
           onClick={handleMarkPaid}
         >
-          {isPending ? PAYPLAN_LABEL_SAVING : PAYPLAN_LABEL_ALREADY_PAID}
+          {isPending ? PAYPLAN_LABEL_SAVING : markLabel}
         </Button>
       ) : null}
     </article>

@@ -35,6 +35,7 @@ export async function generatePlansInsight(
   upcomingPayPlanTotal: number,
   remainingBudgetTotal: number,
   budgetImpacts: PlanBudgetImpact[],
+  upcomingIncomeTotal = 0,
 ): Promise<string> {
   const dateKey = todayDateKey();
   const cached = await getCachedAiInsight<string>(
@@ -61,6 +62,7 @@ export async function generatePlansInsight(
         estimatedCost,
         availableBalance,
         upcomingPayPlanTotal,
+        upcomingIncomeTotal,
         remainingBudgetTotal,
         planNames: activePlans.map((plan) => plan.name),
         riskyBudgetImpacts,
@@ -74,6 +76,7 @@ export async function generatePlansInsight(
         availableBalance,
         upcomingPayPlanTotal,
         remainingBudgetTotal,
+        upcomingIncomeTotal,
       );
     }
   }
@@ -83,5 +86,6 @@ export async function generatePlansInsight(
     availableBalance,
     upcomingPayPlanTotal,
     remainingBudgetTotal,
+    upcomingIncomeTotal,
   );
 }

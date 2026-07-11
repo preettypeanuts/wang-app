@@ -30,7 +30,9 @@ import {
   PAYPLAN_LABEL_PAY_PER_PERIOD,
   PAYPLAN_LABEL_SAVING,
   PAYPLAN_LABEL_START,
+  PAYPLAN_LABEL_STATUS_EXPECTED,
   PAYPLAN_LABEL_STATUS_PAID,
+  PAYPLAN_LABEL_STATUS_RECEIVED,
   PAYPLAN_LABEL_STATUS_UNPAID,
   UI_LABEL_TOTAL,
 } from "@/config/payplan-labels";
@@ -60,8 +62,8 @@ import {
   getPlannedItemInstallmentSchedule,
 } from "@/lib/planner/installment-progress";
 import {
-  canMarkPlannedItemPaid,
-  getMarkPlannedItemPaidLabel,
+  canMarkPlannedItemDone,
+  getMarkPlannedItemActionLabel,
   getPlannedItemPaymentIndex,
 } from "@/lib/planner/item-payment";
 import { cn } from "@/lib/utils";
@@ -94,8 +96,8 @@ export function PlannedItemDetailDialog({
   const installmentProgress = getInstallmentProgress(currentItem);
   const installmentCount = formatPlannedInstallmentCount(currentItem);
   const installmentSchedule = getPlannedItemInstallmentSchedule(currentItem);
-  const canPay = canMarkPlannedItemPaid(currentItem) && !isPending;
-  const payLabel = getMarkPlannedItemPaidLabel();
+  const canPay = canMarkPlannedItemDone(currentItem) && !isPending;
+  const payLabel = getMarkPlannedItemActionLabel(currentItem);
   const totalAmount =
     currentItem.kind === "installment" && currentItem.installmentCount
       ? currentItem.amount * currentItem.installmentCount
@@ -264,8 +266,12 @@ export function PlannedItemDetailDialog({
                           )}
                         >
                           {entry.isPaid
-                            ? PAYPLAN_LABEL_STATUS_PAID
-                            : PAYPLAN_LABEL_STATUS_UNPAID}
+                            ? isIncome
+                              ? PAYPLAN_LABEL_STATUS_RECEIVED
+                              : PAYPLAN_LABEL_STATUS_PAID
+                            : isIncome
+                              ? PAYPLAN_LABEL_STATUS_EXPECTED
+                              : PAYPLAN_LABEL_STATUS_UNPAID}
                         </span>
                       </li>
                     ))}

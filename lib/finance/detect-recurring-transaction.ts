@@ -1,6 +1,5 @@
 import { extractCategoryKeyword } from "@/lib/finance/extract-category-keyword";
 import { prisma } from "@/lib/db/prisma";
-import type { TransactionCategoryId } from "@/config/categories";
 import type { ParsedTransaction, TransactionType } from "@/types/transaction";
 
 const LOOKBACK_MONTHS = 6;
@@ -14,7 +13,7 @@ const MS_PER_DAY = 24 * 60 * 60 * 1000;
 export interface RecurringSuggestion {
   keyword: string;
   averageAmount: number;
-  category: TransactionCategoryId;
+  category: string;
   flowType: TransactionType;
   suggestedRepeat: "monthly";
   matchCount: number;

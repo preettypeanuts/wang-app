@@ -59,7 +59,6 @@ import {
   UI_LABEL_CATEGORY,
   UI_LABEL_SAVE,
 } from "@/config/payplan-labels";
-import type { TransactionCategoryId } from "@/config/categories";
 import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_FIELD_GRID_ROW,
@@ -146,7 +145,7 @@ export function PlannedItemFormDialog({
   const [isPending, startTransition] = useTransition();
   const [kind, setKind] = useState<PlannedItemKind>("bill");
   const [repeat, setRepeat] = useState<PlannedRepeatInterval>("monthly");
-  const [category, setCategory] = useState<TransactionCategoryId>("housing");
+  const [category, setCategory] = useState<string>("housing");
   const [endMode, setEndMode] = useState<PlannedEndMode>("never");
   const [amountDraft, setAmountDraft] = useState("");
   const [totalDraft, setTotalDraft] = useState("");
@@ -235,7 +234,7 @@ export function PlannedItemFormDialog({
         resolveCategoryForEntry(
           item.flowType,
           item.category,
-        ) as TransactionCategoryId,
+        ),
       );
       setEndMode(getPlannedItemEndMode(item));
       setAmountDraft(getInitialAmountDraft(item));
@@ -262,7 +261,7 @@ export function PlannedItemFormDialog({
 
     setKind("bill");
     setRepeat("monthly");
-    setCategory(getDefaultCategoryForKind("bill") as TransactionCategoryId);
+    setCategory(getDefaultCategoryForKind("bill"));
     setEndMode("never");
     setAmountDraft("");
     setTotalDraft("");
@@ -442,7 +441,7 @@ export function PlannedItemFormDialog({
                         setCategory(
                           getDefaultCategoryForKind(
                             nextKind,
-                          ) as TransactionCategoryId,
+                          ),
                         );
                         if (nextKind === "installment") {
                           setEndMode("installments");
@@ -524,7 +523,7 @@ export function PlannedItemFormDialog({
                       setCategory(
                         getDefaultCategoryForKind(
                           nextKind,
-                        ) as TransactionCategoryId,
+                        ),
                       );
                       if (nextKind === "installment") {
                         setEndMode("installments");

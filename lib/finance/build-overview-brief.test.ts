@@ -17,7 +17,13 @@ const plansOverview: PlansOverview = {
   estimatedCost: 0,
   upcomingPayPlanTotal: 0,
   upcomingPayPlanCount: 0,
+  upcomingIncomeTotal: 0,
+  upcomingIncomeCount: 0,
+  remainingBudgetTotal: 0,
+  projectedBalance: 4_426_401,
+  budgetImpacts: [],
   insight: "",
+  insightMeta: { tone: "empty", label: "" },
 };
 
 describe("buildOverviewBrief", () => {

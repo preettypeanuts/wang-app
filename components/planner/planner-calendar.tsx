@@ -9,6 +9,7 @@ import { PlannerCalendarHeader } from "@/components/planner/planner-calendar-hea
 import { PlannerCalendarMobile } from "@/components/planner/planner-calendar-mobile";
 import { PlannerCalendarSummary } from "@/components/planner/planner-calendar-summary";
 import { PlannerCalendarUpcoming } from "@/components/planner/planner-calendar-upcoming";
+import { PlannerNextMonthCashflow } from "@/components/planner/planner-next-month-cashflow";
 import {
   PAYPLAN_CALENDAR_FRAME_MOBILE,
   PAYPLAN_MOBILE_PAYMENT_SUMMARY,
@@ -30,6 +31,7 @@ import {
   WEEKDAY_LABELS,
 } from "@/lib/planner/calendar";
 import { cn } from "@/lib/utils";
+import type { PlannedCashFlowSummary } from "@/lib/planner/summarize-cash-flow";
 import type { PlannedItemRecord, PlannedOccurrence } from "@/types/planner";
 
 type PlannedItemRecordSerialized = Omit<
@@ -47,6 +49,8 @@ interface PlannerCalendarProps {
   items: Array<Omit<PlannedOccurrence, "dueAt"> & { dueAt: string }>;
   plannedItems: PlannedItemRecordSerialized[];
   initialDayKey: string;
+  nextMonthKey: string;
+  nextMonthCashFlow: PlannedCashFlowSummary;
 }
 
 function normalizeItems(
@@ -65,6 +69,8 @@ export function PlannerCalendar({
   items,
   plannedItems,
   initialDayKey,
+  nextMonthKey,
+  nextMonthCashFlow,
 }: PlannerCalendarProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -163,6 +169,12 @@ export function PlannerCalendar({
         items={normalizedItems}
         manageLayout={isMobile ? "table" : "cards"}
         monthKey={monthKey}
+      />
+
+      <PlannerNextMonthCashflow
+        className={cn(isMobile && PAYPLAN_MOBILE_PAYMENT_SUMMARY)}
+        summary={nextMonthCashFlow}
+        monthKey={nextMonthKey}
       />
 
       <div className="md:hidden">

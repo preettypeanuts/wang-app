@@ -7,11 +7,46 @@ import {
 import {
   formatPayPlanDueInDays,
   formatPayPlanDueInDaysLower,
+  formatPayPlanExpectedInDays,
+  formatPayPlanExpectedInDaysLower,
   formatPayPlanPaidOn,
   formatPayPlanPaidOnWithDue,
   formatPayPlanPaidOnWithNext,
+  formatPayPlanReceivedOn,
+  formatPayPlanReceivedOnWithDue,
+  formatPayPlanReceivedOnWithNext,
 } from "@/config/payplan-labels";
 import type { PlannedItemRecord, PlannedRepeatInterval } from "@/types/planner";
+
+interface FlowStatusLabels {
+  settledOn: (date: Date | string) => string;
+  settledOnWithNext: (date: Date | string, daysUntil: number) => string;
+  settledOnWithDue: (date: Date | string, dueLabel: string) => string;
+  countdown: (daysUntil: number) => string;
+  countdownLower: (daysUntil: number) => string;
+}
+
+const EXPENSE_STATUS_LABELS: FlowStatusLabels = {
+  settledOn: formatPayPlanPaidOn,
+  settledOnWithNext: formatPayPlanPaidOnWithNext,
+  settledOnWithDue: formatPayPlanPaidOnWithDue,
+  countdown: formatPayPlanDueInDays,
+  countdownLower: formatPayPlanDueInDaysLower,
+};
+
+const INCOME_STATUS_LABELS: FlowStatusLabels = {
+  settledOn: formatPayPlanReceivedOn,
+  settledOnWithNext: formatPayPlanReceivedOnWithNext,
+  settledOnWithDue: formatPayPlanReceivedOnWithDue,
+  countdown: formatPayPlanExpectedInDays,
+  countdownLower: formatPayPlanExpectedInDaysLower,
+};
+
+function getFlowStatusLabels(item: PlannedItemRecord): FlowStatusLabels {
+  return item.flowType === "income"
+    ? INCOME_STATUS_LABELS
+    : EXPENSE_STATUS_LABELS;
+}
 
 function addMonthsDateOnly(
   value: Date,
@@ -112,22 +147,6 @@ export function getPlannedItemInstallmentSchedule(
   }));
 }
 
-function formatDaysUntilLabel(daysUntil: number): string {
-  if (daysUntil > 0) {
-    return `in ${daysUntil} days`;
-  }
-
-  if (daysUntil === 0) {
-    return "today";
-  }
-
-  return `${Math.abs(daysUntil)} days ago`;
-}
-
-function formatDueCountdown(daysUntil: number): string {
-  return formatPayPlanDueInDays(daysUntil);
-}
-
 function getDaysUntilDue(dueDate: Date, referenceDate: Date): number {
   const today = startOfDay(referenceDate);
 
@@ -201,10 +220,7 @@ export function getPlannedItemPaymentStatus(
   item: PlannedItemRecord,
   referenceDate: Date = new Date(),
 ): InstallmentPaymentStatus | null {
-  if (item.flowType === "income") {
-    return null;
-  }
-
+  const labels = getFlowStatusLabels(item);
   const paid = item.paidInstallmentCount;
   const total = item.installmentCount;
   const elapsed = countElapsedPeriods(item, referenceDate);
@@ -215,7 +231,7 @@ export function getPlannedItemPaymentStatus(
 
     return {
       status: "paid",
-      label: formatPayPlanPaidOn(lastPaidDate),
+      label: labels.settledOn(lastPaidDate),
       daysUntil: null,
     };
   }
@@ -227,7 +243,7 @@ export function getPlannedItemPaymentStatus(
     if (!isOccurrenceBeforeEnd(item, nextDueDate)) {
       return {
         status: "paid",
-        label: formatPayPlanPaidOn(lastPaidDate),
+        label: labels.settledOn(lastPaidDate),
         daysUntil: null,
       };
     }
@@ -237,19 +253,19 @@ export function getPlannedItemPaymentStatus(
     if (hasInstallments) {
       return {
         status: "paid",
-        label: formatPayPlanPaidOnWithNext(lastPaidDate, daysUntil),
+        label: labels.settledOnWithNext(lastPaidDate, daysUntil),
         daysUntil,
       };
     }
 
     const nextDueLabel =
       daysUntil > 0
-        ? formatPayPlanDueInDaysLower(daysUntil)
-        : formatDueCountdown(daysUntil).toLowerCase();
+        ? labels.countdownLower(daysUntil)
+        : labels.countdown(daysUntil).toLowerCase();
 
     return {
       status: "paid",
-      label: formatPayPlanPaidOnWithDue(lastPaidDate, nextDueLabel),
+      label: labels.settledOnWithDue(lastPaidDate, nextDueLabel),
       daysUntil,
     };
   }
@@ -264,7 +280,7 @@ export function getPlannedItemPaymentStatus(
 
   return {
     status: "pending",
-    label: formatDueCountdown(daysUntil),
+    label: labels.countdown(daysUntil),
     daysUntil,
   };
 }

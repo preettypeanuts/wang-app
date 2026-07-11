@@ -41,8 +41,11 @@ import {
 import { formatIdr } from "@/lib/finance/format-currency";
 import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
+import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
 import { getCurrentMonthKey } from "@/lib/planner/calendar";
+import { listUpcomingIncomePayPlanEntries } from "@/lib/planner/list-upcoming-income-payplan";
 import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
+import { sumUpcomingIncomeThisMonth } from "@/lib/planner/sum-upcoming-income-this-month";
 import type { NotificationDraft } from "@/types/notification";
 
 function firstLine(text: string): string {
@@ -124,6 +127,7 @@ export async function buildUserNotificationDrafts(
     yesterdaySummary,
     weeklySummary,
     budgets,
+    plannedItems,
   ] = await Promise.all([
     getAvailableBalance(userId, referenceDate),
     listPlans(userId),
@@ -145,12 +149,15 @@ export async function buildUserNotificationDrafts(
       : getYesterdayDailySummary(userId),
     weeklySummaryPromise,
     listBudgetsForMonth(userId, getCurrentMonthKey(referenceDate)),
+    getPlannedItemsForExpansion(userId),
   ]);
 
   const activePlans = plans.filter((plan) => plan.status === "active");
   const estimatedCost = activePlans.reduce((sum, plan) => sum + plan.amount, 0);
   const { upcomingPayPlanTotal, upcomingPayPlanCount } =
     sumUpcomingPayPlanThisMonth(upcoming, referenceDate);
+  const { upcomingIncomeTotal, upcomingIncomeCount } =
+    sumUpcomingIncomeThisMonth(plannedItems, referenceDate);
   const remainingBudgetTotal = sumRemainingBudgetTotal(budgets);
   const plansOverview = buildPlansOverview(
     plans,
@@ -160,11 +167,14 @@ export async function buildUserNotificationDrafts(
       availableBalance,
       upcomingPayPlanTotal,
       remainingBudgetTotal,
+      upcomingIncomeTotal,
     ),
     upcomingPayPlanTotal,
     upcomingPayPlanCount,
     [],
     remainingBudgetTotal,
+    upcomingIncomeTotal,
+    upcomingIncomeCount,
   );
 
   const drafts: NotificationDraft[] = [];
@@ -202,6 +212,37 @@ export async function buildUserNotificationDrafts(
       body: `${item.name} · ${formatIdr(item.amount)} · ${item.dueLabel}`,
       href: NOTIFICATION_ROUTES.payplan,
       dedupeKey: `bill-tomorrow:${item.id}:${dayKey}`,
+    });
+  }
+
+  const upcomingIncome = listUpcomingIncomePayPlanEntries(
+    plannedItems,
+    referenceDate,
+    14,
+  );
+
+  for (const income of upcomingIncome) {
+    if (income.daysUntil < 0 || income.daysUntil > 1) {
+      continue;
+    }
+
+    if (income.daysUntil === 0) {
+      drafts.push({
+        kind: "bill_reminder",
+        title: "Pemasukan masuk hari ini",
+        body: `${income.item.name} · ${formatIdr(income.item.amount)}`,
+        href: NOTIFICATION_ROUTES.payplan,
+        dedupeKey: `income-today:${income.item.id}:${dayKey}`,
+      });
+      continue;
+    }
+
+    drafts.push({
+      kind: "bill_reminder",
+      title: "Pemasukan masuk besok",
+      body: `${income.item.name} · ${formatIdr(income.item.amount)}`,
+      href: NOTIFICATION_ROUTES.payplan,
+      dedupeKey: `income-tomorrow:${income.item.id}:${dayKey}`,
     });
   }
 
