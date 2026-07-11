@@ -1,6 +1,8 @@
 "use client";
 
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
+import { BudgetDetailExplanation } from "@/components/planner/budget-detail-explanation";
+import { BudgetDetailPaceMetrics } from "@/components/planner/budget-detail-pace-metrics";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -23,37 +25,19 @@ import {
   FORM_PREVIEW_COMPACT_AMOUNT,
 } from "@/config/form-dialog";
 import {
-  formatBudgetAdjustedDailyHint,
-  formatBudgetAvgDailyHint,
-  formatBudgetDailyAmount,
-  formatBudgetDailyDelta,
   formatBudgetDailyLimit,
-  formatBudgetElapsedDays,
-  formatBudgetRemainingDays,
-  PAYPLAN_LABEL_ADJUSTED_DAILY,
-  PAYPLAN_LABEL_AVG_DAILY_SPENT,
   PAYPLAN_LABEL_BUDGET_DETAIL_DESC,
-  PAYPLAN_LABEL_BUDGET_EXPLANATION,
-  PAYPLAN_LABEL_BUDGET_PACING,
-  PAYPLAN_LABEL_BUDGET_PERIOD,
   PAYPLAN_LABEL_CLOSE,
   PAYPLAN_LABEL_DELETE,
   PAYPLAN_LABEL_EDIT,
-  PAYPLAN_LABEL_ELAPSED_DAYS,
   PAYPLAN_LABEL_LIMIT,
   PAYPLAN_LABEL_MANUAL_TOTAL,
   PAYPLAN_LABEL_NOTE,
   PAYPLAN_LABEL_PER_DAY,
-  PAYPLAN_LABEL_PLANNED_DAILY,
   PAYPLAN_LABEL_REMAINING_BUDGET,
-  PAYPLAN_LABEL_REMAINING_DAYS,
   PAYPLAN_LABEL_REPEAT_NEXT_MONTH,
   PAYPLAN_LABEL_USED,
 } from "@/config/payplan-labels";
-import {
-  PLANNER_MANAGE_META,
-  PLANNER_MANAGE_META_BETWEEN,
-} from "@/config/planner-manage";
 import { getPlanCategoryAccent } from "@/config/plans";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { buildBudgetDetailExplanation } from "@/lib/finance/build-budget-detail-explanation";
@@ -73,37 +57,6 @@ interface BudgetDetailDrawerProps {
 
 const MODE_BADGE =
   "inline-flex shrink-0 rounded-lg px-2 py-0.5 text-[10px] font-semibold bg-black/6 text-muted-foreground dark:bg-white/10";
-
-function DetailMetric({
-  label,
-  value,
-  hint,
-  valueClassName,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  valueClassName?: string;
-}) {
-  return (
-    <div className="min-w-0">
-      <p className={PLANNER_MANAGE_META}>{label}</p>
-      <p
-        className={cn(
-          "mt-1 text-sm font-semibold tabular-nums text-foreground/90",
-          valueClassName,
-        )}
-      >
-        {value}
-      </p>
-      {hint ? (
-        <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
-          {hint}
-        </p>
-      ) : null}
-    </div>
-  );
-}
 
 function formatLimitSummary(status: BudgetStatus): string {
   if (status.budget.limitMode === "daily") {
@@ -135,15 +88,7 @@ export function BudgetDetailDrawer({
   const showPacing =
     pace.plannedDailyBudget !== null &&
     (pace.isCurrentMonth || pace.isPastMonth);
-  const explanation = buildBudgetDetailExplanation(currentStatus);
-  const explanationTone =
-    currentStatus.remaining < 0 || pace.paceStatus === "fast"
-      ? "border-[#FF9500]/25 bg-[#FF9500]/8 text-[#FF9500] dark:border-[#FF9500]/30 dark:bg-[#FF9500]/10"
-      : currentStatus.remainingPercent <= 20
-        ? "border-[#FF9500]/25 bg-[#FF9500]/8 text-foreground/90 dark:border-[#FF9500]/30 dark:bg-[#FF9500]/10"
-        : pace.paceStatus === "slow"
-          ? "border-[#007AFF]/25 bg-[#007AFF]/8 text-foreground/90 dark:border-[#007AFF]/30 dark:bg-[#007AFF]/10"
-          : "border-black/8 bg-black/[0.03] text-foreground/90 dark:border-white/10 dark:bg-white/[0.04]";
+  const explanationSegments = buildBudgetDetailExplanation(currentStatus);
 
   function handleEdit() {
     onOpenChange(false);
@@ -261,102 +206,14 @@ export function BudgetDetailDrawer({
           </div>
         </div>
 
-        <div
-          className={cn("mx-1 rounded-2xl border px-4 py-3", explanationTone)}
-        >
-          <p className="text-[10px] font-semibold uppercase tracking-widest opacity-80">
-            {PAYPLAN_LABEL_BUDGET_EXPLANATION}
-          </p>
-          <p className="mt-1.5 text-[13px] leading-relaxed">{explanation}</p>
-        </div>
+        <BudgetDetailExplanation
+          segments={explanationSegments}
+          paceStatus={pace.paceStatus}
+          remainingPercent={currentStatus.remainingPercent}
+          isOver={isOver}
+        />
 
-        {showPacing ? (
-          <div className={FORM_GROUP}>
-            <div className="px-4 py-3">
-              <div className={PLANNER_MANAGE_META_BETWEEN}>
-                <p className="text-xs font-medium text-muted-foreground">
-                  {PAYPLAN_LABEL_BUDGET_PACING}
-                </p>
-                <p className="text-[11px] text-muted-foreground">
-                  {PAYPLAN_LABEL_BUDGET_PERIOD} ·{" "}
-                  {formatBudgetElapsedDays(pace.elapsedDays)} ·{" "}
-                  {formatBudgetRemainingDays(pace.remainingDays)}
-                </p>
-              </div>
-
-              <div className="mt-3 grid grid-cols-2 gap-3">
-                <DetailMetric
-                  label={PAYPLAN_LABEL_PLANNED_DAILY}
-                  value={formatBudgetDailyAmount(
-                    formatIdr(pace.plannedDailyBudget ?? 0),
-                  )}
-                />
-                {pace.avgDailySpent !== null ? (
-                  <DetailMetric
-                    label={PAYPLAN_LABEL_AVG_DAILY_SPENT}
-                    value={formatBudgetDailyAmount(
-                      formatIdr(pace.avgDailySpent),
-                    )}
-                    hint={formatBudgetAvgDailyHint(
-                      formatIdr(pace.avgDailySpent),
-                      pace.elapsedDays,
-                    )}
-                    valueClassName={
-                      pace.paceStatus === "fast" ? "text-[#FF9500]" : undefined
-                    }
-                  />
-                ) : (
-                  <DetailMetric
-                    label={PAYPLAN_LABEL_AVG_DAILY_SPENT}
-                    value="—"
-                  />
-                )}
-                {pace.adjustedDailyBudget !== null ? (
-                  <DetailMetric
-                    label={PAYPLAN_LABEL_ADJUSTED_DAILY}
-                    value={formatBudgetDailyAmount(
-                      formatIdr(pace.adjustedDailyBudget),
-                    )}
-                    hint={formatBudgetAdjustedDailyHint(
-                      formatIdr(pace.adjustedDailyBudget),
-                      pace.remainingDays,
-                      formatIdr(pace.plannedDailyBudget ?? 0),
-                    )}
-                    valueClassName={
-                      pace.dailyDelta !== null && pace.dailyDelta < 0
-                        ? "text-[#FF9500]"
-                        : pace.dailyDelta !== null && pace.dailyDelta > 0
-                          ? "text-[#34C759]"
-                          : undefined
-                    }
-                  />
-                ) : (
-                  <DetailMetric
-                    label={PAYPLAN_LABEL_ADJUSTED_DAILY}
-                    value="—"
-                  />
-                )}
-                <DetailMetric
-                  label={PAYPLAN_LABEL_ELAPSED_DAYS}
-                  value={String(pace.elapsedDays)}
-                />
-                <DetailMetric
-                  label={PAYPLAN_LABEL_REMAINING_DAYS}
-                  value={String(pace.remainingDays)}
-                />
-              </div>
-
-              {pace.dailyDelta !== null && pace.dailyDelta !== 0 ? (
-                <p className="mt-3 text-[11px] leading-snug text-muted-foreground">
-                  {formatBudgetDailyDelta(
-                    formatIdr(Math.abs(pace.dailyDelta)),
-                    pace.dailyDelta < 0 ? "below" : "above",
-                  )}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
+        {showPacing ? <BudgetDetailPaceMetrics pace={pace} /> : null}
 
         {currentStatus.budget.note?.trim() ? (
           <div className={FORM_GROUP}>
