@@ -28,9 +28,9 @@ export const SIDEBAR_COLLAPSED_ITEM_GAP = "0.375rem";
 export const SIDEBAR_APP_ICON_SHELL =
   "flex size-9 shrink-0 items-center justify-center rounded-[0.7rem] bg-linear-to-b shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),0_1px_2px_rgba(0,0,0,0.14)]";
 
-/** Wang logo tile in sidebar — matches W.png matte background per theme. */
+/** Wang logo tile in sidebar — full-bleed app icon per theme. */
 export const SIDEBAR_APP_LOGO_SHELL =
-  "flex shrink-0 items-center justify-center overflow-hidden rounded-[0.7rem] bg-white p-1 dark:bg-black shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4),0_1px_2px_rgba(0,0,0,0.14)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.07),0_1px_2px_rgba(0,0,0,0.4)]";
+  "flex shrink-0 items-center justify-center bg-background overflow-hidden rounded-[0.7rem] shadow-[0_1px_2px_rgba(0,0,0,0.14)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.4)]";
 
 export const SIDEBAR_APP_ICON_GLYPH = "size-4 text-white drop-shadow-sm";
 

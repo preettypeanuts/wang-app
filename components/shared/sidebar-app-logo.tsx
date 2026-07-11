@@ -18,7 +18,7 @@ export function SidebarAppLogo({
       <AppLogo
         alt={alt}
         size={size}
-        className="size-full rounded-[inherit] object-cover"
+        className="size-full rounded-[inherit] object-contain"
       />
     </span>
   );

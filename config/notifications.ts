@@ -1,5 +1,6 @@
 import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
 import { OVERVIEW_ROUTE, PAYPLAN_ROUTE } from "@/config/navigation";
+import { PWA_NOTIFICATION_ICON } from "@/config/pwa";
 
 export const NOTIFICATION_CRON_PATH = "/api/cron/notifications";
 
@@ -46,4 +47,4 @@ export const NOTIFICATION_MAX_IN_APP_STACK = 3;
 /** In-app banner auto-dismiss — matches common iOS toast duration (~5s). */
 export const NOTIFICATION_IN_APP_AUTO_DISMISS_MS = 5000;
 
-export const NOTIFICATION_PUSH_ICON = "/icon-192.png";
+export const NOTIFICATION_PUSH_ICON = PWA_NOTIFICATION_ICON;

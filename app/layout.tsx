@@ -2,7 +2,15 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Suspense } from "react";
 import { APP_DESCRIPTION, APP_NAME } from "@/config/app";
-import { PWA_APPLE_TOUCH_ICON, PWA_ICON_192, PWA_ICON_512 } from "@/config/pwa";
+import {
+  PWA_APPLE_TOUCH_ICON,
+  PWA_FAVICON_DARK,
+  PWA_FAVICON_LIGHT,
+  PWA_ICON_192,
+  PWA_ICON_512,
+  PWA_ICON_DARK_192,
+  PWA_ICON_LIGHT_192,
+} from "@/config/pwa";
 import "./globals.css";
 import { RootBootstrapScript } from "@/components/shared/root-bootstrap-script";
 import { RootLayoutBody } from "@/components/shared/root-layout-body";
@@ -27,6 +35,30 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
+      {
+        url: PWA_FAVICON_LIGHT,
+        sizes: "32x32",
+        type: "image/png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: PWA_FAVICON_DARK,
+        sizes: "32x32",
+        type: "image/png",
+        media: "(prefers-color-scheme: dark)",
+      },
+      {
+        url: PWA_ICON_LIGHT_192,
+        sizes: "192x192",
+        type: "image/png",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: PWA_ICON_DARK_192,
+        sizes: "192x192",
+        type: "image/png",
+        media: "(prefers-color-scheme: dark)",
+      },
       { url: PWA_ICON_192, sizes: "192x192", type: "image/png" },
       { url: PWA_ICON_512, sizes: "512x512", type: "image/png" },
     ],

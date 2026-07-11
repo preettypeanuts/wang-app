@@ -1,3 +1,5 @@
+import { PWA_NOTIFICATION_ICON } from "@/config/pwa";
+
 interface PushPayload {
   title: string;
   body: string;
@@ -11,7 +13,7 @@ const DEFAULT_PUSH_PAYLOAD: PushPayload = {
   body: "Ada pembaruan keuangan untuk kamu.",
   href: "/overview",
   tag: "wang-notification",
-  icon: "/icon-192.png",
+  icon: PWA_NOTIFICATION_ICON,
 };
 
 function parsePushPayload(event: PushEvent): PushPayload {
@@ -40,7 +42,7 @@ export function registerPushNotificationHandlers(
         icon: payload.icon,
         tag: payload.tag,
         data: { href: payload.href },
-        badge: "/icon-192.png",
+        badge: PWA_NOTIFICATION_ICON,
       }),
     );
   });
