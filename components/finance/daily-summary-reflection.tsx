@@ -1,4 +1,5 @@
 import {
+  FINANCE_REFLECTION_RADIUS,
   FINANCE_REFLECTION_SHELL,
   getFinanceConditionWeatherStyle,
 } from "@/config/finance-condition-weather";
@@ -18,34 +19,38 @@ export function DailySummaryReflection({
   const style = getFinanceConditionWeatherStyle(condition);
 
   return (
-    <div className={FINANCE_REFLECTION_SHELL}>
+    <div className={cn(FINANCE_REFLECTION_SHELL, FINANCE_REFLECTION_RADIUS)}>
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]",
+          "pointer-events-none absolute inset-0",
+          FINANCE_REFLECTION_RADIUS,
           style.surface,
         )}
       />
 
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+        className={cn(
+          "pointer-events-none absolute inset-0 overflow-hidden",
+          FINANCE_REFLECTION_RADIUS,
+        )}
       >
         <div
           className={cn(
-            "absolute -right-4 -top-4 size-24 rounded-full blur-3xl",
+            "absolute right-3 top-3 size-20 rounded-full blur-3xl",
             style.glowOrb,
           )}
         />
         <div
           className={cn(
-            "absolute -bottom-4 -left-4 size-20 rounded-full blur-3xl",
+            "absolute bottom-3 left-3 size-16 rounded-full blur-3xl",
             style.secondaryOrb,
           )}
         />
       </div>
 
-      <div className="relative flex flex-col p-4">
+      <div className="relative z-10 flex flex-col px-4 pt-4 pb-5">
         <div className="flex items-center justify-between gap-3">
           <p
             className={cn(

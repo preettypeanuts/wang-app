@@ -12,13 +12,14 @@ import {
   INBOX_SUMMARY_DRAWER_SURFACE,
 } from "@/config/inbox-mobile";
 import { useDrawerScrollLock } from "@/hooks/use-drawer-scroll-lock";
-import type { DailySummarySnapshot, TodaySummary } from "@/types/summary";
+import type { InboxDailySummaries } from "@/lib/inbox/get-inbox-daily-summaries";
+import type { TodaySummary } from "@/types/summary";
 
 interface InboxTodaySummaryDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   summary: TodaySummary;
-  dailySummary: DailySummarySnapshot | null;
+  dailySummaries: InboxDailySummaries;
   availableBalance?: number | null;
 }
 
@@ -26,7 +27,7 @@ export function InboxTodaySummaryDrawer({
   open,
   onOpenChange,
   summary,
-  dailySummary,
+  dailySummaries,
   availableBalance = null,
 }: InboxTodaySummaryDrawerProps) {
   useDrawerScrollLock(open);
@@ -38,7 +39,8 @@ export function InboxTodaySummaryDrawer({
         <div className={INBOX_SUMMARY_DRAWER_BODY}>
           <TodaySummaryPanel
             availableBalance={availableBalance}
-            dailySummary={dailySummary}
+            todayReflection={dailySummaries.todayReflection}
+            yesterdaySummary={dailySummaries.yesterdaySummary}
             embedded
             summary={summary}
           />

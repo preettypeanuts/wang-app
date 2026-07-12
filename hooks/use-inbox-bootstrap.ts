@@ -22,8 +22,14 @@ import type {
   ChatMessage,
   UnpaidPayPlanChatItem,
 } from "@/types/chat";
-import type { DailySummarySnapshot, TodaySummary } from "@/types/summary";
+import type { TodaySummary } from "@/types/summary";
+import type { InboxDailySummaries } from "@/lib/inbox/get-inbox-daily-summaries";
 import type { ParsedTransaction } from "@/types/transaction";
+
+const EMPTY_DAILY_SUMMARIES: InboxDailySummaries = {
+  yesterdaySummary: null,
+  todayReflection: null,
+};
 
 const EMPTY_SLASH = {
   unpaidPayPlanItems: [] as UnpaidPayPlanChatItem[],
@@ -110,8 +116,8 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
   const [state, setState] = useState<InboxBootstrapState>(() =>
     toBootstrapState(options.initialBootstrap ?? null, Boolean(options.initialBootstrap)),
   );
-  const [dailySummary, setDailySummary] = useState<DailySummarySnapshot | null>(
-    null,
+  const [dailySummaries, setDailySummaries] = useState<InboxDailySummaries>(
+    EMPTY_DAILY_SUMMARIES,
   );
   const [slash, setSlash] = useState(EMPTY_SLASH);
   const [slashRequested, setSlashRequested] = useState(false);
@@ -204,7 +210,7 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
         applyBootstrapPayload(payload, options?.force ? "force" : "merge");
 
         if (options?.clearDailySummary) {
-          setDailySummary(null);
+          setDailySummaries(EMPTY_DAILY_SUMMARIES);
         }
       } finally {
         syncInFlightRef.current = false;
@@ -300,8 +306,10 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
           return;
         }
 
-        setDailySummary(
-          (data as { dailySummary: DailySummarySnapshot | null }).dailySummary,
+        setDailySummaries(
+          (data as InboxDailySummaries).yesterdaySummary !== undefined
+            ? (data as InboxDailySummaries)
+            : EMPTY_DAILY_SUMMARIES,
         );
       })
       .catch(() => {});
@@ -315,7 +323,7 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
       return;
     }
 
-    setDailySummary(null);
+    setDailySummaries(EMPTY_DAILY_SUMMARIES);
 
     setState((current) => {
       const summary = applyTransactionsToSummary(current.summary, transactions);
@@ -374,7 +382,7 @@ export function useInboxBootstrap(options: InboxBootstrapOptions = {}) {
 
   return {
     ...state,
-    dailySummary,
+    dailySummaries,
     slash,
     isRefreshing: isSyncing,
     isSyncing,

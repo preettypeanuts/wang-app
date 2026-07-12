@@ -4,8 +4,10 @@ import type { FinanceCondition } from "@/types/summary";
 const REFLECTION_SURFACE_HIGHLIGHT =
   "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.32)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14)]";
 
+export const FINANCE_REFLECTION_RADIUS = "rounded-[1.35rem]";
+
 export const FINANCE_REFLECTION_SHELL =
-  "relative isolate min-h-28 overflow-hidden rounded-[1.35rem] ring-1 ring-white/20 drop-shadow-[0_8px_20px_rgba(0,0,0,0.08)] dark:ring-white/10 dark:drop-shadow-[0_10px_24px_rgba(0,0,0,0.3)]";
+  "relative isolate min-h-28 overflow-hidden ring-1 ring-white/20 drop-shadow-[0_8px_20px_rgba(0,0,0,0.08)] dark:ring-white/10 dark:drop-shadow-[0_10px_24px_rgba(0,0,0,0.3)]";
 
 export interface FinanceConditionWeatherStyle {
   surface: string;
