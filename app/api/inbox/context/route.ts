@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getApiUserId } from "@/lib/auth/api-session";
-import { ensureDailySummaryForDay, getDailySummaryForDay } from "@/lib/db/daily-summary";
 import { getInboxSlashContext } from "@/lib/inbox/get-inbox-deferred-data";
+import { getInboxDailySummaries } from "@/lib/inbox/get-inbox-daily-summaries";
 
 export async function GET(request: Request) {
   const userId = await getApiUserId();
@@ -18,10 +18,7 @@ export async function GET(request: Request) {
   }
 
   if (scope === "daily-summary") {
-    const today = new Date();
-    await ensureDailySummaryForDay(userId, today);
-    const dailySummary = await getDailySummaryForDay(userId, today);
-    return NextResponse.json({ dailySummary });
+    return NextResponse.json(await getInboxDailySummaries(userId));
   }
 
   return NextResponse.json({ error: "Invalid scope." }, { status: 400 });

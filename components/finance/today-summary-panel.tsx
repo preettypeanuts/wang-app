@@ -29,7 +29,8 @@ import type { DailySummarySnapshot, TodaySummary } from "@/types/summary";
 
 interface TodaySummaryPanelProps {
   summary: TodaySummary;
-  dailySummary: DailySummarySnapshot | null;
+  yesterdaySummary: DailySummarySnapshot | null;
+  todayReflection: DailySummarySnapshot | null;
   availableBalance?: number | null;
   /** Flat layout for mobile drawer — no outer glass shell. */
   embedded?: boolean;
@@ -37,7 +38,8 @@ interface TodaySummaryPanelProps {
 
 export function TodaySummaryPanel({
   summary,
-  dailySummary,
+  yesterdaySummary,
+  todayReflection,
   availableBalance = null,
   embedded = false,
 }: TodaySummaryPanelProps) {
@@ -115,10 +117,10 @@ export function TodaySummaryPanel({
           />
         </section>
 
-        {dailySummary?.insight && dailySummary.condition ? (
+        {todayReflection?.insight && todayReflection.condition ? (
           <DailySummaryReflection
-            condition={dailySummary.condition}
-            insight={dailySummary.insight}
+            condition={todayReflection.condition}
+            insight={todayReflection.insight}
           />
         ) : null}
 
@@ -149,8 +151,11 @@ export function TodaySummaryPanel({
           )}
         </section>
 
-        {dailySummary ? (
-          <DailySummarySection dailySummary={dailySummary} showReflection={false} />
+        {yesterdaySummary ? (
+          <DailySummarySection
+            dailySummary={yesterdaySummary}
+            showReflection={false}
+          />
         ) : null}
       </div>
     </div>

@@ -12,12 +12,13 @@ import { MobileTabRefreshBar } from "@/components/shared/mobile-tab-refresh-bar"
 import { INBOX_MOBILE_PAGE } from "@/config/inbox-mobile";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/types/chat";
-import type { DailySummarySnapshot, TodaySummary } from "@/types/summary";
+import type { InboxDailySummaries } from "@/lib/inbox/get-inbox-daily-summaries";
+import type { TodaySummary } from "@/types/summary";
 
 interface InboxMobileLayoutProps {
   children: ReactNode;
   summary: TodaySummary;
-  dailySummary: DailySummarySnapshot | null;
+  dailySummaries: InboxDailySummaries;
   availableBalance?: number | null;
   messages?: ChatMessage[];
   onOpenSummary?: () => void;
@@ -29,7 +30,7 @@ interface InboxMobileLayoutProps {
 export function InboxMobileLayout({
   children,
   summary,
-  dailySummary,
+  dailySummaries,
   availableBalance = null,
   messages = [],
   onOpenSummary,
@@ -80,7 +81,7 @@ export function InboxMobileLayout({
 
         <InboxTodaySummaryDrawer
           availableBalance={availableBalance}
-          dailySummary={dailySummary}
+          dailySummaries={dailySummaries}
           onOpenChange={setSummaryOpen}
           open={summaryOpen}
           summary={summary}

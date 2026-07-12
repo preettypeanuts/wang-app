@@ -1,5 +1,6 @@
 import {
   FINANCE_REFLECTION_CONTENT,
+  FINANCE_REFLECTION_RADIUS,
   FINANCE_REFLECTION_SHELL,
   getFinanceConditionWeatherStyle,
 } from "@/config/finance-condition-weather";
@@ -23,24 +24,28 @@ export function DailySummaryReflection({
       <div
         aria-hidden
         className={cn(
-          "pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]",
+          "pointer-events-none absolute inset-0",
+          FINANCE_REFLECTION_RADIUS,
           style.surface,
         )}
       />
 
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+        className={cn(
+          "pointer-events-none absolute inset-0 overflow-hidden",
+          FINANCE_REFLECTION_RADIUS,
+        )}
       >
         <div
           className={cn(
-            "absolute -right-6 -top-6 size-20 rounded-full opacity-70 blur-2xl",
+            "absolute right-3 top-3 size-20 rounded-full opacity-70 blur-2xl",
             style.glowOrb,
           )}
         />
         <div
           className={cn(
-            "absolute -bottom-5 -left-5 size-16 rounded-full opacity-60 blur-2xl",
+            "absolute bottom-3 left-3 size-16 rounded-full opacity-60 blur-2xl",
             style.secondaryOrb,
           )}
         />

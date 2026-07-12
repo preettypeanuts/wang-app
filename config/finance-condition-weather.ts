@@ -2,9 +2,12 @@ import { SEPARATED_SURFACE } from "@/config/shape";
 import { SOLID_WIDGET_TILE_SHADOW } from "@/config/solid-widget-tiles";
 import type { FinanceCondition } from "@/types/summary";
 
+export const FINANCE_REFLECTION_RADIUS = "rounded-2xl";
+
 export const FINANCE_REFLECTION_SHELL = `relative isolate overflow-hidden ${SEPARATED_SURFACE}`;
 
-export const FINANCE_REFLECTION_CONTENT = "relative flex flex-col p-3";
+export const FINANCE_REFLECTION_CONTENT =
+  "relative z-10 flex flex-col px-4 pt-4 pb-5";
 
 export interface FinanceConditionWeatherStyle {
   surface: string;
