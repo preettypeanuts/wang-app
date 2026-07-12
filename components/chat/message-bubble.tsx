@@ -1,23 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef } from "react";
 import { motion, useReducedMotion } from "motion/react";
 
+import {
+  CHAT_BUBBLE_ASSISTANT_VARIANTS,
+  CHAT_BUBBLE_USER_VARIANTS,
+} from "@/config/chat-animation";
 import {
   CHAT_BUBBLE_BASE,
   CHAT_BUBBLE_LAYOUT_IN_MENU,
   CHAT_BUBBLE_LAYOUT_STANDALONE,
   CHAT_BUBBLE_STYLES,
-  SEPARATED_SURFACE,
+  CHAT_BUBBLE_TAIL,
 } from "@/config/chat-bubbles";
-import {
-  CHAT_MESSAGE_ASSISTANT_ANIMATE,
-  CHAT_MESSAGE_ASSISTANT_ENTER,
-  CHAT_MESSAGE_ASSISTANT_TRANSITION,
-  CHAT_MESSAGE_USER_ANIMATE,
-  CHAT_MESSAGE_USER_ENTER,
-  CHAT_MESSAGE_USER_TRANSITION,
-} from "@/config/chat-message-enter";
 import { cn } from "@/lib/utils";
 import type { MessageRole } from "@/types/chat";
 
@@ -39,48 +35,49 @@ export function MessageBubble({
   inMenu = false,
   onEnterComplete,
 }: MessageBubbleProps) {
+  const ref = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
   const shouldAnimate = animateEnter && !reduceMotion;
-  const [isAnimating, setIsAnimating] = useState(shouldAnimate);
-
-  useEffect(() => {
-    if (shouldAnimate) {
-      setIsAnimating(true);
-    }
-  }, [shouldAnimate]);
-
   const bubbleStyle = CHAT_BUBBLE_STYLES[role];
   const isUser = role === "user";
+  const variants = isUser
+    ? CHAT_BUBBLE_USER_VARIANTS
+    : CHAT_BUBBLE_ASSISTANT_VARIANTS;
 
   const bubbleClassName = cn(
     CHAT_BUBBLE_BASE,
     inMenu ? CHAT_BUBBLE_LAYOUT_IN_MENU : CHAT_BUBBLE_LAYOUT_STANDALONE,
-    SEPARATED_SURFACE,
+    !inMenu && CHAT_BUBBLE_TAIL,
     bubbleStyle.surface,
     bubbleStyle.text,
     className,
   );
 
   if (!shouldAnimate) {
-    return <div className={bubbleClassName}>{content}</div>;
+    return (
+      <div ref={ref} className={bubbleClassName}>
+        {content}
+      </div>
+    );
   }
 
   return (
     <motion.div
-      className={bubbleClassName}
+      ref={ref}
+      variants={variants}
+      initial="initial"
+      animate="animate"
       style={{
-        transformOrigin: isUser ? "right bottom" : "left bottom",
-        willChange: isAnimating ? "transform, opacity" : undefined,
+        transformOrigin: isUser ? "bottom right" : "bottom left",
+        willChange: "transform, opacity",
       }}
-      initial={isUser ? CHAT_MESSAGE_USER_ENTER : CHAT_MESSAGE_ASSISTANT_ENTER}
-      animate={isUser ? CHAT_MESSAGE_USER_ANIMATE : CHAT_MESSAGE_ASSISTANT_ANIMATE}
-      transition={
-        isUser ? CHAT_MESSAGE_USER_TRANSITION : CHAT_MESSAGE_ASSISTANT_TRANSITION
-      }
       onAnimationComplete={() => {
-        setIsAnimating(false);
+        if (ref.current) {
+          ref.current.style.willChange = "auto";
+        }
         onEnterComplete?.();
       }}
+      className={bubbleClassName}
     >
       {content}
     </motion.div>

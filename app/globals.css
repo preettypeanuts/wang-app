@@ -419,6 +419,7 @@
 
   /* Keep in sync with INBOX_MESSAGE_SCROLL_AREA in config/chat-layout.ts */
   .inbox-message-scroll {
+    --chat-thread-bg: transparent;
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
   }
@@ -445,7 +446,23 @@
     background-color: color-mix(in srgb, var(--foreground) 28%, transparent);
   }
 
-  /* Keep in sync with CHAT_BUBBLE_USER in config/chat-bubbles.ts */
+  /* Keep in sync with CHAT_BUBBLE_* in config/chat-bubbles.ts */
+  .chat-bubble {
+    position: relative;
+    border-radius: 18px;
+    padding: 8px 14px;
+    font-size: 15px;
+    line-height: 1.35;
+  }
+
+  .chat-bubble--tailed.chat-bubble-user {
+    margin-right: 6px;
+  }
+
+  .chat-bubble--tailed.chat-bubble-assistant {
+    margin-left: 6px;
+  }
+
   .chat-bubble-user {
     background-color: color-mix(in srgb, var(--primary) 80%, transparent);
     border-color: color-mix(in srgb, var(--primary) 42%, transparent);
@@ -454,6 +471,54 @@
   :is(.dark) .chat-bubble-user {
     background-color: color-mix(in srgb, var(--primary) 80%, transparent);
     border-color: color-mix(in srgb, var(--primary) 48%, transparent);
+  }
+
+  .chat-bubble--tailed.chat-bubble-user::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    bottom: -2px;
+    right: -7px;
+    width: 20px;
+    height: 20px;
+    background: color-mix(in srgb, var(--primary) 80%, transparent);
+    border-bottom-left-radius: 16px;
+  }
+
+  .chat-bubble--tailed.chat-bubble-user::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    bottom: -2px;
+    right: -13px;
+    width: 13px;
+    height: 20px;
+    background: var(--chat-thread-bg);
+    border-bottom-left-radius: 10px;
+  }
+
+  .chat-bubble--tailed.chat-bubble-assistant::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    bottom: -2px;
+    left: -7px;
+    width: 20px;
+    height: 20px;
+    background: var(--glass-fill);
+    border-bottom-right-radius: 16px;
+  }
+
+  .chat-bubble--tailed.chat-bubble-assistant::after {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    bottom: -2px;
+    left: -13px;
+    width: 13px;
+    height: 20px;
+    background: var(--chat-thread-bg);
+    border-bottom-right-radius: 10px;
   }
 
   /* Keep in sync with INBOX_SUMMARY_DRAWER_POPUP in config/inbox-mobile.ts */
