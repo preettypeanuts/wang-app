@@ -509,10 +509,10 @@ export function ChatInput({
                   "aspect-square shrink-0 rounded-full p-0",
                   "max-md:size-10 max-md:min-h-10 max-md:[&_svg]:size-[1.05rem]",
                   "md:size-9 md:min-h-9 md:min-w-9 md:[&_svg]:size-4",
-                  "glass-backdrop bg-[var(--glass-fill)]",
+                  "glass-backdrop bg-(--glass-fill)",
                   "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.3)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)]",
-                  "hover:!bg-[var(--glass-fill)] dark:hover:!bg-[var(--glass-fill)]",
-                  "aria-expanded:!bg-[var(--glass-fill)] aria-expanded:text-foreground",
+                  "hover:bg-(--glass-fill)! dark:hover:bg-(--glass-fill)!",
+                  "aria-expanded:bg-(--glass-fill)! aria-expanded:text-foreground",
                 )}
               />
             }
