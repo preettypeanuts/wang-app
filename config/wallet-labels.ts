@@ -3,7 +3,6 @@ import type { WalletType } from "@/types/wallet";
 export const WALLETS_PAGE_TITLE = "Wallets";
 export const WALLETS_PAGE_DESC =
   "Track balances per wallet — cash, bank, e-wallet.";
-export const WALLETS_BACK_LABEL = "Overview";
 export const WALLETS_ADD = "Add wallet";
 export const WALLETS_EMPTY =
   "No wallets yet. Add one to start tracking balances per source.";

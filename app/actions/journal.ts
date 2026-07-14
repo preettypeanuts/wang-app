@@ -22,6 +22,7 @@ import { getBudgetStatusForExpense } from "@/lib/finance/build-budget-reply";
 import { resolveUserCategoryCatalog } from "@/lib/finance/resolve-user-categories";
 import { saveUserCategoryOverride } from "@/lib/finance/user-category-override";
 import { parseJournalEntryFormData } from "@/lib/validations/journal-entry";
+import { WALLETS_ROUTE } from "@/config/navigation";
 import type { JournalEntry } from "@/types/journal";
 import type { FlowTransactionType, ParsedTransaction } from "@/types/transaction";
 
@@ -196,7 +197,7 @@ export async function updateTransactionWalletAction(input: {
       walletId,
     );
     revalidateJournal(userId);
-    revalidatePath("/overview/wallets");
+    revalidatePath(WALLETS_ROUTE);
     return { ok: true, entry };
   } catch (error) {
     return {

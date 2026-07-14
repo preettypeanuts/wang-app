@@ -22,6 +22,7 @@ import {
 import { parseWalletAdjustmentFormData } from "@/lib/validations/wallet-adjustment";
 import { parseWalletFormData } from "@/lib/validations/wallet";
 import { parseWalletTransferFormData } from "@/lib/validations/wallet-transfer";
+import { WALLETS_ROUTE } from "@/config/navigation";
 import type { WalletRecord, WalletType } from "@/types/wallet";
 
 interface WalletActionSuccess {
@@ -40,7 +41,7 @@ export type WalletActionResult = WalletActionSuccess | WalletActionFailure;
 function revalidateWallets(userId: string) {
   revalidateUserWallets(userId);
   revalidatePath("/overview");
-  revalidatePath("/overview/wallets");
+  revalidatePath(WALLETS_ROUTE);
   revalidatePath("/journal");
 }
 
@@ -219,7 +220,7 @@ export async function correctInboxTransactionWalletAction(input: {
 
   revalidateAfterTransactionMutation(userId);
   revalidatePath("/overview");
-  revalidatePath("/overview/wallets");
+  revalidatePath(WALLETS_ROUTE);
 
   return { ok: true, walletName: wallet.name, assistantContent };
 }

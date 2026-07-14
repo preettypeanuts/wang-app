@@ -6,6 +6,7 @@ import {
   SETTINGS_IOS_ROW_ICON,
   SETTINGS_IOS_ROW_LABEL,
 } from "@/config/settings-ios";
+import { WALLETS_ROUTE } from "@/config/navigation";
 import { WALLETS_PAGE_TITLE } from "@/config/wallet-labels";
 import { CaretRightIcon, WalletIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -14,7 +15,7 @@ import { cn } from "@/lib/utils";
 export function WalletsSettingsLink() {
   return (
     <div className={SETTINGS_IOS_GROUP}>
-      <Link href="/overview/wallets" className={SETTINGS_IOS_ROW}>
+      <Link href={WALLETS_ROUTE} className={SETTINGS_IOS_ROW}>
         <span className={cn(SETTINGS_IOS_ROW_ICON, "bg-[#34C759]")}>
           <WalletIcon />
         </span>

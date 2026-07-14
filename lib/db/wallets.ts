@@ -246,7 +246,7 @@ export async function getDefaultWalletId(
 
 /**
  * Safety net: auto-create "Dompet Utama" when the user has no active wallet.
- * Silent fallback for chat/receipt before the user opens /overview/wallets.
+ * Silent fallback for chat/receipt before the user opens the wallets page.
  */
 export async function ensureDefaultWalletForClient(
   client: PrismaClient,

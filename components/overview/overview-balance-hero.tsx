@@ -24,6 +24,7 @@ import {
   UI_LABEL_OVERVIEW_VS_YESTERDAY,
 } from "@/config/ui-labels";
 import { WALLETS_MANAGE } from "@/config/wallet-labels";
+import { WALLETS_ROUTE } from "@/config/navigation";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import { ArrowDownIcon, ArrowUpIcon, WalletIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
@@ -135,7 +136,7 @@ export function OverviewBalanceHero({
                 {walletChips.map((wallet) => (
                   <Link
                     key={wallet.id}
-                    href="/overview/wallets"
+                    href={WALLETS_ROUTE}
                     className={cn(
                       OVERVIEW_STATUS_BADGE,
                       "shrink-0 transition-opacity hover:opacity-80",
@@ -155,7 +156,7 @@ export function OverviewBalanceHero({
                   </Link>
                 ))}
                 <Link
-                  href="/overview/wallets"
+                  href={WALLETS_ROUTE}
                   className={cn(
                     OVERVIEW_STATUS_BADGE,
                     "shrink-0 text-[#007AFF] transition-opacity hover:opacity-80 dark:text-[#0A84FF]",

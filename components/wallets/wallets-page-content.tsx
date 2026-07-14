@@ -1,14 +1,7 @@
-import Link from "next/link";
-
 import { JournalShell } from "@/components/journal/journal-shell";
 import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
 import { STACK_GAP } from "@/config/spacing";
-import {
-  WALLETS_BACK_LABEL,
-  WALLETS_PAGE_DESC,
-  WALLETS_PAGE_TITLE,
-} from "@/config/wallet-labels";
-import { CaretLeftIcon } from "@/lib/icons";
+import { WALLETS_PAGE_DESC, WALLETS_PAGE_TITLE } from "@/config/wallet-labels";
 import { cn } from "@/lib/utils";
 
 interface WalletsPageContentProps {
@@ -29,14 +22,7 @@ export function WalletsPageContent({ children }: WalletsPageContentProps) {
           title={WALLETS_PAGE_TITLE}
         >
           <header className="shrink-0 max-md:hidden">
-            <Link
-              href="/overview"
-              className="inline-flex items-center gap-1 text-xs font-medium text-[#007AFF] transition-opacity hover:opacity-80 dark:text-[#0A84FF]"
-            >
-              <CaretLeftIcon className="size-3" />
-              {WALLETS_BACK_LABEL}
-            </Link>
-            <h1 className="mt-1 text-base font-semibold tracking-tight sm:text-lg">
+            <h1 className="text-base font-semibold tracking-tight sm:text-lg">
               {WALLETS_PAGE_TITLE}
             </h1>
             <p className="mt-0.5 text-[11px] text-muted-foreground sm:text-xs">
