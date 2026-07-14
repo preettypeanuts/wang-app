@@ -1,5 +1,5 @@
 ---
-description: TypeScript strict standards for Monmon finance app
+description: TypeScript strict standards for Wang finance app
 globs: **/*.{ts,tsx}
 alwaysApply: false
 ---

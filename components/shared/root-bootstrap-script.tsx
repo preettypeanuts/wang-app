@@ -10,7 +10,7 @@ const BOOTSTRAP_SCRIPT = createRootAppearanceBootstrapScript();
 export function RootBootstrapScript() {
   useServerInsertedHTML(() => (
     <script
-      id="monmon-bootstrap"
+      id="wang-bootstrap"
       dangerouslySetInnerHTML={{ __html: BOOTSTRAP_SCRIPT }}
     />
   ));

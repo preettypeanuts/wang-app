@@ -5,7 +5,7 @@ import {
   MAX_CUSTOM_WALLPAPERS,
 } from "@/lib/wallpaper/custom-wallpaper";
 
-const DB_NAME = "monmon-app";
+const DB_NAME = "wang-app";
 const DB_VERSION = 1;
 const STORE_NAME = "settings";
 const CUSTOM_WALLPAPERS_KEY = "custom-wallpapers";

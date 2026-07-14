@@ -2,7 +2,7 @@ import { DEFAULT_WALLPAPER_ID, WALLPAPER_IDS } from "@/config/wallpapers";
 import { normalizeStoredWallpaperId } from "@/lib/wallpaper/custom-wallpaper";
 import type { WallpaperId } from "@/types/wallpaper";
 
-const STORAGE_KEY = "monmon:wallpaper";
+const STORAGE_KEY = "wang:wallpaper";
 
 export function isWallpaperId(value: string): value is WallpaperId {
   const normalized = normalizeStoredWallpaperId(value);

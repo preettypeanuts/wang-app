@@ -6,8 +6,8 @@ import {
 } from "@/config/wallpaper-mask";
 import type { WallpaperMaskColor } from "@/types/wallpaper";
 
-const STORAGE_KEY = "monmon:wallpaper-mask";
-const COLOR_STORAGE_KEY = "monmon:wallpaper-mask-color";
+const STORAGE_KEY = "wang:wallpaper-mask";
+const COLOR_STORAGE_KEY = "wang:wallpaper-mask-color";
 
 function readThemeAwareMaskColor(): WallpaperMaskColor {
   if (typeof window === "undefined") {

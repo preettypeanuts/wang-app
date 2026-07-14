@@ -5,9 +5,9 @@ import {
 import { DEFAULT_THEME_MODE, THEME_MODE_IDS } from "@/config/theme-modes";
 import type { AccentColorId, ThemeMode } from "@/types/appearance";
 
-export const THEME_COOKIE_KEY = "monmon-theme";
-export const ACCENT_COOKIE_KEY = "monmon-accent";
-export const RESOLVED_DARK_COOKIE_KEY = "monmon-theme-dark";
+export const THEME_COOKIE_KEY = "wang-theme";
+export const ACCENT_COOKIE_KEY = "wang-accent";
+export const RESOLVED_DARK_COOKIE_KEY = "wang-theme-dark";
 
 const COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24 * 365;
 

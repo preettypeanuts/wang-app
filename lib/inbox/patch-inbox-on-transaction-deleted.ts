@@ -7,7 +7,7 @@ import { removeTransactionFromSummary } from "@/lib/inbox/remove-transaction-fro
 import { isTransactionToday } from "@/lib/finance/is-transaction-today";
 import type { ParsedTransaction } from "@/types/transaction";
 
-export const INBOX_BOOTSTRAP_PATCHED_EVENT = "monmon:inbox-bootstrap-patched";
+export const INBOX_BOOTSTRAP_PATCHED_EVENT = "wang:inbox-bootstrap-patched";
 
 export interface JournalTransactionDeletedPatch {
   inboxMessageId: string | null;

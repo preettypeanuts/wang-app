@@ -100,7 +100,7 @@ export function NotificationsFeed() {
         </div>
       </div>
     );
-  }
+  } 
 
   return (
     <div className={NOTIFICATIONS_PAGE_SCROLL_INNER}>

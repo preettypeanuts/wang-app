@@ -9,8 +9,8 @@ import {
 } from "@/lib/appearance/cookies";
 import type { AccentColorId, ThemeMode } from "@/types/appearance";
 
-const THEME_STORAGE_KEY = "monmon:theme";
-const ACCENT_STORAGE_KEY = "monmon:accent";
+const THEME_STORAGE_KEY = "wang:theme";
+const ACCENT_STORAGE_KEY = "wang:accent";
 
 export function isThemeMode(value: string): value is ThemeMode {
   return THEME_MODE_IDS.has(value as ThemeMode);

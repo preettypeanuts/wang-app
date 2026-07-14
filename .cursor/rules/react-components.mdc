@@ -1,5 +1,5 @@
 ---
-description: React & Next.js component patterns for Monmon chat UI
+description: React & Next.js component patterns for Wang chat UI
 globs: **/*.tsx
 alwaysApply: false
 ---

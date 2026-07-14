@@ -1,6 +1,6 @@
 import { writeClientSidebarCookie } from "@/lib/sidebar/cookies";
 
-const SIDEBAR_STORAGE_KEY = "monmon:sidebar-open";
+const SIDEBAR_STORAGE_KEY = "wang:sidebar-open";
 
 const SIDEBAR_COOKIE_PATTERN = /(?:^|;\s*)sidebar_state=([^;]*)/;
 

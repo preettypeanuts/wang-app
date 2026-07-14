@@ -5,8 +5,8 @@ import {
 } from "@/lib/appearance/cookies";
 import { PWA_STANDALONE_BOOTSTRAP_SCRIPT } from "@/lib/pwa/standalone-viewport";
 
-const THEME_STORAGE_KEY = "monmon:theme";
-const ACCENT_STORAGE_KEY = "monmon:accent";
+const THEME_STORAGE_KEY = "wang:theme";
+const ACCENT_STORAGE_KEY = "wang:accent";
 
 /** Inline script — applies theme/accent + PWA standalone height before first paint. */
 export function createRootAppearanceBootstrapScript(): string {

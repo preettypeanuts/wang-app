@@ -8,9 +8,9 @@ import {
 } from "@/config/glass-fill";
 import type { GlassBlurLevelId } from "@/types/glass-blur";
 
-const BLUR_STORAGE_KEY = "monmon:glass-blur";
-const FILL_TRANSPARENCY_STORAGE_KEY = "monmon:glass-fill-transparency";
-const LEGACY_OFF_FILL_STORAGE_KEY = "monmon:glass-off-fill";
+const BLUR_STORAGE_KEY = "wang:glass-blur";
+const FILL_TRANSPARENCY_STORAGE_KEY = "wang:glass-fill-transparency";
+const LEGACY_OFF_FILL_STORAGE_KEY = "wang:glass-off-fill";
 
 export function readStoredGlassBlurLevel(): GlassBlurLevelId {
   if (typeof window === "undefined") {
