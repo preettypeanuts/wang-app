@@ -1,5 +1,6 @@
 "use client";
 
+import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -9,9 +10,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  JOURNAL_CATEGORY_OPTIONS,
   JOURNAL_TYPE_OPTIONS,
 } from "@/config/journal";
+import { buildJournalCategoryFilterOptions } from "@/lib/finance/user-category-catalog";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import { CONTROL_GAP } from "@/config/spacing";
 import {
@@ -44,6 +45,8 @@ export function JournalFilterFields({
   layout = "stack",
   className,
 }: JournalFilterFieldsProps) {
+  const { catalog } = useUserCategoryCatalog();
+  const categoryOptions = buildJournalCategoryFilterOptions(catalog);
   const isStack = layout === "stack";
 
   return (
@@ -89,7 +92,7 @@ export function JournalFilterFields({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {JOURNAL_CATEGORY_OPTIONS.map((option) => (
+            {categoryOptions.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}
               </SelectItem>

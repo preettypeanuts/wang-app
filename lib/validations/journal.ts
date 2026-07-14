@@ -1,8 +1,10 @@
 import { JOURNAL_PAGE_SIZE } from "@/config/journal";
 import { isTransactionCategory } from "@/config/categories";
+import { isCategoryInCatalog } from "@/lib/finance/user-category-catalog";
 import { isValidJournalDateInput } from "@/lib/journal/journal-date-range";
 import type { JournalFilters } from "@/types/journal";
 import type { FlowTransactionType } from "@/types/transaction";
+import type { ResolvedCategory } from "@/types/user-category";
 
 const VALID_TYPES = new Set<FlowTransactionType>(["income", "expense"]);
 
@@ -26,8 +28,28 @@ function readDateParam(
   return value && isValidJournalDateInput(value) ? value : null;
 }
 
+function parseJournalCategoryFilter(
+  categoryRaw: string,
+  catalog?: ResolvedCategory[],
+): string {
+  if (!categoryRaw || categoryRaw === "all") {
+    return "all";
+  }
+
+  if (isTransactionCategory(categoryRaw)) {
+    return categoryRaw;
+  }
+
+  if (catalog && isCategoryInCatalog(catalog, categoryRaw)) {
+    return categoryRaw;
+  }
+
+  return "all";
+}
+
 export function parseJournalSearchParams(
   searchParams: Record<string, string | string[] | undefined>,
+  catalog?: ResolvedCategory[],
 ): JournalFilters {
   const q = readParam(searchParams, "q");
   const typeRaw = readParam(searchParams, "type");
@@ -42,8 +64,7 @@ export function parseJournalSearchParams(
       ? (typeRaw as FlowTransactionType)
       : "all";
 
-  const category =
-    categoryRaw && isTransactionCategory(categoryRaw) ? categoryRaw : "all";
+  const category = parseJournalCategoryFilter(categoryRaw, catalog);
 
   // Wallet ids are cuid-like — restrict to safe chars, anything else means "all".
   const walletId = /^[a-z0-9-]{10,64}$/i.test(walletRaw) ? walletRaw : "all";

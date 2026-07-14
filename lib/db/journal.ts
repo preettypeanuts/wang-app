@@ -235,20 +235,24 @@ async function queryJournalCategoryExpenseBreakdown(
     return { totalExpense: 0, categories: [] };
   }
 
-  const grouped = await prisma.transaction.groupBy({
-    by: ["category"],
-    where: {
-      ...buildJournalTransactionWhere(userId, filters),
-      type: "expense",
-    },
-    _sum: { amount: true },
-  });
+  const [grouped, catalog] = await Promise.all([
+    prisma.transaction.groupBy({
+      by: ["category"],
+      where: {
+        ...buildJournalTransactionWhere(userId, filters),
+        type: "expense",
+      },
+      _sum: { amount: true },
+    }),
+    resolveUserCategoryCatalog(userId),
+  ]);
 
   return buildJournalCategoryExpenseBreakdown(
     grouped.map((row) => ({
       category: row.category,
       amount: row._sum.amount ?? 0,
     })),
+    catalog,
   );
 }
 
@@ -261,7 +265,12 @@ export async function getJournalCategoryExpenseBreakdown(
   return unstable_cache(
     () => queryJournalCategoryExpenseBreakdown(userId, filters),
     ["journal-category-breakdown", userId, cacheKey],
-    { tags: [userDataTags.transactions(userId)] },
+    {
+      tags: [
+        userDataTags.transactions(userId),
+        userDataTags.categories(userId),
+      ],
+    },
   )();
 }
 

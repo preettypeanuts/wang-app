@@ -18,6 +18,7 @@ import {
 } from "@/config/category-icon-style";
 import type { ResolvedCategory, UserCategoryRecord } from "@/types/user-category";
 import type { TransactionType } from "@/types/transaction";
+import { UI_LABEL_ALL_CATEGORIES } from "@/config/ui-labels";
 
 function normalizeSearchTerm(value: string): string {
   return value.trim().toLowerCase();
@@ -224,6 +225,18 @@ export function getExpenseCategoriesFromCatalog(
   catalog: ResolvedCategory[],
 ): ResolvedCategory[] {
   return catalog.filter((entry) => entry.type === "expense");
+}
+
+export function buildJournalCategoryFilterOptions(
+  catalog: ResolvedCategory[],
+): { value: string; label: string }[] {
+  return [
+    { value: "all", label: UI_LABEL_ALL_CATEGORIES },
+    ...catalog.map((entry) => ({
+      value: entry.id,
+      label: entry.label,
+    })),
+  ];
 }
 
 export function parseCategoryIcon(value: string): ResolvedCategory["icon"] {
