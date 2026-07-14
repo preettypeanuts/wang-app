@@ -10,6 +10,8 @@ import { buildGeminiInboxParseSystemInstruction } from "@/config/gemini-locale";
 import { getGeminiClient } from "@/lib/ai/gemini-client";
 import { TransactionParseError } from "@/lib/ai/transaction-parse-error";
 import { resolveExplicitCategoryForType } from "@/lib/chat/category-mentions";
+import { buildCategoryMentionOptionsFromCatalog } from "@/lib/finance/user-category-catalog";
+import { resolveUserCategoryCatalog } from "@/lib/finance/resolve-user-categories";
 import { detectTransactionType } from "@/lib/finance/categories";
 import { parseRelativeDate } from "@/lib/finance/parse-relative-date";
 import { resolveTransactionCategoryAsync } from "@/lib/finance/resolve-transaction-category";
@@ -125,8 +127,14 @@ export async function parseTransactionWithGemini(
   const afterDate = dateParse?.cleanedText ?? trimmed;
   const fallbackOccurredAt = dateParse?.occurredAt ?? now;
   const typeHint = detectTransactionType(afterDate);
+  const mentionOptions = userId
+    ? buildCategoryMentionOptionsFromCatalog(
+        await resolveUserCategoryCatalog(userId),
+        typeHint,
+      )
+    : undefined;
   const { category: explicitCategory, cleanedText } =
-    resolveExplicitCategoryForType(afterDate, typeHint);
+    resolveExplicitCategoryForType(afterDate, typeHint, mentionOptions);
   const parseText = cleanedText || afterDate;
   const ai = getGeminiClient();
 

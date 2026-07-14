@@ -8,6 +8,7 @@ import {
 import { getWalletBalances } from "@/lib/db/wallet-balance";
 import { getDefaultWalletId } from "@/lib/db/wallets";
 import { resolveUserCategoryCatalog } from "@/lib/finance/resolve-user-categories";
+import { reconcileStaleTransactionCategories } from "@/lib/db/reconcile-transaction-categories";
 import { parseJournalSearchParams } from "@/lib/validations/journal";
 
 interface JournalPageDataProps {
@@ -18,6 +19,7 @@ export async function JournalPageData({ searchParams }: JournalPageDataProps) {
   const userId = await requireUserId();
   const params = await searchParams;
   const catalog = await resolveUserCategoryCatalog(userId);
+  await reconcileStaleTransactionCategories(userId);
   const filters = parseJournalSearchParams(params, catalog);
   const [result, daySummary, categoryBreakdown, wallets, defaultWalletId] =
     await Promise.all([

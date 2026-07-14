@@ -2,6 +2,8 @@ import { isGeminiConfigured } from "@/lib/ai/gemini-client";
 import { parseTransactionWithGemini } from "@/lib/ai/parse-transaction-gemini";
 import { TransactionParseError } from "@/lib/ai/transaction-parse-error";
 import { resolveExplicitCategoryForType } from "@/lib/chat/category-mentions";
+import { buildCategoryMentionOptionsFromCatalog } from "@/lib/finance/user-category-catalog";
+import { resolveUserCategoryCatalog } from "@/lib/finance/resolve-user-categories";
 import { detectTransactionType } from "@/lib/finance/categories";
 import { parseAmount } from "@/lib/finance/parse-amount";
 import { parseRelativeDate } from "@/lib/finance/parse-relative-date";
@@ -23,8 +25,14 @@ export async function parseTransactionLocally(
   const occurredAt = dateParse?.occurredAt ?? now;
 
   const type = detectTransactionType(description);
+  const mentionOptions = userId
+    ? buildCategoryMentionOptionsFromCatalog(
+        await resolveUserCategoryCatalog(userId),
+        type,
+      )
+    : undefined;
   const { category: explicitCategory, cleanedText } =
-    resolveExplicitCategoryForType(description, type);
+    resolveExplicitCategoryForType(description, type, mentionOptions);
   const parseText = cleanedText || description;
   const amount = parseAmount(parseText);
 

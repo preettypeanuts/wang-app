@@ -18,11 +18,18 @@ async function applyCategoryPipeline(
   rawCategory: string | undefined,
   type: FlowTransactionType,
   description: string,
-): Promise<TransactionCategoryId> {
+): Promise<string> {
   if (userId) {
     const override = await findUserCategoryOverride(userId, description, type);
     if (override) {
-      return resolveCategoryForType(override, type);
+      if (override.startsWith("custom_")) {
+        return override;
+      }
+
+      return resolveCategoryForType(
+        override as TransactionCategoryId,
+        type,
+      );
     }
   }
 
@@ -57,14 +64,22 @@ export async function resolveTransactionCategory(
   type: FlowTransactionType,
   description: string,
   userId?: string,
-): Promise<TransactionCategoryId> {
+): Promise<string> {
   const category = await applyCategoryPipeline(
     userId,
     rawCategory,
     type,
     description,
   );
-  return refineMisclassifiedCategory(category, description);
+
+  if (category.startsWith("custom_")) {
+    return category;
+  }
+
+  return refineMisclassifiedCategory(
+    category as TransactionCategoryId,
+    description,
+  );
 }
 
 export async function resolveTransactionCategoryAsync(
@@ -72,7 +87,7 @@ export async function resolveTransactionCategoryAsync(
   type: FlowTransactionType,
   description: string,
   userId?: string,
-): Promise<TransactionCategoryId> {
+): Promise<string> {
   let category = await applyCategoryPipeline(
     userId,
     rawCategory,
@@ -80,7 +95,12 @@ export async function resolveTransactionCategoryAsync(
     description,
   );
 
-  category = refineMisclassifiedCategory(category, description);
+  if (!category.startsWith("custom_")) {
+    category = refineMisclassifiedCategory(
+      category as TransactionCategoryId,
+      description,
+    );
+  }
 
   if (category !== "other" || !isGeminiConfigured()) {
     return category;

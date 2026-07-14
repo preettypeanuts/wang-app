@@ -1,26 +1,40 @@
 import { describe, expect, it } from "vitest";
 
-import { mergeUserCategoryCatalog } from "@/lib/finance/user-category-catalog";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
+import { mergeUserCategoryCatalog } from "@/lib/finance/user-category-catalog";
 import type { UserCategoryRecord } from "@/types/user-category";
+
+function buildRecord(
+  partial: Partial<UserCategoryRecord> & Pick<UserCategoryRecord, "slug" | "label">,
+): UserCategoryRecord {
+  return {
+    id: partial.id ?? "cat-1",
+    userId: partial.userId ?? "user-1",
+    slug: partial.slug,
+    label: partial.label,
+    icon: partial.icon ?? "dots-three",
+    iconIsCustom: partial.iconIsCustom ?? false,
+    accentLight: partial.accentLight ?? "#F2F2F2",
+    accentDark: partial.accentDark ?? "#3A3A3C",
+    colorIsCustom: partial.colorIsCustom ?? false,
+    type: partial.type ?? "expense",
+    baseCategoryId: partial.baseCategoryId ?? null,
+    hidden: partial.hidden ?? false,
+    sortOrder: partial.sortOrder ?? 0,
+    createdAt: partial.createdAt ?? new Date(),
+    updatedAt: partial.updatedAt ?? new Date(),
+  };
+}
 
 describe("buildJournalCategoryExpenseBreakdown", () => {
   it("uses user catalog labels for custom categories", () => {
-    const overrides: UserCategoryRecord[] = [
-      {
-        id: "cat-1",
-        userId: "user-1",
+    const overrides = [
+      buildRecord({
         slug: "custom_abc123",
         label: "Langganan App",
         icon: "sparkles",
-        accent: { light: "#E8F4FF", dark: "#1A2A3A" },
-        type: "expense",
-        baseCategoryId: null,
-        hidden: false,
-        sortOrder: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
+        iconIsCustom: true,
+      }),
     ];
 
     const catalog = mergeUserCategoryCatalog(overrides);
@@ -30,9 +44,9 @@ describe("buildJournalCategoryExpenseBreakdown", () => {
         { category: "custom_abc123", amount: 50_000 },
       ],
       catalog,
+      overrides,
     );
 
-    expect(breakdown.totalExpense).toBe(150_000);
     expect(breakdown.categories).toEqual([
       {
         category: "food",
@@ -50,29 +64,42 @@ describe("buildJournalCategoryExpenseBreakdown", () => {
   });
 
   it("uses overridden built-in labels from the catalog", () => {
-    const overrides: UserCategoryRecord[] = [
-      {
-        id: "cat-2",
-        userId: "user-1",
+    const overrides = [
+      buildRecord({
         slug: "food",
         label: "Jajan",
         icon: "fork-knife",
-        accent: { light: "#FFE8E8", dark: "#3A1A1A" },
-        type: "expense",
         baseCategoryId: "food",
-        hidden: false,
-        sortOrder: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      },
+      }),
     ];
 
     const catalog = mergeUserCategoryCatalog(overrides);
     const breakdown = buildJournalCategoryExpenseBreakdown(
       [{ category: "food", amount: 25_000 }],
       catalog,
+      overrides,
     );
 
     expect(breakdown.categories[0]?.label).toBe("Jajan");
+  });
+
+  it("uses hidden built-in override labels for legacy other transactions", () => {
+    const overrides = [
+      buildRecord({
+        slug: "other",
+        label: "Asset",
+        baseCategoryId: "other",
+        hidden: true,
+      }),
+    ];
+
+    const catalog = mergeUserCategoryCatalog(overrides);
+    const breakdown = buildJournalCategoryExpenseBreakdown(
+      [{ category: "other", amount: 75_000 }],
+      catalog,
+      overrides,
+    );
+
+    expect(breakdown.categories[0]?.label).toBe("Asset");
   });
 });

@@ -152,14 +152,49 @@ export function mergeUserCategoryCatalog(
 export function getCategoryLabelFromCatalog(
   catalog: ResolvedCategory[],
   categoryId: string,
+  userRecords: UserCategoryRecord[] = [],
 ): string {
-  const match = catalog.find((entry) => entry.id === categoryId);
-  if (match) {
-    return match.label;
+  return resolveStoredCategoryLabel(categoryId, catalog, userRecords);
+}
+
+/** Resolve labels for stored transaction slugs, including hidden or removed categories. */
+export function resolveStoredCategoryLabel(
+  categoryId: string,
+  catalog: ResolvedCategory[],
+  userRecords: UserCategoryRecord[] = [],
+): string {
+  const normalizedId = categoryId.trim();
+  if (!normalizedId) {
+    return "Lainnya";
+  }
+
+  const catalogMatch = catalog.find((entry) => entry.id === normalizedId);
+  if (catalogMatch) {
+    return catalogMatch.label;
+  }
+
+  const recordMatch = userRecords.find((record) => record.slug === normalizedId);
+  if (recordMatch) {
+    return recordMatch.label;
+  }
+
+  const normalizedLabel = normalizedId.toLowerCase();
+  const catalogByLabel = catalog.find(
+    (entry) => entry.label.trim().toLowerCase() === normalizedLabel,
+  );
+  if (catalogByLabel) {
+    return catalogByLabel.label;
+  }
+
+  const recordByLabel = userRecords.find(
+    (record) => record.label.trim().toLowerCase() === normalizedLabel,
+  );
+  if (recordByLabel) {
+    return recordByLabel.label;
   }
 
   const builtIn = TRANSACTION_CATEGORIES.find(
-    (category) => category.id === categoryId,
+    (category) => category.id === normalizedId,
   );
   return builtIn?.label ?? "Lainnya";
 }

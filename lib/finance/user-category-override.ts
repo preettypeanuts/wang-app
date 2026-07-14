@@ -1,7 +1,6 @@
 import {
   isTransactionCategory,
   normalizeCategory,
-  type TransactionCategoryId,
 } from "@/config/categories";
 import { extractCategoryKeyword } from "@/lib/finance/extract-category-keyword";
 import { prisma } from "@/lib/db/prisma";
@@ -42,21 +41,28 @@ export async function findUserCategoryOverride(
   userId: string,
   description: string,
   type: TransactionType,
-): Promise<TransactionCategoryId | null> {
+): Promise<string | null> {
   const overrides = await prisma.userCategoryOverride.findMany({
     where: { userId, type },
   });
 
   const lowerDescription = description.toLowerCase();
-  let best: { keyword: string; category: TransactionCategoryId } | null = null;
+  let best: { keyword: string; category: string } | null = null;
 
   for (const row of overrides) {
     if (!lowerDescription.includes(row.keyword.toLowerCase())) {
       continue;
     }
 
-    const category = normalizeCategory(row.category);
-    if (!isTransactionCategory(category)) {
+    const storedCategory = row.category.trim();
+    const category = storedCategory.startsWith("custom_")
+      ? storedCategory
+      : normalizeCategory(storedCategory);
+
+    if (
+      !storedCategory.startsWith("custom_") &&
+      !isTransactionCategory(category)
+    ) {
       continue;
     }
 

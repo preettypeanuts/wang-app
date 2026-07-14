@@ -1,6 +1,6 @@
-import { getCategoryLabelFromCatalog } from "@/lib/finance/user-category-catalog";
+import { resolveStoredCategoryLabel } from "@/lib/finance/user-category-catalog";
 import type { JournalCategoryExpenseBreakdown } from "@/types/journal";
-import type { ResolvedCategory } from "@/types/user-category";
+import type { ResolvedCategory, UserCategoryRecord } from "@/types/user-category";
 
 interface CategoryExpenseRow {
   category: string;
@@ -10,6 +10,7 @@ interface CategoryExpenseRow {
 export function buildJournalCategoryExpenseBreakdown(
   rows: CategoryExpenseRow[],
   catalog: ResolvedCategory[],
+  userRecords: UserCategoryRecord[] = [],
 ): JournalCategoryExpenseBreakdown {
   const totalExpense = rows.reduce((sum, row) => sum + row.amount, 0);
 
@@ -21,7 +22,11 @@ export function buildJournalCategoryExpenseBreakdown(
     .filter((row) => row.amount > 0)
     .map((row) => ({
       category: row.category,
-      label: getCategoryLabelFromCatalog(catalog, row.category),
+      label: resolveStoredCategoryLabel(
+        row.category,
+        catalog,
+        userRecords,
+      ),
       amount: row.amount,
       percent: Math.round((row.amount / totalExpense) * 100),
     }))

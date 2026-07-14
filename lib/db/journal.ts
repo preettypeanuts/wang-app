@@ -13,6 +13,8 @@ import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insig
 import { prisma } from "@/lib/db/prisma";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import { buildJournalCategoryExpenseBreakdown } from "@/lib/finance/build-journal-category-breakdown";
+import { listUserCategoriesForUser } from "@/lib/db/user-categories";
+import { reconcileStaleTransactionCategories } from "@/lib/db/reconcile-transaction-categories";
 import {
   resolveCategoryForTransaction,
   resolveUserCategoryCatalog,
@@ -235,7 +237,7 @@ async function queryJournalCategoryExpenseBreakdown(
     return { totalExpense: 0, categories: [] };
   }
 
-  const [grouped, catalog] = await Promise.all([
+  const [grouped, catalog, userRecords] = await Promise.all([
     prisma.transaction.groupBy({
       by: ["category"],
       where: {
@@ -245,6 +247,7 @@ async function queryJournalCategoryExpenseBreakdown(
       _sum: { amount: true },
     }),
     resolveUserCategoryCatalog(userId),
+    listUserCategoriesForUser(userId),
   ]);
 
   return buildJournalCategoryExpenseBreakdown(
@@ -253,6 +256,7 @@ async function queryJournalCategoryExpenseBreakdown(
       amount: row._sum.amount ?? 0,
     })),
     catalog,
+    userRecords,
   );
 }
 
