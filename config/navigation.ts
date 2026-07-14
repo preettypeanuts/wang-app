@@ -5,6 +5,7 @@ import {
   HeartIcon,
   NotebookIcon,
   SquaresFourIcon,
+  WalletIcon,
   type Icon,
 } from "@/lib/icons";
 
@@ -49,6 +50,12 @@ export const mainNavItems: NavItem[] = [
     href: "/journal",
     icon: NotebookIcon,
     gradient: SIDEBAR_APP_ICON_GRADIENTS.journal,
+  },
+  {
+    title: "Wallets",
+    href: WALLETS_ROUTE,
+    icon: WalletIcon,
+    gradient: SIDEBAR_APP_ICON_GRADIENTS.wallets,
   },
   {
     title: "PayPlan",

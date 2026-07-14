@@ -1,10 +1,14 @@
 import { unstable_cache } from "next/cache";
 
 import type { PrismaClient, Wallet } from "@/generated/prisma/client";
-import { revalidateUserWallets } from "@/lib/cache/revalidate-user-data";
+import {
+  revalidateAfterTransactionMutation,
+  revalidateUserWallets,
+} from "@/lib/cache/revalidate-user-data";
 import { userDataTags } from "@/lib/cache/user-data-tags";
 import { prisma } from "@/lib/db/prisma";
-import { scopedId } from "@/lib/db/user-scope";
+import { flowTransactionTypesWhere } from "@/lib/db/transaction-flow-filter";
+import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import type { WalletFormInput, WalletRecord } from "@/types/wallet";
 
 export const DEFAULT_WALLET_NAME = "Dompet Utama";
@@ -152,20 +156,7 @@ export async function setDefaultWallet(
     throw new Error("Wallet tidak ditemukan.");
   }
 
-  await prisma.$transaction([
-    prisma.wallet.updateMany({
-      where: { userId, isArchived: false },
-      data: { isDefault: false },
-    }),
-    prisma.wallet.update({
-      where: { id: wallet.id },
-      data: { isDefault: true },
-    }),
-    prisma.user.update({
-      where: { id: userId },
-      data: { defaultWalletId: wallet.id },
-    }),
-  ]);
+  await syncDefaultWalletPointers(prisma, userId, wallet.id);
 
   revalidateUserWallets(userId);
   return mapWallet({ ...wallet, isDefault: true });
@@ -236,12 +227,30 @@ export async function getDefaultWalletId(
     return null;
   }
 
-  await prisma.user.updateMany({
-    where: { id: userId },
-    data: { defaultWalletId: fallback.id },
-  });
+  await syncDefaultWalletPointers(prisma, userId, fallback.id);
 
   return fallback.id;
+}
+
+async function syncDefaultWalletPointers(
+  client: PrismaClient,
+  userId: string,
+  walletId: string,
+): Promise<void> {
+  await client.$transaction([
+    client.wallet.updateMany({
+      where: { userId, isArchived: false },
+      data: { isDefault: false },
+    }),
+    client.wallet.updateMany({
+      where: { id: walletId, userId },
+      data: { isDefault: true },
+    }),
+    client.user.updateMany({
+      where: { id: userId },
+      data: { defaultWalletId: walletId },
+    }),
+  ]);
 }
 
 /**
@@ -258,11 +267,16 @@ export async function ensureDefaultWalletForClient(
   });
 
   if (existing) {
-    await client.user.updateMany({
-      where: { id: userId, defaultWalletId: null },
-      data: { defaultWalletId: existing.id },
-    });
-    return existing;
+    if (existing.isDefault) {
+      await client.user.updateMany({
+        where: { id: userId, defaultWalletId: null },
+        data: { defaultWalletId: existing.id },
+      });
+      return existing;
+    }
+
+    await syncDefaultWalletPointers(client, userId, existing.id);
+    return { ...existing, isDefault: true };
   }
 
   const created = await client.wallet.create({
@@ -294,4 +308,40 @@ export async function userHasWallet(userId: string): Promise<boolean> {
   });
 
   return count > 0;
+}
+
+/** Income/expense rows still missing walletId (pre-wallet feature data). */
+export async function countUnassignedFlowTransactions(
+  userId: string,
+): Promise<number> {
+  return prisma.transaction.count({
+    where: scopedByUser(userId, {
+      walletId: null,
+      ...flowTransactionTypesWhere(),
+    }),
+  });
+}
+
+/** One-time style backfill — assigns legacy flow rows to the user's default wallet. */
+export async function assignUnassignedTransactionsToDefaultWallet(
+  userId: string,
+): Promise<number> {
+  let defaultWalletId = await getDefaultWalletId(userId);
+
+  if (!defaultWalletId) {
+    const wallet = await ensureDefaultWallet(userId);
+    defaultWalletId = wallet.id;
+  }
+
+  const updated = await prisma.transaction.updateMany({
+    where: scopedByUser(userId, {
+      walletId: null,
+      ...flowTransactionTypesWhere(),
+    }),
+    data: { walletId: defaultWalletId },
+  });
+
+  revalidateAfterTransactionMutation(userId);
+  revalidateUserWallets(userId);
+  return updated.count;
 }

@@ -74,3 +74,16 @@ export const WALLET_ADJUST_NOTE = "Catatan (opsional)";
 export const WALLET_ADJUST_NOTE_PLACEHOLDER = "Cek mutasi bank, selisih kas fisik...";
 export const WALLET_ADJUST_SAVE = "Simpan penyesuaian";
 export const WALLET_ADJUST_SAVING = "Menyimpan...";
+
+export const WALLET_INSUFFICIENT_TITLE = "Saldo tidak cukup";
+export const WALLET_INSUFFICIENT_HINT =
+  "Pertimbangkan pindahkan saldo dari wallet lain dulu lewat menu Transfer. Kamu tetap bisa lanjut — saldo bisa minus.";
+export const WALLET_INSUFFICIENT_BACK = "Kembali";
+export const WALLET_INSUFFICIENT_PROCEED_TRANSFER = "Lanjutkan transfer";
+export const WALLET_INSUFFICIENT_PROCEED_RECORD = "Lanjutkan catat";
+
+export const WALLETS_LEGACY_BANNER_TITLE = "Transaksi lama belum punya wallet";
+export const WALLETS_LEGACY_BANNER_DESC =
+  "Ada {count} transaksi tanpa wallet. Tautkan ke {wallet} agar saldo per wallet akurat.";
+export const WALLETS_LEGACY_BANNER_ACTION = "Tautkan ke default";
+export const WALLETS_LEGACY_BANNER_ACTIONING = "Menautkan...";

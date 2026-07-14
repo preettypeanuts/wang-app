@@ -23,6 +23,7 @@ import {
   flowTransactionTypesWhere,
 } from "@/lib/db/transaction-flow-filter";
 import { buildJournalTransactionWhere } from "@/lib/journal/build-transaction-where";
+import { getDefaultWalletId } from "@/lib/db/wallets";
 import type {
   JournalCategoryExpenseBreakdown,
   JournalEntry,
@@ -268,6 +269,8 @@ export async function createJournalTransaction(
   userId: string,
   data: JournalEntryFormInput,
 ): Promise<JournalEntry> {
+  const walletId = await getDefaultWalletId(userId);
+
   const entry = await prisma.transaction.create({
     data: {
       userId,
@@ -277,6 +280,7 @@ export async function createJournalTransaction(
       description: data.description,
       rawInput: data.rawInput,
       occurredAt: data.occurredAt,
+      walletId,
     },
     select: JOURNAL_ENTRY_SELECT,
   });

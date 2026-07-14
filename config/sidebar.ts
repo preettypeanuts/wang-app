@@ -51,6 +51,7 @@ export const SIDEBAR_APP_ICON_GRADIENTS = {
   payplan: "from-[#BF5AF2] via-[#AF52DE] to-[#8E5AF7]",
   plans: "from-[#FF70C1] via-[#FF2D55] to-[#D91A45]",
   notifications: "from-[#FF9F5A] via-[#FF9500] to-[#C93400]",
+  wallets: "from-[#34C759] via-[#30B350] to-[#248A3D]",
   settings: "from-[#C7C7CC] via-[#8E8E93] to-[#636366]",
   collapse: "from-[#E5E5EA] via-[#AEAEB2] to-[#8E8E93]",
 } as const;

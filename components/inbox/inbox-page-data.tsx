@@ -4,7 +4,8 @@ import { requireUserId } from "@/lib/auth/session";
 import { getAvailableBalance } from "@/lib/db/balance";
 import { getInboxMessagesPage } from "@/lib/db/inbox-messages";
 import { getTodaySummary } from "@/lib/db/transactions";
-import { getDefaultWalletId, listWallets } from "@/lib/db/wallets";
+import { getWalletBalances } from "@/lib/db/wallet-balance";
+import { getDefaultWalletId } from "@/lib/db/wallets";
 
 export async function InboxPageData() {
   const userId = await requireUserId();
@@ -13,7 +14,7 @@ export async function InboxPageData() {
       getInboxMessagesPage(userId),
       getTodaySummary(userId),
       getAvailableBalance(userId),
-      listWallets(userId),
+      getWalletBalances(userId),
       getDefaultWalletId(userId),
     ]);
 
@@ -30,6 +31,7 @@ export async function InboxPageData() {
         walletOptions={wallets.map((wallet) => ({
           id: wallet.id,
           name: wallet.name,
+          balance: wallet.balance,
         }))}
       />
     </InboxPageShell>

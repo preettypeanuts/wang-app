@@ -18,7 +18,7 @@ import { useInboxBootstrap } from "@/hooks/use-inbox-bootstrap";
 interface InboxClientShellProps {
   initialBootstrap?: InboxBootstrapPayload;
   defaultWalletId?: string | null;
-  walletOptions?: Array<{ id: string; name: string }>;
+  walletOptions?: Array<{ id: string; name: string; balance?: number }>;
 }
 
 export function InboxClientShell({

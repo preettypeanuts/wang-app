@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { InsufficientWalletBalancePanel } from "@/components/wallets/insufficient-wallet-balance-panel";
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
 import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import { AmountTextInput } from "@/components/shared/amount-text-input";
@@ -49,6 +50,14 @@ import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import { toDateInputValue } from "@/lib/validations/planned-item";
 import { UI_LABEL_WALLET } from "@/config/ui-labels";
+import {
+  WALLET_INSUFFICIENT_PROCEED_RECORD,
+} from "@/config/wallet-labels";
+import { useProtectedCurrency } from "@/hooks/use-protected-currency";
+import {
+  buildInsufficientWalletBalanceMessage,
+  isInsufficientWalletBalance,
+} from "@/lib/finance/compute-wallet-balance";
 import type { ReceiptDraft } from "@/types/receipt";
 import type { FlowTransactionType } from "@/types/transaction";
 
@@ -59,7 +68,7 @@ interface ReceiptConfirmDialogProps {
   notice?: string | null;
   mode?: "create" | "edit";
   defaultWalletId?: string | null;
-  walletOptions?: Array<{ id: string; name: string }>;
+  walletOptions?: Array<{ id: string; name: string; balance?: number }>;
   onOpenChange: (open: boolean) => void;
   onConfirm: (input: {
     type: FlowTransactionType;
@@ -92,6 +101,8 @@ export function ReceiptConfirmDialog({
   const [description, setDescription] = useState("");
   const [merchant, setMerchant] = useState("");
   const [occurredAtText, setOccurredAtText] = useState("");
+  const [confirmInsufficient, setConfirmInsufficient] = useState(false);
+  const { formatAmount } = useProtectedCurrency();
 
   useEffect(() => {
     if (!open || !draft) {
@@ -111,6 +122,7 @@ export function ReceiptConfirmDialog({
         walletOptions[0]?.id ??
         "",
     );
+    setConfirmInsufficient(false);
   }, [catalog, draft, defaultWalletId, open, walletOptions]);
 
   const categoryOptions = useMemo(
@@ -120,14 +132,30 @@ export function ReceiptConfirmDialog({
 
   const previewAmount = Number.parseInt(amountDraft, 10) || 0;
 
-  function handleTypeChange(nextType: FlowTransactionType) {
-    setType(nextType);
-    setCategory((current) =>
-      resolveCategoryForTransaction(current, nextType, catalog),
-    );
-  }
+  const selectedWallet = useMemo(
+    () => walletOptions.find((option) => option.id === walletId),
+    [walletId, walletOptions],
+  );
 
-  function handleConfirm() {
+  const insufficientMessage = useMemo(() => {
+    if (
+      type !== "expense" ||
+      !selectedWallet ||
+      selectedWallet.balance === undefined ||
+      previewAmount <= 0
+    ) {
+      return "";
+    }
+
+    return buildInsufficientWalletBalanceMessage({
+      walletName: selectedWallet.name,
+      balanceLabel: formatAmount(selectedWallet.balance),
+      amountLabel: formatAmount(previewAmount),
+      context: "expense",
+    });
+  }, [formatAmount, previewAmount, selectedWallet, type]);
+
+  function submitConfirmed() {
     startTransition(async () => {
       const occurredAt = occurredAtText
         ? new Date(`${occurredAtText}T12:00:00`).toISOString()
@@ -143,6 +171,27 @@ export function ReceiptConfirmDialog({
         walletId,
       });
     });
+  }
+
+  function handleConfirm() {
+    if (
+      type === "expense" &&
+      selectedWallet?.balance !== undefined &&
+      isInsufficientWalletBalance(selectedWallet.balance, previewAmount)
+    ) {
+      setConfirmInsufficient(true);
+      return;
+    }
+
+    submitConfirmed();
+  }
+
+  function handleTypeChange(nextType: FlowTransactionType) {
+    setConfirmInsufficient(false);
+    setType(nextType);
+    setCategory((current) =>
+      resolveCategoryForTransaction(current, nextType, catalog),
+    );
   }
 
   const isEditMode = mode === "edit";
@@ -187,6 +236,18 @@ export function ReceiptConfirmDialog({
       ) : null}
 
       <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
+          {confirmInsufficient ? (
+            <InsufficientWalletBalancePanel
+              message={insufficientMessage}
+              onBack={() => setConfirmInsufficient(false)}
+              onProceed={submitConfirmed}
+              isPending={isPending}
+              proceedLabel={
+                isPending ? "Menyimpan..." : WALLET_INSUFFICIENT_PROCEED_RECORD
+              }
+            />
+          ) : (
+            <>
           {notice ? (
             <p className="rounded-xl border border-amber-500/25 bg-amber-500/10 px-3 py-2 text-[13px] leading-snug text-amber-950 dark:text-amber-100">
               {notice}
@@ -354,8 +415,11 @@ export function ReceiptConfirmDialog({
               </Select>
             </FormDialogField>
           </div>
+            </>
+          )}
       </ResponsiveDialogBody>
 
+      {!confirmInsufficient ? (
       <ResponsiveDialogFooter>
         <Button
           type="button"
@@ -377,6 +441,7 @@ export function ReceiptConfirmDialog({
               : "Catat ke inbox"}
         </Button>
       </ResponsiveDialogFooter>
+      ) : null}
     </ResponsiveDialog>
   );
 }

@@ -6,6 +6,7 @@ import {
   OVERVIEW_ROUTE,
   PAYPLAN_ROUTE,
   PLANS_ROUTE,
+  WALLETS_ROUTE,
 } from "@/config/navigation";
 import { NOTIFICATIONS_PAGE_TITLE } from "@/config/ui-labels";
 import { SIDEBAR_APP_ICON_GRADIENTS } from "@/config/sidebar";
@@ -19,6 +20,7 @@ import {
   MobileNavOverviewIcon,
   MobileNavPayPlanIcon,
   MobileNavWishIcon,
+  WalletIcon,
 } from "@/lib/icons";
 
 /** Safe-area bottom inset — shared by nav bar & drawer anchor. */
@@ -146,6 +148,13 @@ export const mobileDrawerMenuItems: MobileDrawerMenuItem[] = [
     icon: ChartBarIcon,
     drawerTileClass: SIDEBAR_APP_ICON_GRADIENTS.payplan,
   },
+  {
+    id: "wallets",
+    title: "Wallets",
+    href: WALLETS_ROUTE,
+    icon: WalletIcon,
+    drawerTileClass: SIDEBAR_APP_ICON_GRADIENTS.wallets,
+  },
 ];
 
 const MOBILE_PRIMARY_HREFS = [
@@ -206,6 +215,10 @@ export function isDrawerMenuItemActive(
 
   if (item.id === "notifications") {
     return pathname === NOTIFICATIONS_ROUTE;
+  }
+
+  if (item.id === "wallets") {
+    return pathname === WALLETS_ROUTE;
   }
 
   return isNavItemActive(pathname, item.href);

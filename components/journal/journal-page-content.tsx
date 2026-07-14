@@ -31,6 +31,7 @@ import type {
   JournalFilters,
   JournalListResult,
 } from "@/types/journal";
+import type { WalletWithBalance } from "@/types/wallet";
 
 function getJournalPeriodHeading(summary: JournalDaySummary): string {
   if (summary.periodLabel) {
@@ -46,6 +47,7 @@ interface JournalPageContentProps {
   categoryBreakdown: JournalCategoryExpenseBreakdown;
   filters: JournalFilters;
   walletOptions?: JournalWalletOption[];
+  defaultWallet?: Pick<WalletWithBalance, "id" | "name" | "balance"> | null;
 }
 
 export function JournalPageContent({
@@ -54,6 +56,7 @@ export function JournalPageContent({
   categoryBreakdown,
   filters,
   walletOptions,
+  defaultWallet = null,
 }: JournalPageContentProps) {
   const [createOpen, setCreateOpen] = useState(false);
   useRefreshOnTabActive();
@@ -135,7 +138,11 @@ export function JournalPageContent({
       </JournalShell>
 
       <JournalAddFab onClick={() => setCreateOpen(true)} />
-      <JournalEntryCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <JournalEntryCreateDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultWallet={defaultWallet}
+      />
     </div>
   );
 }

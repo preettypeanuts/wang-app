@@ -14,6 +14,7 @@ import { createWalletAdjustment } from "@/lib/db/wallet-adjustment";
 import { createWalletTransfer } from "@/lib/db/wallet-transfer";
 import {
   archiveWallet,
+  assignUnassignedTransactionsToDefaultWallet,
   createWallet,
   setDefaultWallet,
   updateWallet,
@@ -223,6 +224,26 @@ export async function correctInboxTransactionWalletAction(input: {
   revalidatePath(WALLETS_ROUTE);
 
   return { ok: true, walletName: wallet.name, assistantContent };
+}
+
+export async function assignLegacyTransactionsAction(): Promise<
+  { ok: true; count: number } | WalletActionFailure
+> {
+  const userId = await requireUserId();
+
+  try {
+    const count = await assignUnassignedTransactionsToDefaultWallet(userId);
+    revalidateWallets(userId);
+    return { ok: true, count };
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Gagal menautkan transaksi lama.",
+    };
+  }
 }
 
 export async function archiveWalletAction(

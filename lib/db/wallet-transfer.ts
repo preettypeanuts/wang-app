@@ -53,31 +53,33 @@ export async function createWalletTransfer(
   const transferPairId = randomUUID();
   const occurredAt = new Date();
 
-  await prisma.transaction.createMany({
-    data: [
-      {
-        userId,
-        type: "transfer",
-        amount: -input.amount,
-        category: TRANSFER_CATEGORY,
-        description: `Transfer ke ${toWallet.name}`,
-        rawInput,
-        occurredAt,
-        walletId: fromWallet.id,
-        transferPairId,
-      },
-      {
-        userId,
-        type: "transfer",
-        amount: input.amount,
-        category: TRANSFER_CATEGORY,
-        description: `Transfer dari ${fromWallet.name}`,
-        rawInput,
-        occurredAt,
-        walletId: toWallet.id,
-        transferPairId,
-      },
-    ],
+  await prisma.$transaction(async (tx) => {
+    await tx.transaction.createMany({
+      data: [
+        {
+          userId,
+          type: "transfer",
+          amount: -input.amount,
+          category: TRANSFER_CATEGORY,
+          description: `Transfer ke ${toWallet.name}`,
+          rawInput,
+          occurredAt,
+          walletId: fromWallet.id,
+          transferPairId,
+        },
+        {
+          userId,
+          type: "transfer",
+          amount: input.amount,
+          category: TRANSFER_CATEGORY,
+          description: `Transfer dari ${fromWallet.name}`,
+          rawInput,
+          occurredAt,
+          walletId: toWallet.id,
+          transferPairId,
+        },
+      ],
+    });
   });
 
   revalidateAfterTransactionMutation(userId);

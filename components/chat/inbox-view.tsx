@@ -91,6 +91,7 @@ interface ReceiptConfirmInput {
 export interface InboxWalletPickerOption {
   id: string;
   name: string;
+  balance?: number;
 }
 
 interface InboxViewProps {
