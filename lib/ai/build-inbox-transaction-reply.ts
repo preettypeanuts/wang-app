@@ -83,24 +83,32 @@ export async function buildInboxTransactionReplyForParsed(
   userId: string,
   rawInput: string,
   transaction: ParsedTransaction,
+  walletName?: string | null,
 ): Promise<string> {
   const budgetStatuses = await collectExpenseBudgetStatuses(userId, [
     transaction,
   ]);
 
   // MVP hot path: warm template only — no second Gemini round-trip.
-  return buildWarmTransactionReply(transaction, budgetStatuses[0] ?? null);
+  return buildWarmTransactionReply(
+    transaction,
+    budgetStatuses[0] ?? null,
+    walletName,
+  );
 }
 
 export async function buildInboxMultipleTransactionReplyForParsed(
   userId: string,
   transactions: ParsedTransaction[],
+  /** Mentioned in the reply only when a non-default wallet was detected. */
+  walletName?: string | null,
 ): Promise<string> {
   if (transactions.length === 1) {
     return buildInboxTransactionReplyForParsed(
       userId,
       transactions[0].description,
       transactions[0],
+      walletName,
     );
   }
 
@@ -108,5 +116,9 @@ export async function buildInboxMultipleTransactionReplyForParsed(
     userId,
     transactions,
   );
-  return buildWarmMultipleTransactionReply(transactions, budgetStatuses);
+  return buildWarmMultipleTransactionReply(
+    transactions,
+    budgetStatuses,
+    walletName,
+  );
 }

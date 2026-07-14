@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertFlowTransactionType } from "@/lib/db/transaction-flow-filter";
 import { normalizeCategory } from "@/config/categories";
 import { buildInboxMultipleTransactionReplyForParsed } from "@/lib/ai/build-inbox-transaction-reply";
 import { parseMultipleTransactions } from "@/lib/ai/parse-multiple-transactions";
@@ -14,6 +13,7 @@ import {
 } from "@/lib/cache/revalidate-user-data";
 import { formatInboxProcessingError } from "@/lib/chat/inbox-error";
 import { findLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
+import { resolveInboxWallet } from "@/lib/chat/resolve-inbox-wallet";
 import {
   createInboxMessage,
   type DeleteInboxMessagePairResult,
@@ -32,6 +32,7 @@ import { listPlannedItems, markInstallmentPaid } from "@/lib/db/planned-items";
 import { listPlans, markPlanDone } from "@/lib/db/plans";
 import { prisma } from "@/lib/db/prisma";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
+import { assertFlowTransactionType } from "@/lib/db/transaction-flow-filter";
 import { createMultipleTransactions } from "@/lib/db/transactions";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
 import { detectRecurringPattern } from "@/lib/finance/detect-recurring-transaction";
@@ -150,10 +151,14 @@ export async function submitInboxMessage(
   }
 
   try {
-    const transactions = await parseMultipleTransactions(trimmed, userId);
+    const [transactions, walletResolution] = await Promise.all([
+      parseMultipleTransactions(trimmed, userId),
+      resolveInboxWallet(userId, trimmed),
+    ]);
     const content = await buildInboxMultipleTransactionReplyForParsed(
       userId,
       transactions,
+      walletResolution.mentionedWalletName,
     );
 
     const {
@@ -165,7 +170,15 @@ export async function submitInboxMessage(
       rawInput: trimmed,
       transactions,
       assistantContent: content,
+      walletId: walletResolution.walletId,
     });
+
+    const enriched = await enrichAssistantMessage(
+      userId,
+      trimmed,
+      savedTransactions,
+      assistantMessage,
+    );
 
     return {
       ok: true,
@@ -173,12 +186,13 @@ export async function submitInboxMessage(
       transaction: savedTransactions[0],
       transactions: savedTransactions,
       userMessage,
-      assistantMessage: await enrichAssistantMessage(
-        userId,
-        trimmed,
-        savedTransactions,
-        assistantMessage,
-      ),
+      assistantMessage:
+        walletResolution.ambiguousCandidates.length > 1
+          ? {
+              ...enriched,
+              walletCandidates: walletResolution.ambiguousCandidates,
+            }
+          : enriched,
     };
   } catch (error) {
     const content = formatInboxProcessingError(error);
@@ -242,13 +256,17 @@ export async function retryInboxMessageAction(
   };
 
   try {
-    const transactions = await parseMultipleTransactions(trimmed, userId);
+    const [transactions, walletResolution] = await Promise.all([
+      parseMultipleTransactions(trimmed, userId),
+      resolveInboxWallet(userId, trimmed),
+    ]);
 
     const savedRows = await createMultipleTransactions({
       userId,
       rawInput: trimmed,
       transactions,
       inboxMessageId: assistantMessageId,
+      walletId: walletResolution.walletId,
     });
 
     const savedTransactions: ParsedTransaction[] = savedRows.map(
@@ -265,6 +283,7 @@ export async function retryInboxMessageAction(
     const content = await buildInboxMultipleTransactionReplyForParsed(
       userId,
       savedTransactions,
+      walletResolution.mentionedWalletName,
     );
 
     const assistantMessage = await updateInboxMessage(

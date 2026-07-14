@@ -51,15 +51,21 @@ function buildBudgetFallbackLine(status: BudgetStatus): string {
   );
 }
 
-/** Warm template fallback when Gemini is unavailable — safe for client imports. */
+/**
+ * Warm template fallback when Gemini is unavailable — safe for client imports.
+ * `walletName` is only passed when the transaction landed in a non-default
+ * wallet, so the user can immediately spot a wrong detection.
+ */
 export function buildWarmTransactionReply(
   transaction: ParsedTransaction,
   budgetStatus: BudgetStatus | null,
+  walletName?: string | null,
 ): string {
   const opener = pickOpener(transaction);
   const amountLabel = formatIdr(transaction.amount);
   const categoryLabel = getCategoryLabel(transaction.category);
   const dateHint = formatTransactionOccurredAtHint(transaction.occurredAt);
+  const walletHint = walletName ? ` (${walletName})` : "";
   const subject =
     transaction.description.length <= 36
       ? transaction.description
@@ -69,11 +75,11 @@ export function buildWarmTransactionReply(
 
   if (transaction.type === "income") {
     lines.push(
-      `${opener} Pemasukan ${amountLabel} (${categoryLabel}) dari "${subject}"${dateHint ? ` ${dateHint}` : ""} sudah masuk.`,
+      `${opener} Pemasukan ${amountLabel} (${categoryLabel}) dari "${subject}"${dateHint ? ` ${dateHint}` : ""} sudah masuk${walletHint}.`,
     );
   } else {
     lines.push(
-      `${opener} ${amountLabel} untuk ${subject} masuk kategori ${categoryLabel}${dateHint ? ` ${dateHint}` : ""}.`,
+      `${opener} ${amountLabel} untuk ${subject} masuk kategori ${categoryLabel}${dateHint ? ` ${dateHint}` : ""}${walletHint}.`,
     );
   }
 
@@ -106,6 +112,7 @@ function formatMultiTransactionBullet(transaction: ParsedTransaction): string {
 export function buildWarmMultipleTransactionReply(
   transactions: ParsedTransaction[],
   budgetStatuses: BudgetStatus[],
+  walletName?: string | null,
 ): string {
   if (transactions.length === 0) {
     return "Belum ada transaksi yang tercatat.";
@@ -115,6 +122,7 @@ export function buildWarmMultipleTransactionReply(
     return buildWarmTransactionReply(
       transactions[0],
       budgetStatuses[0] ?? null,
+      walletName,
     );
   }
 
@@ -122,7 +130,7 @@ export function buildWarmMultipleTransactionReply(
   const lines = [
     `Siap, ${transactions.length} transaksi tercatat:`,
     ...transactions.map(formatMultiTransactionBullet),
-    `Total: ${formatIdr(total)}`,
+    `Total: ${formatIdr(total)}${walletName ? ` (${walletName})` : ""}`,
   ];
 
   const warnings = budgetStatuses

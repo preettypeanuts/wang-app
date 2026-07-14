@@ -25,6 +25,16 @@ export interface ChatMessage {
   lowConfidenceTransactionId?: string;
   /** Offer to schedule a recurring PayPlan item when a monthly pattern is detected. */
   recurringSuggestion?: RecurringSuggestion;
+  /**
+   * Wallet quick-correct chips — set when the chat text matched two or more
+   * wallet names so the fallback default wallet may be wrong.
+   */
+  walletCandidates?: WalletChipCandidate[];
+}
+
+export interface WalletChipCandidate {
+  id: string;
+  name: string;
 }
 
 export interface UnpaidPayPlanChatItem {

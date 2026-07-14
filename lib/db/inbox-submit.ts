@@ -6,8 +6,11 @@ import {
 } from "@/lib/cache/revalidate-user-data";
 import { invalidateAiInsightCacheOnTransactionMutation } from "@/lib/db/ai-insight-cache";
 import { prisma } from "@/lib/db/prisma";
+import {
+  assertFlowTransactionType,
+  isFlowTransactionType,
+} from "@/lib/db/transaction-flow-filter";
 import type { ChatMessage } from "@/types/chat";
-import { assertFlowTransactionType, isFlowTransactionType } from "@/lib/db/transaction-flow-filter";
 import type { ParsedTransaction } from "@/types/transaction";
 
 function mapTransaction(record: Transaction): ParsedTransaction | null {
@@ -50,7 +53,9 @@ function mapAssistantMessage(
 ): ChatMessage {
   const parsed = transactions
     .map(mapTransaction)
-    .filter((transaction): transaction is ParsedTransaction => transaction !== null);
+    .filter(
+      (transaction): transaction is ParsedTransaction => transaction !== null,
+    );
 
   return {
     id: record.id,
@@ -68,6 +73,7 @@ export async function submitInboxChatTransaction(input: {
   userContent?: string;
   transaction: ParsedTransaction;
   assistantContent: string;
+  walletId?: string | null;
 }): Promise<{
   userMessage: ChatMessage;
   assistantMessage: ChatMessage;
@@ -79,6 +85,7 @@ export async function submitInboxChatTransaction(input: {
     userContent: input.userContent,
     transactions: [input.transaction],
     assistantContent: input.assistantContent,
+    walletId: input.walletId,
   });
 }
 
@@ -88,6 +95,8 @@ export async function submitInboxChatTransactions(input: {
   userContent?: string;
   transactions: ParsedTransaction[];
   assistantContent: string;
+  /** Wallet assigned to every saved transaction (detected or user default). */
+  walletId?: string | null;
 }): Promise<{
   userMessage: ChatMessage;
   assistantMessage: ChatMessage;
@@ -149,6 +158,7 @@ export async function submitInboxChatTransactions(input: {
           occurredAt: new Date(transaction.occurredAt),
           rawInput: trimmed,
           inboxMessageId: assistantRecord.id,
+          walletId: input.walletId ?? null,
           createdAt: new Date(assistantAt.getTime() + index),
         },
       });
@@ -160,7 +170,10 @@ export async function submitInboxChatTransactions(input: {
       assistantMessage: mapAssistantMessage(assistantRecord, savedTransactions),
       transactions: savedTransactions
         .map(mapTransaction)
-        .filter((transaction): transaction is ParsedTransaction => transaction !== null),
+        .filter(
+          (transaction): transaction is ParsedTransaction =>
+            transaction !== null,
+        ),
       occurredAts: savedTransactions.map((row) => row.occurredAt),
     };
   });

@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { ChatMessageMenu } from "@/components/chat/chat-message-menu";
 import { ChatMessageMenuHint } from "@/components/chat/chat-message-menu-hint";
 import { ChatMessageRetryButton } from "@/components/chat/chat-message-retry-button";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { MessageTimestamp } from "@/components/chat/message-timestamp";
+import { RecurringSuggestionPrompt } from "@/components/chat/recurring-suggestion-prompt";
 import { TransactionPreview } from "@/components/chat/transaction-preview";
 import { TransactionQuickCorrect } from "@/components/chat/transaction-quick-correct";
-import { RecurringSuggestionPrompt } from "@/components/chat/recurring-suggestion-prompt";
+import { WalletQuickCorrect } from "@/components/chat/wallet-quick-correct";
 import { MobilePageTitle } from "@/components/shared/mobile-page-title";
 import { useSyncMobileScrollChrome } from "@/components/shared/mobile-scroll-chrome-provider";
 import { useSyncMobileTopBlur } from "@/components/shared/mobile-top-blur-provider";
@@ -37,19 +38,22 @@ import { MOBILE_CHROME_SCROLL_INSET_TOP } from "@/config/mobile-chrome";
 import { STACK_GAP } from "@/config/spacing";
 import { useMobileLargeTitleScroll } from "@/hooks/use-mobile-large-title-scroll";
 import { findInboxEditHintTargetIndex } from "@/lib/chat/find-inbox-edit-hint-target";
+import { getInboxRetryContext } from "@/lib/chat/inbox-error";
+import {
+  canManageSentUserMessage,
+  canUndoSentUserMessage,
+} from "@/lib/chat/inbox-message-actions";
+import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import {
   getChatMessageKey,
   isPendingChatMessage,
 } from "@/lib/chat/optimistic-chat-message";
 import { scrollMessageListToBottom } from "@/lib/chat/scroll-message-list-to-bottom";
-import { getInboxRetryContext } from "@/lib/chat/inbox-error";
-import { canManageSentUserMessage, canUndoSentUserMessage } from "@/lib/chat/inbox-message-actions";
-import { isReceiptUserMessage } from "@/lib/receipt/receipt-message";
-import { isLowConfidenceTransaction } from "@/lib/chat/low-confidence-transaction";
 import {
   hasSeenInboxEditHint,
   markInboxEditHintSeen,
 } from "@/lib/inbox/inbox-edit-hint-storage";
+import { isReceiptUserMessage } from "@/lib/receipt/receipt-message";
 import { cn } from "@/lib/utils";
 import type { ChatMessage } from "@/types/chat";
 import type { FlowTransactionType } from "@/types/transaction";
@@ -65,6 +69,10 @@ interface MessageListProps {
     transactionId: string;
     category: string;
     type: FlowTransactionType;
+  }) => Promise<void>;
+  onWalletCorrect?: (input: {
+    assistantMessageId: string;
+    walletId: string;
   }) => Promise<void>;
   actionsDisabled?: boolean;
   fixedMobileTopBar?: boolean;
@@ -101,6 +109,7 @@ export function MessageList({
   onUndoMessage,
   onEditReceipt,
   onQuickCorrect,
+  onWalletCorrect,
   actionsDisabled = false,
   fixedMobileTopBar = false,
   className,
@@ -123,9 +132,9 @@ export function MessageList({
     lastId: null,
     length: 0,
   });
-  const [enteringMountKeys, setEnteringMountKeys] = useState<ReadonlySet<string>>(
-    () => new Set(),
-  );
+  const [enteringMountKeys, setEnteringMountKeys] = useState<
+    ReadonlySet<string>
+  >(() => new Set());
   const loadingOlderRef = useRef(false);
   const [editHintSeen, setEditHintSeen] = useState(true);
   const reduceMotion = useReducedMotion();
@@ -258,9 +267,7 @@ export function MessageList({
           ? messages.slice(previousLastIndex + 1)
           : messages;
       const pendingMountKeys = newlyAppended
-        .filter(
-          (message) => message.mountKey && isPendingChatMessage(message),
-        )
+        .filter((message) => message.mountKey && isPendingChatMessage(message))
         .map((message) => message.mountKey as string);
 
       if (pendingMountKeys.length > 0) {
@@ -381,178 +388,199 @@ export function MessageList({
             </div>
           ) : null}
           <AnimatePresence initial={false}>
-          {messages.map((message, index) => {
-            const isUser = message.role === "user";
-            const retryContext = getInboxRetryContext(messages, index);
-            const canManage =
-              canManageSentUserMessage(message) &&
-              Boolean(onEditMessage) &&
-              Boolean(onUndoMessage);
-            const canUndo =
-              canUndoSentUserMessage(message) && Boolean(onUndoMessage);
-            const nextMessage = messages[index + 1];
-            const canEditReceipt =
-              isReceiptUserMessage(message.content) &&
-              nextMessage?.role === "assistant" &&
-              Boolean(nextMessage.transaction?.id) &&
-              !nextMessage.transactionDeleted &&
-              Boolean(onEditReceipt);
+            {messages.map((message, index) => {
+              const isUser = message.role === "user";
+              const retryContext = getInboxRetryContext(messages, index);
+              const canManage =
+                canManageSentUserMessage(message) &&
+                Boolean(onEditMessage) &&
+                Boolean(onUndoMessage);
+              const canUndo =
+                canUndoSentUserMessage(message) && Boolean(onUndoMessage);
+              const nextMessage = messages[index + 1];
+              const canEditReceipt =
+                isReceiptUserMessage(message.content) &&
+                nextMessage?.role === "assistant" &&
+                Boolean(nextMessage.transaction?.id) &&
+                !nextMessage.transactionDeleted &&
+                Boolean(onEditReceipt);
 
-            const hasMessageMenu =
-              canManage ||
-              canEditReceipt ||
-              (canUndo && isReceiptUserMessage(message.content));
+              const hasMessageMenu =
+                canManage ||
+                canEditReceipt ||
+                (canUndo && isReceiptUserMessage(message.content));
 
-            const previousMessage = index > 0 ? messages[index - 1] : undefined;
-            const userInput =
-              previousMessage?.role === "user" ? previousMessage.content : "";
-            const batchTransactions = message.transactions?.length
-              ? message.transactions
-              : message.transaction
-                ? [message.transaction]
-                : [];
-            const quickCorrectTransaction =
-              (message.lowConfidenceTransactionId
-                ? batchTransactions.find(
-                    (item) => item.id === message.lowConfidenceTransactionId,
-                  )
-                : undefined) ??
-              (message.transaction &&
-              (message.lowConfidenceCategory ||
-                (userInput
-                  ? isLowConfidenceTransaction(userInput, message.transaction)
-                  : false))
-                ? message.transaction
-                : batchTransactions.find((item) =>
-                    userInput
-                      ? isLowConfidenceTransaction(userInput, item)
-                      : item.category === "other",
-                  ));
-            const showQuickCorrect =
-              !isUser &&
-              Boolean(quickCorrectTransaction?.id) &&
-              !message.transactionDeleted &&
-              Boolean(onQuickCorrect);
+              const previousMessage =
+                index > 0 ? messages[index - 1] : undefined;
+              const userInput =
+                previousMessage?.role === "user" ? previousMessage.content : "";
+              const batchTransactions = message.transactions?.length
+                ? message.transactions
+                : message.transaction
+                  ? [message.transaction]
+                  : [];
+              const quickCorrectTransaction =
+                (message.lowConfidenceTransactionId
+                  ? batchTransactions.find(
+                      (item) => item.id === message.lowConfidenceTransactionId,
+                    )
+                  : undefined) ??
+                (message.transaction &&
+                (message.lowConfidenceCategory ||
+                  (userInput
+                    ? isLowConfidenceTransaction(userInput, message.transaction)
+                    : false))
+                  ? message.transaction
+                  : batchTransactions.find((item) =>
+                      userInput
+                        ? isLowConfidenceTransaction(userInput, item)
+                        : item.category === "other",
+                    ));
+              const showQuickCorrect =
+                !isUser &&
+                Boolean(quickCorrectTransaction?.id) &&
+                !message.transactionDeleted &&
+                Boolean(onQuickCorrect);
 
-            const showEditHintHere =
-              showEditHint && index === editHintTargetIndex;
+              const showEditHintHere =
+                showEditHint && index === editHintTargetIndex;
 
-            const messageKey = getChatMessageKey(message);
-            const shouldAnimateEnter = message.mountKey
-              ? enteringMountKeys.has(message.mountKey)
-              : false;
+              const messageKey = getChatMessageKey(message);
+              const shouldAnimateEnter = message.mountKey
+                ? enteringMountKeys.has(message.mountKey)
+                : false;
 
-            const bubble = (
-              <MessageBubble
-                role={message.role}
-                content={message.content}
-                inMenu={hasMessageMenu}
-                animateEnter={shouldAnimateEnter}
-                onEnterComplete={() => clearEnteringMountKey(message.mountKey)}
-                className={cn(
-                  isUser && !hasMessageMenu ? "ml-auto" : undefined,
-                )}
-              />
-            );
-
-            return (
-              <motion.div
-                key={messageKey}
-                layout="position"
-                initial={false}
-                exit={reduceMotion ? undefined : CHAT_MESSAGE_EXIT}
-                transition={{
-                  layout: CHAT_MESSAGE_LAYOUT_SPRING,
-                  ...CHAT_MESSAGE_EXIT_TRANSITION,
-                }}
-                data-message-id={message.id}
-                className={cn(
-                  "flex w-full flex-col gap-1 rounded-2xl",
-                  isUser ? "items-end" : "items-start",
-                )}
-              >
-                {showEditHintHere ? (
-                  <ChatMessageMenuHint onDismiss={dismissEditHint} />
-                ) : null}
-                {canManage ? (
-                  <ChatMessageMenu
-                    disabled={actionsDisabled}
-                    onEdit={() => void onEditMessage?.(message.id)}
-                    onUndo={() => void onUndoMessage?.(message.id)}
-                    onOpenChange={handleMessageMenuOpenChange}
-                  >
-                    {bubble}
-                  </ChatMessageMenu>
-                ) : canEditReceipt || (canUndo && isReceiptUserMessage(message.content)) ? (
-                  <ChatMessageMenu
-                    disabled={actionsDisabled}
-                    receiptMenu={isReceiptUserMessage(message.content)}
-                    showEdit={canEditReceipt}
-                    onEdit={() => onEditReceipt?.(message.id)}
-                    onUndo={() => void onUndoMessage?.(message.id)}
-                    onOpenChange={handleMessageMenuOpenChange}
-                  >
-                    {bubble}
-                  </ChatMessageMenu>
-                ) : (
-                  bubble
-                )}
-                {showQuickCorrect && quickCorrectTransaction?.id ? (
-                  <TransactionQuickCorrect
-                    disabled={actionsDisabled}
-                    transaction={quickCorrectTransaction}
-                    userInput={quickCorrectTransaction.description || userInput}
-                    onCorrect={({ category, type }) =>
-                      void onQuickCorrect?.({
-                        assistantMessageId: message.id,
-                        transactionId: quickCorrectTransaction.id ?? "",
-                        category,
-                        type,
-                      })
-                    }
-                  />
-                ) : null}
-                {!isUser &&
-                message.recurringSuggestion &&
-                !message.transactionDeleted ? (
-                  <RecurringSuggestionPrompt
-                    disabled={actionsDisabled}
-                    suggestion={message.recurringSuggestion}
-                    lastOccurredAt={
-                      (message.transactions?.at(-1) ?? message.transaction)
-                        ?.occurredAt ?? message.createdAt
-                    }
-                  />
-                ) : null}
-                <MessageTimestamp
-                  createdAt={message.createdAt}
+              const bubble = (
+                <MessageBubble
                   role={message.role}
+                  content={message.content}
+                  inMenu={hasMessageMenu}
+                  animateEnter={shouldAnimateEnter}
+                  onEnterComplete={() =>
+                    clearEnteringMountKey(message.mountKey)
+                  }
+                  className={cn(
+                    isUser && !hasMessageMenu ? "ml-auto" : undefined,
+                  )}
                 />
-                {retryContext && onRetry ? (
-                  <ChatMessageRetryButton
-                    disabled={actionsDisabled}
-                    onRetry={() =>
-                      void onRetry(retryContext.assistantMessageId)
-                    }
+              );
+
+              return (
+                <motion.div
+                  key={messageKey}
+                  layout="position"
+                  initial={false}
+                  exit={reduceMotion ? undefined : CHAT_MESSAGE_EXIT}
+                  transition={{
+                    layout: CHAT_MESSAGE_LAYOUT_SPRING,
+                    ...CHAT_MESSAGE_EXIT_TRANSITION,
+                  }}
+                  data-message-id={message.id}
+                  className={cn(
+                    "flex w-full flex-col gap-1 rounded-2xl",
+                    isUser ? "items-end" : "items-start",
+                  )}
+                >
+                  {showEditHintHere ? (
+                    <ChatMessageMenuHint onDismiss={dismissEditHint} />
+                  ) : null}
+                  {canManage ? (
+                    <ChatMessageMenu
+                      disabled={actionsDisabled}
+                      onEdit={() => void onEditMessage?.(message.id)}
+                      onUndo={() => void onUndoMessage?.(message.id)}
+                      onOpenChange={handleMessageMenuOpenChange}
+                    >
+                      {bubble}
+                    </ChatMessageMenu>
+                  ) : canEditReceipt ||
+                    (canUndo && isReceiptUserMessage(message.content)) ? (
+                    <ChatMessageMenu
+                      disabled={actionsDisabled}
+                      receiptMenu={isReceiptUserMessage(message.content)}
+                      showEdit={canEditReceipt}
+                      onEdit={() => onEditReceipt?.(message.id)}
+                      onUndo={() => void onUndoMessage?.(message.id)}
+                      onOpenChange={handleMessageMenuOpenChange}
+                    >
+                      {bubble}
+                    </ChatMessageMenu>
+                  ) : (
+                    bubble
+                  )}
+                  {showQuickCorrect && quickCorrectTransaction?.id ? (
+                    <TransactionQuickCorrect
+                      disabled={actionsDisabled}
+                      transaction={quickCorrectTransaction}
+                      userInput={
+                        quickCorrectTransaction.description || userInput
+                      }
+                      onCorrect={({ category, type }) =>
+                        void onQuickCorrect?.({
+                          assistantMessageId: message.id,
+                          transactionId: quickCorrectTransaction.id ?? "",
+                          category,
+                          type,
+                        })
+                      }
+                    />
+                  ) : null}
+                  {!isUser &&
+                  message.walletCandidates?.length &&
+                  !message.transactionDeleted &&
+                  onWalletCorrect ? (
+                    <WalletQuickCorrect
+                      disabled={actionsDisabled}
+                      candidates={message.walletCandidates}
+                      onSelect={(walletId) =>
+                        void onWalletCorrect({
+                          assistantMessageId: message.id,
+                          walletId,
+                        })
+                      }
+                    />
+                  ) : null}
+                  {!isUser &&
+                  message.recurringSuggestion &&
+                  !message.transactionDeleted ? (
+                    <RecurringSuggestionPrompt
+                      disabled={actionsDisabled}
+                      suggestion={message.recurringSuggestion}
+                      lastOccurredAt={
+                        (message.transactions?.at(-1) ?? message.transaction)
+                          ?.occurredAt ?? message.createdAt
+                      }
+                    />
+                  ) : null}
+                  <MessageTimestamp
+                    createdAt={message.createdAt}
+                    role={message.role}
                   />
-                ) : null}
-                {batchTransactions.length > 0 ? (
-                  <div className="mt-1 flex max-w-[85%] flex-col gap-1.5">
-                    {batchTransactions.map((transaction) => (
-                      <TransactionPreview
-                        key={
-                          transaction.id ??
-                          `${transaction.description}-${transaction.amount}`
-                        }
-                        deleted={message.transactionDeleted}
-                        transaction={transaction}
-                      />
-                    ))}
-                  </div>
-                ) : null}
-              </motion.div>
-            );
-          })}
+                  {retryContext && onRetry ? (
+                    <ChatMessageRetryButton
+                      disabled={actionsDisabled}
+                      onRetry={() =>
+                        void onRetry(retryContext.assistantMessageId)
+                      }
+                    />
+                  ) : null}
+                  {batchTransactions.length > 0 ? (
+                    <div className="mt-1 flex max-w-[85%] flex-col gap-1.5">
+                      {batchTransactions.map((transaction) => (
+                        <TransactionPreview
+                          key={
+                            transaction.id ??
+                            `${transaction.description}-${transaction.amount}`
+                          }
+                          deleted={message.transactionDeleted}
+                          transaction={transaction}
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
           <div ref={bottomRef} />
         </div>
