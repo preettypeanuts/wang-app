@@ -18,7 +18,10 @@ import {
   resolveUserCategoryCatalog,
 } from "@/lib/finance/resolve-user-categories";
 import type { DayFlowTotals } from "@/lib/finance/get-day-flow-totals";
-import { assertFlowTransactionType } from "@/lib/db/transaction-flow-filter";
+import {
+  assertFlowTransactionType,
+  flowTransactionTypesWhere,
+} from "@/lib/db/transaction-flow-filter";
 import { buildJournalTransactionWhere } from "@/lib/journal/build-transaction-where";
 import type {
   JournalCategoryExpenseBreakdown,
@@ -37,13 +40,30 @@ const JOURNAL_ENTRY_SELECT = {
   description: true,
   rawInput: true,
   occurredAt: true,
+  walletId: true,
+  transferPairId: true,
+  wallet: { select: { name: true } },
 } as const;
+
+type JournalEntryRow = Prisma.TransactionGetPayload<{
+  select: typeof JOURNAL_ENTRY_SELECT;
+}>;
+
+function toJournalEntry(row: JournalEntryRow): JournalEntry {
+  const { wallet, ...rest } = row;
+
+  return {
+    ...rest,
+    walletName: wallet?.name ?? null,
+  };
+}
 
 function journalFiltersCacheKey(filters: JournalFilters): string {
   return [
     filters.q,
     filters.type,
     filters.category,
+    filters.walletId,
     filters.dateFrom ?? "",
     filters.dateTo ?? "",
     filters.page,
@@ -72,7 +92,7 @@ async function queryJournalTransactions(
   const totalPages = Math.max(1, Math.ceil(total / JOURNAL_PAGE_SIZE));
 
   return serializeJournalListResult({
-    items,
+    items: items.map(toJournalEntry),
     total,
     page: Math.min(page, totalPages),
     pageSize: JOURNAL_PAGE_SIZE,
@@ -102,13 +122,17 @@ async function queryJournalTransactionPreview(
   limit: number,
 ): Promise<JournalEntry[]> {
   const items = await prisma.transaction.findMany({
-    where: buildJournalTransactionWhere(userId, filters),
+    where: {
+      ...buildJournalTransactionWhere(userId, filters),
+      // Overview/AI previews only surface income & expense flows.
+      ...(filters.type === "all" ? flowTransactionTypesWhere() : {}),
+    },
     orderBy: [{ occurredAt: "desc" }, { createdAt: "desc" }],
     take: limit,
     select: JOURNAL_ENTRY_SELECT,
   });
 
-  return items;
+  return items.map(toJournalEntry);
 }
 
 export async function listJournalTransactionPreview(
@@ -260,7 +284,7 @@ export async function createJournalTransaction(
   await invalidateAiInsightCacheOnTransactionMutation(userId, entry.occurredAt);
   revalidateAfterTransactionMutation(userId);
 
-  return entry;
+  return toJournalEntry(entry);
 }
 
 export async function updateJournalTransaction(
@@ -292,7 +316,7 @@ export async function updateJournalTransaction(
   await invalidateAiInsightCacheOnTransactionMutation(userId, entry.occurredAt);
   revalidateAfterTransactionMutation(userId);
 
-  return entry;
+  return toJournalEntry(entry);
 }
 
 export async function updateTransactionCategoryQuick(
@@ -354,8 +378,60 @@ export async function updateTransactionCategoryQuick(
   };
 }
 
+export async function updateTransactionWalletQuick(
+  userId: string,
+  id: string,
+  walletId: string,
+): Promise<JournalEntry> {
+  const existing = await prisma.transaction.findFirst({
+    where: scopedId(userId, id),
+    select: { id: true, type: true },
+  });
+
+  if (!existing) {
+    throw new Error("Transaksi tidak ditemukan.");
+  }
+
+  if (existing.type === "transfer") {
+    throw new Error("Wallet transfer tidak bisa dipindahkan per baris.");
+  }
+
+  const wallet = await prisma.wallet.findFirst({
+    where: {
+      id: walletId,
+      userId,
+      OR: [{ isArchived: false }, { isArchived: true }],
+    },
+    select: { id: true, isArchived: true },
+  });
+
+  if (!wallet) {
+    throw new Error("Wallet tidak ditemukan.");
+  }
+
+  const updated = await prisma.transaction.updateMany({
+    where: scopedId(userId, id),
+    data: { walletId: wallet.id },
+  });
+
+  if (updated.count === 0) {
+    throw new Error("Transaksi tidak ditemukan.");
+  }
+
+  const entry = await prisma.transaction.findFirstOrThrow({
+    where: scopedId(userId, id),
+    select: JOURNAL_ENTRY_SELECT,
+  });
+
+  await invalidateAiInsightCacheOnTransactionMutation(userId, entry.occurredAt);
+  revalidateAfterTransactionMutation(userId);
+
+  return toJournalEntry(entry);
+}
+
 export interface DeleteJournalTransactionResult {
-  transaction: ParsedTransaction;
+  /** Null when a transfer pair was deleted — no inbox summary to patch. */
+  transaction: ParsedTransaction | null;
   inboxMessageId: string | null;
 }
 
@@ -369,6 +445,23 @@ export async function deleteJournalTransaction(
 
   if (!record) {
     throw new Error("Transaksi tidak ditemukan.");
+  }
+
+  // Deleting one transfer leg removes its counterpart too, so wallet balances stay consistent.
+  if (record.type === "transfer") {
+    await prisma.transaction.deleteMany({
+      where: record.transferPairId
+        ? scopedByUser(userId, { transferPairId: record.transferPairId })
+        : scopedId(userId, id),
+    });
+
+    await invalidateAiInsightCacheOnTransactionMutation(
+      userId,
+      record.occurredAt,
+    );
+    revalidateAfterTransactionMutation(userId);
+
+    return { transaction: null, inboxMessageId: null };
   }
 
   const snapshot: ParsedTransaction = {

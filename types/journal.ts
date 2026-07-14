@@ -4,6 +4,8 @@ export interface JournalFilters {
   q: string;
   type: FlowTransactionType | "all";
   category: string;
+  /** Wallet id or "all". */
+  walletId: string;
   page: number;
   dateFrom: string | null;
   dateTo: string | null;
@@ -12,11 +14,15 @@ export interface JournalFilters {
 export interface JournalEntry {
   id: string;
   type: TransactionType;
+  /** Signed for transfer legs (negative = out of the wallet). */
   amount: number;
   category: string;
   description: string;
   rawInput: string;
   occurredAt: Date;
+  walletId: string | null;
+  walletName: string | null;
+  transferPairId: string | null;
 }
 
 export interface JournalEntryFormInput {

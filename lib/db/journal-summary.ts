@@ -242,6 +242,7 @@ function getCachedJournalRangeSummary(
         q: "",
         type: "all",
         category: "all",
+        walletId: "all",
         page: 1,
         dateFrom: dateFrom || null,
         dateTo: dateTo || null,

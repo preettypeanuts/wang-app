@@ -13,6 +13,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_FIELD_LABEL,
   FORM_SEGMENT,
@@ -23,6 +30,7 @@ import {
 import { JOURNAL_TYPE_OPTIONS } from "@/config/journal";
 import { SEPARATED_CONTROL } from "@/config/shape";
 import {
+  UI_LABEL_ALL_WALLETS,
   UI_LABEL_APPLY,
   UI_LABEL_CATEGORY,
   UI_LABEL_DATE_RANGE,
@@ -30,6 +38,7 @@ import {
   UI_LABEL_FILTER_JOURNAL_DESCRIPTION,
   UI_LABEL_RESET,
   UI_LABEL_TYPE,
+  UI_LABEL_WALLET,
 } from "@/config/ui-labels";
 import {
   getJournalDateRangePresets,
@@ -38,6 +47,11 @@ import {
 import { cn } from "@/lib/utils";
 import type { JournalFilters } from "@/types/journal";
 
+export interface JournalWalletOption {
+  id: string;
+  name: string;
+}
+
 interface JournalFiltersDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -45,11 +59,16 @@ interface JournalFiltersDrawerProps {
   dateTo: string | null;
   type: JournalFilters["type"];
   category: JournalFilters["category"];
+  /** "all" or a wallet id. */
+  walletId?: string;
+  /** Wallet filter section only renders when options are provided. */
+  walletOptions?: JournalWalletOption[];
   onApply: (filters: {
     dateFrom: string | null;
     dateTo: string | null;
     type: JournalFilters["type"];
     category: string;
+    walletId: string;
   }) => void;
   onReset: () => void;
 }
@@ -61,6 +80,8 @@ export function JournalFiltersDrawer({
   dateTo,
   type,
   category,
+  walletId = "all",
+  walletOptions,
   onApply,
   onReset,
 }: JournalFiltersDrawerProps) {
@@ -68,8 +89,10 @@ export function JournalFiltersDrawer({
   const [draftTo, setDraftTo] = useState(dateTo ?? "");
   const [draftType, setDraftType] = useState(type);
   const [draftCategory, setDraftCategory] = useState(category);
+  const [draftWalletId, setDraftWalletId] = useState(walletId);
   const [error, setError] = useState<string | null>(null);
   const presets = getJournalDateRangePresets();
+  const showWalletFilter = Boolean(walletOptions && walletOptions.length > 0);
 
   useEffect(() => {
     if (!open) {
@@ -80,8 +103,9 @@ export function JournalFiltersDrawer({
     setDraftTo(dateTo ?? "");
     setDraftType(type);
     setDraftCategory(category);
+    setDraftWalletId(walletId);
     setError(null);
-  }, [open, dateFrom, dateTo, type, category]);
+  }, [open, dateFrom, dateTo, type, category, walletId]);
 
   function handleApply() {
     const nextFrom = draftFrom.trim();
@@ -107,6 +131,7 @@ export function JournalFiltersDrawer({
       dateTo: nextTo || null,
       type: draftType,
       category: draftCategory,
+      walletId: draftWalletId,
     });
     onOpenChange(false);
   }
@@ -116,6 +141,7 @@ export function JournalFiltersDrawer({
     setDraftTo("");
     setDraftType("all");
     setDraftCategory("all");
+    setDraftWalletId("all");
     setError(null);
     onReset();
     onOpenChange(false);
@@ -196,6 +222,32 @@ export function JournalFiltersDrawer({
             })}
           </div>
         </section>
+
+        {showWalletFilter ? (
+          <section className="flex flex-col gap-2">
+            <span className={FORM_FIELD_LABEL}>{UI_LABEL_WALLET}</span>
+            <Select
+              value={draftWalletId}
+              onValueChange={(value) => {
+                if (value) {
+                  setDraftWalletId(value);
+                }
+              }}
+            >
+              <SelectTrigger className={cn(SEPARATED_CONTROL, "h-10 w-full")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{UI_LABEL_ALL_WALLETS}</SelectItem>
+                {walletOptions?.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {option.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </section>
+        ) : null}
 
         <section className="flex flex-col gap-2">
           <span className={FORM_FIELD_LABEL}>{UI_LABEL_CATEGORY}</span>

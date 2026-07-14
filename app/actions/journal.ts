@@ -14,6 +14,7 @@ import {
   deleteJournalTransaction,
   updateJournalTransaction,
   updateTransactionCategoryQuick,
+  updateTransactionWalletQuick,
 } from "@/lib/db/journal";
 import { prisma } from "@/lib/db/prisma";
 import { scopedId } from "@/lib/db/user-scope";
@@ -176,15 +177,48 @@ export async function updateTransactionCategoryAction(input: {
   }
 }
 
+export async function updateTransactionWalletAction(input: {
+  transactionId: string;
+  walletId: string;
+}): Promise<JournalActionResult> {
+  const userId = await requireUserId();
+  const transactionId = input.transactionId.trim();
+  const walletId = input.walletId.trim();
+
+  if (!transactionId || !walletId) {
+    return { ok: false, error: "Wallet tidak ditemukan." };
+  }
+
+  try {
+    const entry = await updateTransactionWalletQuick(
+      userId,
+      transactionId,
+      walletId,
+    );
+    revalidateJournal(userId);
+    revalidatePath("/overview/wallets");
+    return { ok: true, entry };
+  } catch (error) {
+    return {
+      ok: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Gagal memperbarui wallet transaksi.",
+    };
+  }
+}
+
 export async function deleteJournalEntryAction(
   id: string,
 ): Promise<
   | {
       ok: true;
+      /** Null when a transfer pair was deleted — nothing to patch in inbox. */
       deleted: {
         inboxMessageId: string | null;
         transaction: ParsedTransaction;
-      };
+      } | null;
     }
   | JournalActionFailure
 > {
@@ -199,7 +233,12 @@ export async function deleteJournalEntryAction(
     const deleted = await deleteJournalTransaction(userId, trimmed);
     revalidateJournal(userId);
     revalidatePath("/");
-    return { ok: true, deleted };
+    return {
+      ok: true,
+      deleted: deleted.transaction
+        ? { inboxMessageId: deleted.inboxMessageId, transaction: deleted.transaction }
+        : null,
+    };
   } catch {
     return { ok: false, error: "Gagal menghapus transaksi." };
   }

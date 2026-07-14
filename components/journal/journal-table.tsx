@@ -28,14 +28,20 @@ import {
 } from "@/config/journal-table";
 import { groupJournalEntriesByDay } from "@/lib/journal/group-journal-entries";
 import { cn } from "@/lib/utils";
+import type { JournalWalletOption } from "@/components/journal/journal-filters-drawer";
 import type { JournalEntry } from "@/types/journal";
 
 interface JournalTableProps {
   items: JournalEntry[];
+  walletOptions?: JournalWalletOption[];
   onAdd?: () => void;
 }
 
-export function JournalTable({ items, onAdd }: JournalTableProps) {
+export function JournalTable({
+  items,
+  walletOptions,
+  onAdd,
+}: JournalTableProps) {
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
 
@@ -120,6 +126,7 @@ export function JournalTable({ items, onAdd }: JournalTableProps) {
       <JournalEntryDetailDialog
         open={detailOpen}
         entry={selectedEntry}
+        walletOptions={walletOptions}
         onOpenChange={setDetailOpen}
       />
     </>

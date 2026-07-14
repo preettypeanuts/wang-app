@@ -24,6 +24,7 @@ import {
 } from "@/lib/planner/calendar";
 import { PlusIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
+import type { JournalWalletOption } from "@/components/journal/journal-filters-drawer";
 import type {
   JournalCategoryExpenseBreakdown,
   JournalDaySummary,
@@ -44,6 +45,7 @@ interface JournalPageContentProps {
   daySummary: JournalDaySummary;
   categoryBreakdown: JournalCategoryExpenseBreakdown;
   filters: JournalFilters;
+  walletOptions?: JournalWalletOption[];
 }
 
 export function JournalPageContent({
@@ -51,6 +53,7 @@ export function JournalPageContent({
   daySummary,
   categoryBreakdown,
   filters,
+  walletOptions,
 }: JournalPageContentProps) {
   const [createOpen, setCreateOpen] = useState(false);
   useRefreshOnTabActive();
@@ -105,10 +108,14 @@ export function JournalPageContent({
           <JournalSummaryWidget summary={daySummary} className="shrink-0" />
 
           <div className="shrink-0">
-            <JournalFiltersBar filters={filters} />
+            <JournalFiltersBar filters={filters} walletOptions={walletOptions} />
           </div>
 
-          <JournalTable items={result.items} onAdd={() => setCreateOpen(true)} />
+          <JournalTable
+            items={result.items}
+            walletOptions={walletOptions}
+            onAdd={() => setCreateOpen(true)}
+          />
 
           <JournalPagination
             page={result.page}

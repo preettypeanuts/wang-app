@@ -32,6 +32,7 @@ export function parseJournalSearchParams(
   const q = readParam(searchParams, "q");
   const typeRaw = readParam(searchParams, "type");
   const categoryRaw = readParam(searchParams, "category");
+  const walletRaw = readParam(searchParams, "wallet");
   const pageRaw = Number.parseInt(readParam(searchParams, "page") || "1", 10);
   const dateFrom = readDateParam(searchParams, "from");
   const dateTo = readDateParam(searchParams, "to");
@@ -44,10 +45,13 @@ export function parseJournalSearchParams(
   const category =
     categoryRaw && isTransactionCategory(categoryRaw) ? categoryRaw : "all";
 
+  // Wallet ids are cuid-like — restrict to safe chars, anything else means "all".
+  const walletId = /^[a-z0-9-]{10,64}$/i.test(walletRaw) ? walletRaw : "all";
+
   const page =
     Number.isFinite(pageRaw) && pageRaw > 0 ? pageRaw : 1;
 
-  return { q, type, category, page, dateFrom, dateTo };
+  return { q, type, category, walletId, page, dateFrom, dateTo };
 }
 
 export function buildJournalSearchParams(
@@ -66,6 +70,10 @@ export function buildJournalSearchParams(
 
   if (filters.category !== "all") {
     params.set("category", filters.category);
+  }
+
+  if (filters.walletId !== "all") {
+    params.set("wallet", filters.walletId);
   }
 
   if (filters.dateFrom) {

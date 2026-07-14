@@ -67,6 +67,7 @@ function OverviewFiltersBridgeInner({ children }: { children: ReactNode }) {
       q: "",
       type,
       category,
+      walletId: filters.walletId,
       page: 1,
       dateFrom: filters.dateFrom,
       dateTo: filters.dateTo,
@@ -89,6 +90,7 @@ function OverviewFiltersBridgeInner({ children }: { children: ReactNode }) {
     dateTo: string | null;
     type: JournalFilters["type"];
     category: string;
+    walletId: string;
   }) {
     setType(next.type);
     setCategory(next.category);

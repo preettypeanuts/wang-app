@@ -5,6 +5,7 @@ import {
   getJournalCategoryExpenseBreakdown,
   listJournalTransactions,
 } from "@/lib/db/journal";
+import { listWallets } from "@/lib/db/wallets";
 import { parseJournalSearchParams } from "@/lib/validations/journal";
 
 interface JournalPageDataProps {
@@ -15,10 +16,11 @@ export async function JournalPageData({ searchParams }: JournalPageDataProps) {
   const userId = await requireUserId();
   const params = await searchParams;
   const filters = parseJournalSearchParams(params);
-  const [result, daySummary, categoryBreakdown] = await Promise.all([
+  const [result, daySummary, categoryBreakdown, wallets] = await Promise.all([
     listJournalTransactions(userId, filters),
     getJournalFilteredSummary(userId, filters),
     getJournalCategoryExpenseBreakdown(userId, filters),
+    listWallets(userId),
   ]);
 
   return (
@@ -27,6 +29,10 @@ export async function JournalPageData({ searchParams }: JournalPageDataProps) {
       daySummary={daySummary}
       filters={filters}
       result={result}
+      walletOptions={wallets.map((wallet) => ({
+        id: wallet.id,
+        name: wallet.name,
+      }))}
     />
   );
 }

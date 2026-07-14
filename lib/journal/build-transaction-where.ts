@@ -18,6 +18,10 @@ export function buildJournalTransactionWhere(
     where.category = filters.category;
   }
 
+  if (filters.walletId !== "all") {
+    where.walletId = filters.walletId;
+  }
+
   if (filters.q) {
     const query = filters.q.toLowerCase();
     const matchingCategoryIds = TRANSACTION_CATEGORIES.filter(
@@ -101,6 +105,7 @@ export function hasJournalTransactionFilters(filters: JournalFilters): boolean {
     filters.q !== "" ||
     filters.type !== "all" ||
     filters.category !== "all" ||
+    filters.walletId !== "all" ||
     Boolean(filters.dateFrom || filters.dateTo)
   );
 }

@@ -16,6 +16,8 @@ export const JOURNAL_LIST_AMOUNT_INCOME =
 
 export const JOURNAL_LIST_AMOUNT_EXPENSE = "text-foreground/88";
 
+export const JOURNAL_LIST_AMOUNT_TRANSFER = "text-muted-foreground";
+
 export const JOURNAL_LIST_SECTION_HEADER = [
   "sticky top-0 z-10 flex items-center justify-between gap-2 px-3 py-1",
 ].join(" ");

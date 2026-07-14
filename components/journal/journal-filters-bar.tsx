@@ -4,7 +4,10 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { JournalFilterFields } from "@/components/journal/journal-filter-fields";
-import { JournalFiltersDrawer } from "@/components/journal/journal-filters-drawer";
+import {
+  JournalFiltersDrawer,
+  type JournalWalletOption,
+} from "@/components/journal/journal-filters-drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GLASS_SURFACE } from "@/config/glass";
@@ -32,22 +35,28 @@ import type { JournalFilters } from "@/types/journal";
 
 interface JournalFiltersBarProps {
   filters: JournalFilters;
+  walletOptions?: JournalWalletOption[];
 }
 
 function hasActiveFilters(filters: JournalFilters): boolean {
   return (
     filters.type !== "all" ||
     filters.category !== "all" ||
+    filters.walletId !== "all" ||
     isJournalDateRangeActive(filters)
   );
 }
 
-export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
+export function JournalFiltersBar({
+  filters,
+  walletOptions,
+}: JournalFiltersBarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState(filters.q);
   const [type, setType] = useState(filters.type);
   const [category, setCategory] = useState(filters.category);
+  const [walletId, setWalletId] = useState(filters.walletId);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const hasFilters = hasActiveFilters(filters);
@@ -56,6 +65,7 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
     setQ(filters.q);
     setType(filters.type);
     setCategory(filters.category);
+    setWalletId(filters.walletId);
   }, [filters]);
 
   function applyFilters(next?: Partial<JournalFilters>) {
@@ -63,6 +73,7 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
       q,
       type,
       category,
+      walletId,
       page: 1,
       dateFrom: filters.dateFrom,
       dateTo: filters.dateTo,
@@ -78,6 +89,7 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
     setQ("");
     setType("all");
     setCategory("all");
+    setWalletId("all");
     router.push(pathname);
   }
 
@@ -86,14 +98,17 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
     dateTo: string | null;
     type: JournalFilters["type"];
     category: string;
+    walletId: string;
   }) {
     setType(next.type);
     setCategory(next.category);
+    setWalletId(next.walletId);
     applyFilters({
       dateFrom: next.dateFrom,
       dateTo: next.dateTo,
       type: next.type,
       category: next.category,
+      walletId: next.walletId,
       page: 1,
     });
   }
@@ -138,6 +153,8 @@ export function JournalFiltersBar({ filters }: JournalFiltersBarProps) {
         dateTo={filters.dateTo}
         type={type}
         category={category}
+        walletId={walletId}
+        walletOptions={walletOptions}
         onApply={applyAllFilters}
         onReset={resetFilters}
       />

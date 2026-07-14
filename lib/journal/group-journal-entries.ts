@@ -15,6 +15,11 @@ function summarizeJournalDay(items: JournalEntry[]) {
   let totalExpense = 0;
 
   for (const item of items) {
+    // Wallet transfers and balance adjustments — not part of day totals.
+    if (item.type === "transfer" || item.type === "adjustment") {
+      continue;
+    }
+
     if (item.type === "income") {
       totalIncome += item.amount;
       continue;

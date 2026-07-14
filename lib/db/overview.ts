@@ -5,8 +5,8 @@ import {
   UI_LABEL_OVERVIEW_ACTIVITY_EMPTY_PERIOD,
   UI_LABEL_OVERVIEW_ACTIVITY_TODAY,
   UI_LABEL_OVERVIEW_EXPENSE,
-  UI_LABEL_OVERVIEW_INCOME,
   UI_LABEL_OVERVIEW_IN_TODAY,
+  UI_LABEL_OVERVIEW_INCOME,
   UI_LABEL_OVERVIEW_OUT_TODAY,
   UI_LABEL_OVERVIEW_VS_YESTERDAY,
   UI_LABEL_PERIOD_FALLBACK,
@@ -19,13 +19,15 @@ import {
   getJournalFlowTotals,
   listJournalTransactionPreview,
 } from "@/lib/db/journal";
+import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
 import { listPlans } from "@/lib/db/plans";
 import { listSavingsGoals } from "@/lib/db/savings-goals";
+import { isFlowTransactionType } from "@/lib/db/transaction-flow-filter";
 import {
   getMonthTransactionAggregates,
   getTodayTransactionRows,
 } from "@/lib/db/transactions";
-import { isFlowTransactionType } from "@/lib/db/transaction-flow-filter";
+import { getWalletBalances } from "@/lib/db/wallet-balance";
 import { buildOverviewAlerts } from "@/lib/finance/build-overview-alerts";
 import {
   buildFallbackPlansInsight,
@@ -33,7 +35,6 @@ import {
   computePlansSalaryCycleProjection,
 } from "@/lib/finance/build-plans-overview";
 import { buildSavingsOverview } from "@/lib/finance/build-savings-overview";
-import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
 import { buildTodaySummary } from "@/lib/finance/build-summary";
 import {
   addDays,
@@ -45,6 +46,7 @@ import { formatJournalTime } from "@/lib/finance/format-datetime";
 import { formatOverviewGreeting } from "@/lib/finance/format-overview-greeting";
 import type { DayFlowTotals } from "@/lib/finance/get-day-flow-totals";
 import { getDayFlowTotals } from "@/lib/finance/get-day-flow-totals";
+import { sumRemainingBudgetTotal } from "@/lib/finance/sum-remaining-budget-total";
 import { hasJournalTransactionFilters } from "@/lib/journal/build-transaction-where";
 import {
   formatJournalDateRangeLabel,
@@ -52,15 +54,14 @@ import {
   resolveJournalDateRangeBounds,
 } from "@/lib/journal/journal-date-range";
 import { getPlansUpcomingImpact } from "@/lib/planner/build-plans-upcoming-impact";
-import { getPlannedItemsForExpansion } from "@/lib/db/planned-items";
 import {
   formatPlannerMonthLabel,
   getCurrentMonthKey,
   getMonthRange,
 } from "@/lib/planner/calendar";
-import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
-import { sumUpcomingIncomeThisMonth } from "@/lib/planner/sum-upcoming-income-this-month";
 import { getPlansNextMonthObligations } from "@/lib/planner/get-plans-next-month-obligations";
+import { sumUpcomingIncomeThisMonth } from "@/lib/planner/sum-upcoming-income-this-month";
+import { sumUpcomingPayPlanThisMonth } from "@/lib/planner/sum-upcoming-payplan-this-month";
 import type { JournalFilters } from "@/types/journal";
 import type {
   OverviewFilterContext,
@@ -179,6 +180,7 @@ export async function getOverviewPageData(
     q: "",
     type: "all",
     category: "all",
+    walletId: "all",
     page: 1,
     dateFrom: null,
     dateTo: null,
@@ -236,6 +238,7 @@ export async function getOverviewPageData(
     filteredTransactionCount,
     aiBriefTransactionRows,
     plannedItemsForIncome,
+    walletBalances,
   ] = await Promise.all([
     getAvailableBalance(userId, now),
     getAvailableBalance(userId, yesterday),
@@ -284,6 +287,7 @@ export async function getOverviewPageData(
         )
       : Promise.resolve(null),
     getPlannedItemsForExpansion(userId),
+    getWalletBalances(userId),
   ]);
 
   const activityRows = filtersActive
@@ -441,6 +445,11 @@ export async function getOverviewPageData(
         type: transaction.type,
         timeLabel: formatJournalTime(new Date(transaction.occurredAt)),
         categoryLabel: getCategoryLabel(transaction.category),
+      })),
+      walletChips: walletBalances.map((wallet) => ({
+        id: wallet.id,
+        name: wallet.name,
+        balance: wallet.balance,
       })),
     },
     aiBriefInputs: {

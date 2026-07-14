@@ -1,20 +1,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 
 import {
   deleteJournalEntryAction,
   saveJournalEntryAction,
+  updateTransactionWalletAction,
 } from "@/app/actions/journal";
 import { patchInboxBootstrapOnTransactionDeleted } from "@/lib/inbox/patch-inbox-on-transaction-deleted";
+import { JournalAdjustmentIcon } from "@/components/journal/journal-adjustment-icon";
 import { JournalCategoryIcon } from "@/components/journal/journal-category-icon";
-import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
+import { JournalTransferIcon } from "@/components/journal/journal-transfer-icon";
+import { JournalTypeBadge } from "@/components/journal/journal-type-badge";
+import { JournalWalletBadge } from "@/components/journal/journal-wallet-badge";
+import type { JournalWalletOption } from "@/components/journal/journal-filters-drawer";
 import {
   JournalEntryFormFields,
   resolveCategoryForEntry,
 } from "@/components/journal/journal-entry-form-fields";
-import { JournalTypeBadge } from "@/components/journal/journal-type-badge";
+import { useUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
+import { FormDialogField } from "@/components/shared/form-dialog-field";
 import {
   ResponsiveDialog,
   ResponsiveDialogBody,
@@ -24,12 +30,26 @@ import {
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   FORM_DIALOG_BODY_SCROLL,
+  FORM_FIELD_SELECT,
   FORM_GROUP,
   FORM_PREVIEW_COMPACT,
   FORM_PREVIEW_COMPACT_AMOUNT,
 } from "@/config/form-dialog";
+import {
+  PLANNER_SELECT_CONTENT,
+  PLANNER_SELECT_ITEM,
+  PLANNER_SELECT_TRIGGER,
+} from "@/config/planner-manage";
 import { SEPARATED_CONTROL } from "@/config/shape";
+import { UI_LABEL_WALLET } from "@/config/ui-labels";
 import { formatDateTime } from "@/lib/finance/format-datetime";
 import { formatIdr } from "@/lib/finance/format-currency";
 import { PencilSimpleIcon, TrashIcon } from "@/lib/icons";
@@ -43,12 +63,14 @@ type DialogMode = "view" | "edit";
 interface JournalEntryDetailDialogProps {
   open: boolean;
   entry: JournalEntry | null;
+  walletOptions?: JournalWalletOption[];
   onOpenChange: (open: boolean) => void;
 }
 
 export function JournalEntryDetailDialog({
   open,
   entry,
+  walletOptions = [],
   onOpenChange,
 }: JournalEntryDetailDialogProps) {
   const router = useRouter();
@@ -57,6 +79,7 @@ export function JournalEntryDetailDialog({
   const [mode, setMode] = useState<DialogMode>("view");
   const [type, setType] = useState<TransactionType>("expense");
   const [category, setCategory] = useState<string>("food");
+  const [walletId, setWalletId] = useState<string>("");
   const [occurredAtText, setOccurredAtText] = useState("");
 
   const isEdit = mode === "edit";
@@ -69,8 +92,27 @@ export function JournalEntryDetailDialog({
     setMode("view");
     setType(entry.type);
     setCategory(resolveCategoryForEntry(entry.type, entry.category));
+    setWalletId(entry.walletId ?? "");
     setOccurredAtText(toDateInputValue(entry.occurredAt));
   }, [open, entry]);
+
+  const pickerOptions = useMemo(() => {
+    if (!entry?.walletId) {
+      return walletOptions;
+    }
+
+    if (walletOptions.some((option) => option.id === entry.walletId)) {
+      return walletOptions;
+    }
+
+    return [
+      ...walletOptions,
+      {
+        id: entry.walletId,
+        name: entry.walletName ?? "Wallet lama",
+      },
+    ];
+  }, [entry, walletOptions]);
 
   if (!entry) {
     return null;
@@ -78,8 +120,15 @@ export function JournalEntryDetailDialog({
 
   const currentEntry = entry;
   const isIncome = currentEntry.type === "income";
+  const isTransfer = currentEntry.type === "transfer";
+  const isAdjustment = currentEntry.type === "adjustment";
+  const canChangeWallet = !isTransfer && pickerOptions.length > 0;
   const title = currentEntry.rawInput.trim() || currentEntry.description;
-  const categoryLabel = getLabel(currentEntry.category);
+  const categoryLabel = isTransfer
+    ? "Transfer"
+    : isAdjustment
+      ? "Penyesuaian saldo"
+      : getLabel(currentEntry.category);
   const showDescription =
     currentEntry.description.trim().length > 0 &&
     currentEntry.description.trim() !== currentEntry.rawInput.trim();
@@ -92,6 +141,24 @@ export function JournalEntryDetailDialog({
     }
 
     onOpenChange(nextOpen);
+  }
+
+  function handleWalletChange(nextWalletId: string | null) {
+    if (!nextWalletId || nextWalletId === walletId) {
+      return;
+    }
+
+    setWalletId(nextWalletId);
+    startTransition(async () => {
+      const result = await updateTransactionWalletAction({
+        transactionId: currentEntry.id,
+        walletId: nextWalletId,
+      });
+
+      if (result.ok) {
+        router.refresh();
+      }
+    });
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -156,7 +223,7 @@ export function JournalEntryDetailDialog({
         >
           <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
             <JournalEntryFormFields
-              amountDefault={String(currentEntry.amount)}
+              amountDefault={String(Math.abs(currentEntry.amount))}
               category={category}
               descriptionDefault={currentEntry.description}
               occurredAtText={occurredAtText}
@@ -192,11 +259,20 @@ export function JournalEntryDetailDialog({
         <>
           <ResponsiveDialogBody className={FORM_DIALOG_BODY_SCROLL}>
             <div className="flex items-center gap-3 px-1 pb-1">
-              <JournalCategoryIcon
-                category={currentEntry.category}
-                type={currentEntry.type}
-              />
+              {isTransfer ? (
+                <JournalTransferIcon />
+              ) : isAdjustment ? (
+                <JournalAdjustmentIcon />
+              ) : (
+                <JournalCategoryIcon
+                  category={currentEntry.category}
+                  type={currentEntry.type}
+                />
+              )}
               <JournalTypeBadge type={currentEntry.type} />
+              {currentEntry.walletName ? (
+                <JournalWalletBadge name={currentEntry.walletName} />
+              ) : null}
             </div>
 
             <div className={FORM_PREVIEW_COMPACT}>
@@ -208,22 +284,65 @@ export function JournalEntryDetailDialog({
                   className={cn(
                     "mt-0.5",
                     FORM_PREVIEW_COMPACT_AMOUNT,
-                    isIncome
-                      ? "text-[#2FAE52] dark:text-[#34C759]"
-                      : "text-[#E85555] dark:text-[#FF6B6B]",
+                    isTransfer || isAdjustment
+                      ? "text-muted-foreground"
+                      : isIncome
+                        ? "text-[#2FAE52] dark:text-[#34C759]"
+                        : "text-[#E85555] dark:text-[#FF6B6B]",
                   )}
                 >
-                  {isIncome ? "+" : "−"}
-                  {formatIdr(currentEntry.amount)}
+                  {isTransfer || isAdjustment
+                    ? currentEntry.amount < 0
+                      ? "−"
+                      : "+"
+                    : isIncome
+                      ? "+"
+                      : "−"}
+                  {formatIdr(Math.abs(currentEntry.amount))}
                 </p>
               </div>
               <div className="shrink-0 text-right text-[11px] leading-snug text-muted-foreground">
                 <p>{categoryLabel}</p>
                 <p className="font-medium text-foreground">
-                  {isIncome ? "Pemasukan" : "Pengeluaran"}
+                  {isTransfer
+                    ? currentEntry.amount < 0
+                      ? "Transfer keluar"
+                      : "Transfer masuk"
+                    : isAdjustment
+                      ? "Penyesuaian saldo"
+                      : isIncome
+                        ? "Pemasukan"
+                        : "Pengeluaran"}
                 </p>
               </div>
             </div>
+
+            {canChangeWallet ? (
+              <div className={FORM_GROUP}>
+                <FormDialogField label={UI_LABEL_WALLET} htmlFor="journal-wallet">
+                  <Select value={walletId} onValueChange={handleWalletChange}>
+                    <SelectTrigger
+                      id="journal-wallet"
+                      className={cn(FORM_FIELD_SELECT, PLANNER_SELECT_TRIGGER)}
+                      disabled={isPending}
+                    >
+                      <SelectValue placeholder="Pilih wallet" />
+                    </SelectTrigger>
+                    <SelectContent className={PLANNER_SELECT_CONTENT}>
+                      {pickerOptions.map((option) => (
+                        <SelectItem
+                          key={option.id}
+                          value={option.id}
+                          className={PLANNER_SELECT_ITEM}
+                        >
+                          {option.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormDialogField>
+              </div>
+            ) : null}
 
             <div className={FORM_GROUP}>
               <div className="px-4 py-3">
@@ -268,7 +387,7 @@ export function JournalEntryDetailDialog({
               type="button"
               size="icon"
               variant="destructive"
-              disabled={isPending}
+              disabled={isPending || isTransfer}
               className={cn(SEPARATED_CONTROL, "shrink-0")}
               onClick={handleDelete}
               aria-label="Hapus"
@@ -281,7 +400,7 @@ export function JournalEntryDetailDialog({
                 type="button"
                 size="icon"
                 variant="outline"
-                disabled={isPending}
+                disabled={isPending || isTransfer || isAdjustment}
                 className={cn(SEPARATED_CONTROL, "shrink-0")}
                 onClick={() => setMode("edit")}
                 aria-label="Edit"

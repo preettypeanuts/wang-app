@@ -35,6 +35,9 @@ function transactionToJournalEntry(tx: ParsedTransaction): JournalEntry | null {
     description: tx.description,
     rawInput: tx.description,
     occurredAt: new Date(tx.occurredAt),
+    walletId: null,
+    walletName: null,
+    transferPairId: null,
   };
 }
 
