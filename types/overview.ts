@@ -45,6 +45,13 @@ export interface OverviewActivityItem {
   categoryLabel: string;
 }
 
+/** Per-wallet balance chip under the Balance Hero total. */
+export interface OverviewWalletChip {
+  id: string;
+  name: string;
+  balance: number;
+}
+
 export interface OverviewDayDeltas {
   incomeDelta: number;
   expenseDelta: number;
@@ -73,6 +80,7 @@ export interface OverviewPageData {
   monthlySnapshot: OverviewMonthlySnapshot;
   todaySummary: TodaySummary;
   todayActivity: OverviewActivityItem[];
+  walletChips: OverviewWalletChip[];
   filterContext?: OverviewFilterContext;
 }
 

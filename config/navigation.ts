@@ -15,6 +15,7 @@ import {
 import { NOTIFICATIONS_PAGE_TITLE } from "@/config/ui-labels";
 
 export const OVERVIEW_ROUTE = "/overview";
+export const WALLETS_ROUTE = "/overview/wallets";
 export const PAYPLAN_ROUTE = "/payplan";
 export const PLANS_ROUTE = "/plans";
 export const NOTIFICATIONS_ROUTE = "/notifications";

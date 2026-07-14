@@ -33,6 +33,10 @@ export function revalidateUserInbox(userId: string) {
   purgeTag(userDataTags.inbox(userId));
 }
 
+export function revalidateUserWallets(userId: string) {
+  purgeTag(userDataTags.wallets(userId));
+}
+
 /** Transaction writes also affect balance, journal, overview, inbox summary, budget spent. */
 export function revalidateAfterTransactionMutation(userId: string) {
   revalidateUserTransactions(userId);

@@ -20,7 +20,11 @@ interface OverviewViewProps {
   greetingAction?: React.ReactNode;
 }
 
-export function OverviewView({ data, aiBrief, greetingAction }: OverviewViewProps) {
+export function OverviewView({
+  data,
+  aiBrief,
+  greetingAction,
+}: OverviewViewProps) {
   return (
     <div className={OVERVIEW_BENTO_GRID}>
       <div className={OVERVIEW_TOP_PAIR}>
@@ -37,6 +41,7 @@ export function OverviewView({ data, aiBrief, greetingAction }: OverviewViewProp
         todayIncome={data.todaySummary.totalIncome}
         todayExpense={data.todaySummary.totalExpense}
         dayDeltas={data.dayDeltas}
+        walletChips={data.walletChips}
         filterContext={data.filterContext}
         className={OVERVIEW_SPAN_FULL}
       />

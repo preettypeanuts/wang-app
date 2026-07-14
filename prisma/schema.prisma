@@ -21,6 +21,10 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  /// Wallet used when the user does not mention one in chat.
+  defaultWalletId String?
+  defaultWallet   Wallet? @relation("UserDefaultWallet", fields: [defaultWalletId], references: [id], onDelete: SetNull)
+
   transactions    Transaction[]
   inboxMessages   InboxMessage[]
   categoryBudgets CategoryBudget[]
@@ -96,6 +100,7 @@ enum TransactionType {
   income
   expense
   transfer
+  adjustment
 
   @@schema("monmon_whethertie")
 }
@@ -137,6 +142,7 @@ model Wallet {
   isArchived     Boolean      @default(false)
   createdAt      DateTime     @default(now())
   transactions   Transaction[]
+  defaultForUsers User[]      @relation("UserDefaultWallet")
 
   @@index([userId])
   @@schema("monmon_whethertie")
@@ -157,12 +163,15 @@ model Transaction {
   inboxMessage   InboxMessage?   @relation(fields: [inboxMessageId], references: [id], onDelete: SetNull)
   walletId       String?
   wallet         Wallet?         @relation(fields: [walletId], references: [id], onDelete: SetNull)
+  /// Links the two signed legs of a wallet-to-wallet transfer.
+  transferPairId String?
 
   @@index([userId, occurredAt])
   @@index([userId, type])
   @@index([userId, type, occurredAt])
   @@index([inboxMessageId])
   @@index([walletId])
+  @@index([transferPairId])
   @@schema("monmon_whethertie")
 }
 

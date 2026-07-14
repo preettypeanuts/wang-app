@@ -4,15 +4,16 @@ import { ProfileShell } from "@/components/profile/profile-shell";
 import { ProfileSummary } from "@/components/profile/profile-summary";
 import { SetPasswordForm } from "@/components/profile/set-password-form";
 import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
+import { WalletsSettingsLink } from "@/components/wallets/wallets-settings-link";
 import {
-  PROFILE_TITLE,
+  PROFILE_ACCOUNT,
   PROFILE_DESC,
   PROFILE_DESC_GOOGLE_ONLY,
-  PROFILE_ACCOUNT,
   PROFILE_GOOGLE_SIGN_IN_BADGE,
+  PROFILE_TITLE,
 } from "@/config/settings-labels";
-import { getUserAuthProviders } from "@/lib/auth/user-auth-providers";
 import { getSession, requireUserId } from "@/lib/auth/session";
+import { getUserAuthProviders } from "@/lib/auth/user-auth-providers";
 import { cn } from "@/lib/utils";
 
 export async function ProfilePageData() {
@@ -23,8 +24,7 @@ export async function ProfilePageData() {
   ]);
   const user = session?.user;
   const { hasCredentialPassword, usesGoogleSignIn } = authProviders;
-  const showGooglePasswordSetup =
-    !hasCredentialPassword && usesGoogleSignIn;
+  const showGooglePasswordSetup = !hasCredentialPassword && usesGoogleSignIn;
   const profileDesc = showGooglePasswordSetup
     ? PROFILE_DESC_GOOGLE_ONLY
     : PROFILE_DESC;
@@ -72,6 +72,8 @@ export async function ProfilePageData() {
                   />
                 </section>
               ) : null}
+
+              <WalletsSettingsLink />
 
               {hasCredentialPassword ? (
                 <ChangePasswordForm />

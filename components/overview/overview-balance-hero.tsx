@@ -1,17 +1,6 @@
 "use client";
 
-import { ArrowDownIcon, ArrowUpIcon, WalletIcon } from "@/lib/icons";
-
-import {
-  UI_LABEL_BALANCE,
-  UI_LABEL_OVERVIEW_BALANCE,
-  UI_LABEL_OVERVIEW_BALANCE_CUMULATIVE_FILTERED,
-  UI_LABEL_OVERVIEW_BALANCE_CUMULATIVE_TODAY,
-  UI_LABEL_OVERVIEW_BALANCE_SUMMARY,
-  UI_LABEL_OVERVIEW_IN_TODAY,
-  UI_LABEL_OVERVIEW_OUT_TODAY,
-  UI_LABEL_OVERVIEW_VS_YESTERDAY,
-} from "@/config/ui-labels";
+import Link from "next/link";
 import { OverviewIconShell } from "@/components/overview/overview-icon-shell";
 import { BalanceVisibilityToggle } from "@/components/shared/balance-visibility-toggle";
 import {
@@ -22,12 +11,26 @@ import {
   OVERVIEW_CARD_PADDING,
   OVERVIEW_SECTION_LABEL,
   OVERVIEW_SECTION_TITLE,
+  OVERVIEW_STATUS_BADGE,
 } from "@/config/overview";
+import {
+  UI_LABEL_BALANCE,
+  UI_LABEL_OVERVIEW_BALANCE,
+  UI_LABEL_OVERVIEW_BALANCE_CUMULATIVE_FILTERED,
+  UI_LABEL_OVERVIEW_BALANCE_CUMULATIVE_TODAY,
+  UI_LABEL_OVERVIEW_BALANCE_SUMMARY,
+  UI_LABEL_OVERVIEW_IN_TODAY,
+  UI_LABEL_OVERVIEW_OUT_TODAY,
+  UI_LABEL_OVERVIEW_VS_YESTERDAY,
+} from "@/config/ui-labels";
+import { WALLETS_MANAGE } from "@/config/wallet-labels";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
+import { ArrowDownIcon, ArrowUpIcon, WalletIcon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 import type {
   OverviewDayDeltas,
   OverviewFilterContext,
+  OverviewWalletChip,
 } from "@/types/overview";
 
 interface OverviewBalanceHeroProps {
@@ -35,6 +38,7 @@ interface OverviewBalanceHeroProps {
   todayIncome: number;
   todayExpense: number;
   dayDeltas: OverviewDayDeltas;
+  walletChips?: OverviewWalletChip[];
   filterContext?: OverviewFilterContext;
   className?: string;
 }
@@ -73,6 +77,7 @@ export function OverviewBalanceHero({
   todayIncome,
   todayExpense,
   dayDeltas,
+  walletChips,
   filterContext,
   className,
 }: OverviewBalanceHeroProps) {
@@ -84,7 +89,8 @@ export function OverviewBalanceHero({
   } = useProtectedCurrency();
   const isNegative = balance < 0;
   const incomeLabel = filterContext?.incomeLabel ?? UI_LABEL_OVERVIEW_IN_TODAY;
-  const expenseLabel = filterContext?.expenseLabel ?? UI_LABEL_OVERVIEW_OUT_TODAY;
+  const expenseLabel =
+    filterContext?.expenseLabel ?? UI_LABEL_OVERVIEW_OUT_TODAY;
   const balanceDeltaLabel =
     filterContext?.balanceDeltaLabel ?? UI_LABEL_OVERVIEW_VS_YESTERDAY;
 
@@ -101,7 +107,7 @@ export function OverviewBalanceHero({
       </div>
 
       <div className={OVERVIEW_BALANCE_METRICS}>
-        <div className={OVERVIEW_BALANCE_METRIC}>
+        <div className={cn(OVERVIEW_BALANCE_METRIC, "min-w-0")}>
           <div className="flex items-center gap-2">
             <OverviewIconShell variant={isNegative ? "orange" : "green"}>
               <WalletIcon />
@@ -124,6 +130,41 @@ export function OverviewBalanceHero({
               tone="balance"
               label={`${formatSignedDelta(dayDeltas.balanceDelta)} ${balanceDeltaLabel}`}
             />
+            {walletChips && walletChips.length > 0 ? (
+              <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none">
+                {walletChips.map((wallet) => (
+                  <Link
+                    key={wallet.id}
+                    href="/overview/wallets"
+                    className={cn(
+                      OVERVIEW_STATUS_BADGE,
+                      "shrink-0 transition-opacity hover:opacity-80",
+                    )}
+                  >
+                    <span className="max-w-24 truncate">{wallet.name}</span>
+                    <span
+                      className={cn(
+                        "tabular-nums",
+                        wallet.balance < 0
+                          ? "text-[#FF3B30]"
+                          : "text-muted-foreground",
+                      )}
+                    >
+                      {formatAmount(wallet.balance)}
+                    </span>
+                  </Link>
+                ))}
+                <Link
+                  href="/overview/wallets"
+                  className={cn(
+                    OVERVIEW_STATUS_BADGE,
+                    "shrink-0 text-[#007AFF] transition-opacity hover:opacity-80 dark:text-[#0A84FF]",
+                  )}
+                >
+                  {WALLETS_MANAGE}
+                </Link>
+              </div>
+            ) : null}
           </div>
         </div>
 
