@@ -17,10 +17,14 @@ import { useInboxBootstrap } from "@/hooks/use-inbox-bootstrap";
 
 interface InboxClientShellProps {
   initialBootstrap?: InboxBootstrapPayload;
+  defaultWalletId?: string | null;
+  walletOptions?: Array<{ id: string; name: string }>;
 }
 
 export function InboxClientShell({
   initialBootstrap,
+  defaultWalletId = null,
+  walletOptions = [],
 }: InboxClientShellProps) {
   const isActiveTab = usePersistentTabActive();
   const [focusMessageId, setFocusMessageId] = useState<string | null>(null);
@@ -63,6 +67,8 @@ export function InboxClientShell({
             <InboxView
               activePlanItems={slash.activePlanItems}
               activeSavingsItems={slash.activeSavingsItems}
+              defaultWalletId={defaultWalletId}
+              walletOptions={walletOptions}
               fixedMobileTopBar
               focusMessageId={focusMessageId}
               initialHasMoreMessages={hasMoreMessages}

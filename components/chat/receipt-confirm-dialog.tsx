@@ -48,6 +48,7 @@ import { resolveCategoryForTransaction } from "@/lib/finance/user-category-catal
 import { formatIdr } from "@/lib/finance/format-currency";
 import { cn } from "@/lib/utils";
 import { toDateInputValue } from "@/lib/validations/planned-item";
+import { UI_LABEL_WALLET } from "@/config/ui-labels";
 import type { ReceiptDraft } from "@/types/receipt";
 import type { FlowTransactionType } from "@/types/transaction";
 
@@ -57,6 +58,8 @@ interface ReceiptConfirmDialogProps {
   previewUrl: string | null;
   notice?: string | null;
   mode?: "create" | "edit";
+  defaultWalletId?: string | null;
+  walletOptions?: Array<{ id: string; name: string }>;
   onOpenChange: (open: boolean) => void;
   onConfirm: (input: {
     type: FlowTransactionType;
@@ -65,6 +68,7 @@ interface ReceiptConfirmDialogProps {
     description: string;
     merchant: string;
     occurredAt: string;
+    walletId: string;
   }) => Promise<void>;
 }
 
@@ -74,6 +78,8 @@ export function ReceiptConfirmDialog({
   previewUrl,
   notice = null,
   mode = "create",
+  defaultWalletId = null,
+  walletOptions = [],
   onOpenChange,
   onConfirm,
 }: ReceiptConfirmDialogProps) {
@@ -81,6 +87,7 @@ export function ReceiptConfirmDialog({
   const [type, setType] = useState<FlowTransactionType>("expense");
   const [amountDraft, setAmountDraft] = useState("");
   const [category, setCategory] = useState<string>("food");
+  const [walletId, setWalletId] = useState("");
   const { catalog, getMentionOptions } = useUserCategoryCatalog();
   const [description, setDescription] = useState("");
   const [merchant, setMerchant] = useState("");
@@ -99,7 +106,12 @@ export function ReceiptConfirmDialog({
     setDescription(draft.description);
     setMerchant(draft.merchant);
     setOccurredAtText(toDateInputValue(new Date(draft.occurredAt)));
-  }, [catalog, draft, open]);
+    setWalletId(
+      defaultWalletId ??
+        walletOptions[0]?.id ??
+        "",
+    );
+  }, [catalog, draft, defaultWalletId, open, walletOptions]);
 
   const categoryOptions = useMemo(
     () => getMentionOptions(type),
@@ -128,6 +140,7 @@ export function ReceiptConfirmDialog({
         description: description.trim(),
         merchant: merchant.trim(),
         occurredAt,
+        walletId,
       });
     });
   }
@@ -274,6 +287,37 @@ export function ReceiptConfirmDialog({
               />
             </FormDialogField>
 
+            {walletOptions.length > 0 ? (
+              <FormDialogField label={UI_LABEL_WALLET} htmlFor="receipt-wallet">
+                <Select
+                  value={walletId}
+                  onValueChange={(value) => {
+                    if (value) {
+                      setWalletId(value);
+                    }
+                  }}
+                >
+                  <SelectTrigger
+                    id="receipt-wallet"
+                    className={cn(FORM_FIELD_SELECT, PLANNER_SELECT_TRIGGER)}
+                  >
+                    <SelectValue placeholder="Pilih wallet" />
+                  </SelectTrigger>
+                  <SelectContent className={PLANNER_SELECT_CONTENT}>
+                    {walletOptions.map((option) => (
+                      <SelectItem
+                        key={option.id}
+                        value={option.id}
+                        className={PLANNER_SELECT_ITEM}
+                      >
+                        {option.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FormDialogField>
+            ) : null}
+
             <FormDialogField label="Kategori" htmlFor="receipt-category">
               <Select
                 value={category}
@@ -324,7 +368,7 @@ export function ReceiptConfirmDialog({
         <Button
           type="button"
           onClick={handleConfirm}
-          disabled={isPending || !description.trim() || previewAmount <= 0}
+          disabled={isPending || !description.trim() || previewAmount <= 0 || !walletId}
         >
           {isPending
             ? "Menyimpan..."

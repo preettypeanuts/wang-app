@@ -15,6 +15,15 @@ export function isTransferTransactionType(type: string): type is "transfer" {
   return type === "transfer";
 }
 
+export function isAdjustmentTransactionType(type: string): type is "adjustment" {
+  return type === "adjustment";
+}
+
+/** Non-flow wallet ledger rows — excluded from income/expense aggregates. */
+export function isWalletLedgerTransactionType(type: string): boolean {
+  return isTransferTransactionType(type) || isAdjustmentTransactionType(type);
+}
+
 /** Prisma filter: use on queries that must not include transfer rows. */
 export function flowTransactionTypesWhere(): Pick<
   Prisma.TransactionWhereInput,

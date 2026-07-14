@@ -13,6 +13,8 @@ import {
   submitInboxChatFailure,
   submitInboxChatTransaction,
 } from "@/lib/db/inbox-submit";
+import { prisma } from "@/lib/db/prisma";
+import { ensureDefaultWallet, getDefaultWalletId } from "@/lib/db/wallets";
 import { assertFlowTransactionType } from "@/lib/db/transaction-flow-filter";
 import { updateJournalTransaction } from "@/lib/db/journal";
 import { isReceiptMimeType } from "@/lib/receipt/image-file";
@@ -63,6 +65,7 @@ export async function submitInboxMessageFromReceipt(input: {
   description: string;
   merchant: string;
   occurredAt: string;
+  walletId?: string;
 }): Promise<SubmitInboxMessageResult> {
   const userId = await requireUserId();
   const parsed = parseConfirmedReceiptTransaction(input);
@@ -78,6 +81,10 @@ export async function submitInboxMessageFromReceipt(input: {
   );
 
   try {
+    await ensureDefaultWallet(userId);
+    const walletId =
+      input.walletId?.trim() || (await getDefaultWalletId(userId));
+
     const transaction = {
       type: data.type,
       amount: data.amount,
@@ -99,6 +106,7 @@ export async function submitInboxMessageFromReceipt(input: {
         userContent,
         transaction,
         assistantContent: content,
+        walletId,
       });
 
     revalidateAfterTransactionMutation(userId);
@@ -161,6 +169,7 @@ export async function updateInboxMessageFromReceipt(input: {
   description: string;
   merchant: string;
   occurredAt: string;
+  walletId?: string;
 }): Promise<UpdateInboxMessageFromReceiptResult> {
   const userId = await requireUserId();
   const parsed = parseConfirmedReceiptTransaction(input);
@@ -184,6 +193,13 @@ export async function updateInboxMessageFromReceipt(input: {
       rawInput: data.rawInput,
       occurredAt: new Date(data.occurredAt),
     });
+
+    if (input.walletId?.trim()) {
+      await prisma.transaction.updateMany({
+        where: { id: input.transactionId, userId },
+        data: { walletId: input.walletId.trim() },
+      });
+    }
 
     const transaction: ParsedTransaction = {
       id: entry.id,

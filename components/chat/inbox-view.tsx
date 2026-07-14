@@ -16,17 +16,14 @@ import {
   submitInboxMessageFromReceipt,
   updateInboxMessageFromReceipt,
 } from "@/app/actions/receipt";
+import { correctInboxTransactionWalletAction } from "@/app/actions/wallets";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatReceiptDropOverlay } from "@/components/chat/chat-receipt-drop-overlay";
 import { MessageList } from "@/components/chat/message-list";
 import { ReceiptConfirmDialog } from "@/components/chat/receipt-confirm-dialog";
+import { useOptionalUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
 import { FixedViewportPortal } from "@/components/shared/fixed-viewport-portal";
 import { usePersistentTabActive } from "@/components/shared/persistent-tab-active-context";
-import { useOptionalUserCategoryCatalog } from "@/components/providers/user-category-catalog-provider";
-import {
-  mergeUserCategoryCatalog,
-  resolveCategoryForTransaction,
-} from "@/lib/finance/user-category-catalog";
 import { CHAT_INPUT_DOCK } from "@/config/chat-layout";
 import { INBOX_CHAT_VIEW_ROOT } from "@/config/inbox-desktop";
 import { INBOX_CHAT_INPUT_DOCK } from "@/config/inbox-mobile";
@@ -41,15 +38,15 @@ import {
   isPendingChatMessage,
   preserveChatMountKey,
 } from "@/lib/chat/optimistic-chat-message";
+import {
+  mergeUserCategoryCatalog,
+  resolveCategoryForTransaction,
+} from "@/lib/finance/user-category-catalog";
 import { patchInboxBootstrapMessages } from "@/lib/inbox/inbox-bootstrap-cache";
 import {
   mergeInboxMessageTail,
   prependOlderInboxMessages,
 } from "@/lib/inbox/merge-inbox-messages";
-import {
-  buildReceiptDraftFromTransaction,
-  parseReceiptUserMessageContent,
-} from "@/lib/receipt/receipt-message";
 import { createEmptyReceiptDraft } from "@/lib/receipt/create-empty-receipt-draft";
 import {
   getReceiptImageFromDataTransfer,
@@ -59,6 +56,10 @@ import {
   processReceiptImageFile,
   ReceiptImageError,
 } from "@/lib/receipt/process-receipt-image";
+import {
+  buildReceiptDraftFromTransaction,
+  parseReceiptUserMessageContent,
+} from "@/lib/receipt/receipt-message";
 import type {
   ActivePlanChatItem,
   ActiveSavingsChatItem,
@@ -66,7 +67,10 @@ import type {
   UnpaidPayPlanChatItem,
 } from "@/types/chat";
 import type { ReceiptDraft } from "@/types/receipt";
-import type { FlowTransactionType, ParsedTransaction } from "@/types/transaction";
+import type {
+  FlowTransactionType,
+  ParsedTransaction,
+} from "@/types/transaction";
 
 interface ReceiptEditContext {
   userMessageId: string;
@@ -81,6 +85,12 @@ interface ReceiptConfirmInput {
   description: string;
   merchant: string;
   occurredAt: string;
+  walletId: string;
+}
+
+export interface InboxWalletPickerOption {
+  id: string;
+  name: string;
 }
 
 interface InboxViewProps {
@@ -89,6 +99,8 @@ interface InboxViewProps {
   unpaidPayPlanItems: UnpaidPayPlanChatItem[];
   activePlanItems: ActivePlanChatItem[];
   activeSavingsItems: ActiveSavingsChatItem[];
+  defaultWalletId?: string | null;
+  walletOptions?: InboxWalletPickerOption[];
   fixedMobileTopBar?: boolean;
   onSlashMenuOpenChange?: (open: boolean) => void;
   onTransactionRecorded?: (
@@ -110,6 +122,8 @@ export function InboxView({
   unpaidPayPlanItems,
   activePlanItems,
   activeSavingsItems,
+  defaultWalletId = null,
+  walletOptions = [],
   fixedMobileTopBar = false,
   onSlashMenuOpenChange,
   onTransactionRecorded,
@@ -230,7 +244,9 @@ export function InboxView({
   }
 
   function openReceiptEdit(userMessageId: string) {
-    const userIndex = messages.findIndex((message) => message.id === userMessageId);
+    const userIndex = messages.findIndex(
+      (message) => message.id === userMessageId,
+    );
     const userMessage = messages[userIndex];
     const assistantMessage = messages[userIndex + 1];
 
@@ -370,6 +386,7 @@ export function InboxView({
           description: result.draft.description,
           merchant: result.draft.merchant,
           occurredAt: result.draft.occurredAt,
+          walletId: defaultWalletId ?? walletOptions[0]?.id ?? "",
         },
         { excludeMessageIds: [readingMessageId], skipOptimisticUser: true },
       );
@@ -719,6 +736,35 @@ export function InboxView({
     }
   }
 
+  async function handleWalletCorrect(input: {
+    assistantMessageId: string;
+    walletId: string;
+  }) {
+    beginInFlight();
+
+    try {
+      const result = await correctInboxTransactionWalletAction(input);
+
+      if (!result.ok) {
+        return;
+      }
+
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === input.assistantMessageId
+            ? {
+                ...message,
+                walletCandidates: undefined,
+                content: result.assistantContent,
+              }
+            : message,
+        ),
+      );
+    } finally {
+      endInFlight();
+    }
+  }
+
   async function handlePayPlan(item: UnpaidPayPlanChatItem) {
     const isIncome = item.flowType === "income";
     const {
@@ -892,6 +938,7 @@ export function InboxView({
         onUndoMessage={handleUndoMessage}
         onEditReceipt={openReceiptEdit}
         onQuickCorrect={handleQuickCorrect}
+        onWalletCorrect={handleWalletCorrect}
         actionsDisabled={isProcessing}
       />
       <ChatReceiptDropOverlay visible={isDraggingReceipt} />
@@ -907,6 +954,8 @@ export function InboxView({
         previewUrl={receiptPreviewUrl}
         notice={receiptParseNotice}
         mode={receiptEditContext ? "edit" : "create"}
+        defaultWalletId={defaultWalletId}
+        walletOptions={walletOptions}
         onOpenChange={(open) => {
           if (!open) {
             closeReceiptConfirm();
