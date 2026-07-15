@@ -119,7 +119,11 @@ export type Icon = React.ForwardRefExoticComponent<
   IconProps & React.RefAttributes<SVGSVGElement>
 >;
 
-function createSFIcon(symbol: IconDefinition, displayName: string): Icon {
+function createSFIcon(
+  symbol: IconDefinition,
+  displayName: string,
+  defaultProps?: Partial<IconProps>,
+): Icon {
   const IconComponent = forwardRef<SVGSVGElement, IconProps>(
     function IconComponent({ className, size, ...props }, ref) {
       return (
@@ -128,6 +132,7 @@ function createSFIcon(symbol: IconDefinition, displayName: string): Icon {
           icon={symbol}
           size={size ?? SF_ICON_SIZE}
           className={cn("shrink-0", className)}
+          {...defaultProps}
           {...props}
         />
       );
@@ -275,7 +280,7 @@ export const GraduationCapIcon = createSFIcon(
   sfGraduationcapFill,
   "GraduationCapIcon",
 );
-export const HouseIcon = createSFIcon(sfHouseFill, "HouseIcon");
+export const HouseIcon = createSFIcon(sfHouseFill, "HouseIcon", { fillOpacity: 1 });
 export const LaptopIcon = createSFIcon(sfLaptopcomputer, "LaptopIcon");
 export const LeafIcon = createSFIcon(sfLeafFill, "LeafIcon");
 export const MusicNoteIcon = createSFIcon(sfMusicNote, "MusicNoteIcon");
@@ -308,10 +313,6 @@ export const WineGlassIcon = createSFIcon(sfWineglassFill, "WineGlassIcon");
 export const WrenchIcon = createSFIcon(sfWrenchAdjustableFill, "WrenchIcon");
 
 /** Filled SF Symbols for mobile bottom nav (iOS liquid glass). */
-export const MobileNavOverviewIcon = createSFIcon(
-  sfSquareGrid2x2Fill,
-  "MobileNavOverviewIcon",
-);
 export const MobileNavInboxIcon = createSFIcon(
   sfBubbleLeftAndBubbleRightFill,
   "MobileNavInboxIcon",

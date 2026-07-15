@@ -56,7 +56,7 @@ export function TodaySummaryPanel({
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 flex-col overflow-hidden",
+        "flex h-full min-h-0 flex-col",
         !embedded && SEPARATED_SHELL,
         !embedded && GLASS_SURFACE,
       )}

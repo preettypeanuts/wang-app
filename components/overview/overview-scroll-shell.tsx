@@ -1,5 +1,6 @@
 import { OverviewPageShell } from "@/components/overview/overview-page-shell";
 import { MobileScrollSurface } from "@/components/shared/mobile-scroll-surface";
+import { HOME_PAGE_TITLE } from "@/config/navigation";
 import { OVERVIEW_DESKTOP_SCROLL_INNER } from "@/config/overview-desktop";
 import { OVERVIEW_MOBILE_PAGE_TITLE } from "@/config/overview-mobile";
 import {
@@ -20,7 +21,7 @@ export function OverviewScrollShell({ children }: OverviewScrollShellProps) {
       <div className={OVERVIEW_PAGE_ROOT}>
         <MobileScrollSurface
           className={OVERVIEW_PAGE_SCROLL}
-          title="Overview"
+          title={HOME_PAGE_TITLE}
           titleClassName={OVERVIEW_MOBILE_PAGE_TITLE}
         >
           <div

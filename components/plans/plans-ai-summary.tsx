@@ -71,18 +71,21 @@ export function PlansAiSummary({ overview }: PlansAiSummaryProps) {
     <div className={PLANS_AI_SUMMARY_SHELL}>
       <div
         aria-hidden
-        className={cn(
-          "pointer-events-none absolute -right-8 -top-20 size-36 rounded-full blur-3xl opacity-70",
-          style.glowOrb,
-        )}
-      />
-      <div
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute -bottom-12 -left-8 size-28 rounded-full blur-3xl opacity-60",
-          style.secondaryOrb,
-        )}
-      />
+        className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]"
+      >
+        <div
+          className={cn(
+            "absolute -right-8 -top-20 size-36 rounded-full blur-3xl opacity-70",
+            style.glowOrb,
+          )}
+        />
+        <div
+          className={cn(
+            "absolute -bottom-12 -left-8 size-28 rounded-full blur-3xl opacity-60",
+            style.secondaryOrb,
+          )}
+        />
+      </div>
 
       <div className="relative flex h-full flex-col p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">

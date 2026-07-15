@@ -4,10 +4,11 @@ import {
   BellIcon,
   HeartIcon,
   NotebookIcon,
-  SquaresFourIcon,
   WalletIcon,
   type Icon,
 } from "@/lib/icons";
+
+import { HomeNavIcon } from "@/components/shared/home-nav-icon";
 
 import {
   SIDEBAR_APP_ICON_GRADIENTS,
@@ -25,6 +26,9 @@ export const NOTIFICATIONS_ROUTE = "/notifications";
 export const WISH_PAGE_TITLE = "Wish";
 export const SAVINGS_PAGE_TITLE = "Savings";
 
+/** User-facing label for `/overview` — internal route unchanged. */
+export const HOME_PAGE_TITLE = "Home";
+
 export interface NavItem {
   title: string;
   href: string;
@@ -34,9 +38,9 @@ export interface NavItem {
 
 export const mainNavItems: NavItem[] = [
   {
-    title: "Overview",
+    title: HOME_PAGE_TITLE,
     href: OVERVIEW_ROUTE,
-    icon: SquaresFourIcon,
+    icon: HomeNavIcon,
     gradient: SIDEBAR_APP_ICON_GRADIENTS.overview,
   },
   {

@@ -4,7 +4,7 @@ import type { FinanceCondition } from "@/types/summary";
 
 export const FINANCE_REFLECTION_RADIUS = "rounded-2xl";
 
-export const FINANCE_REFLECTION_SHELL = `relative isolate overflow-hidden ${SEPARATED_SURFACE}`;
+export const FINANCE_REFLECTION_SHELL = `relative isolate overflow-hidden!  ${SEPARATED_SURFACE}`;
 
 export const FINANCE_REFLECTION_CONTENT =
   "relative z-10 flex flex-col px-4 pt-4 pb-5";

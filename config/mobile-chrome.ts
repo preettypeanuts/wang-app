@@ -2,6 +2,7 @@ import { MOBILE_SAFE_HORIZONTAL_INSET } from "@/config/ios-safe-area";
 import { mobileOnly } from "@/config/mobile-layout";
 import { MOBILE_LIQUID_GLASS_SURFACE } from "@/config/mobile-nav";
 import {
+  HOME_PAGE_TITLE,
   OVERVIEW_ROUTE,
   NOTIFICATIONS_ROUTE,
   PAYPLAN_ROUTE,
@@ -70,7 +71,7 @@ export const MOBILE_NATIVE_SHELL = [
 
 const MOBILE_PAGE_TITLES: Record<string, string> = {
   "/": "Inbox",
-  [OVERVIEW_ROUTE]: "Overview",
+  [OVERVIEW_ROUTE]: HOME_PAGE_TITLE,
   "/journal": "Journal",
   [PAYPLAN_ROUTE]: "PayPlan",
   [PLANS_ROUTE]: WISH_PAGE_TITLE,

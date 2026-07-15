@@ -12,12 +12,12 @@ import { SIDEBAR_APP_ICON_GRADIENTS } from "@/config/sidebar";
 import { GRID_GAP } from "@/config/spacing";
 import { NOTIFICATIONS_PAGE_TITLE } from "@/config/ui-labels";
 import type { Icon } from "@/lib/icons";
+import { HomeNavIcon } from "@/components/shared/home-nav-icon";
 import {
   BellIcon,
   ChartBarIcon,
   MobileNavInboxIcon,
   MobileNavJournalIcon,
-  MobileNavOverviewIcon,
   MobileNavPayPlanIcon,
   MobileNavWishIcon,
   WalletIcon,
@@ -174,7 +174,7 @@ export interface MobileBottomNavItem {
 }
 
 const MOBILE_BOTTOM_NAV_ICON_BY_HREF: Record<string, Icon> = {
-  [OVERVIEW_ROUTE]: MobileNavOverviewIcon,
+  [OVERVIEW_ROUTE]: HomeNavIcon,
   [PLANS_ROUTE]: MobileNavWishIcon,
   "/journal": MobileNavJournalIcon,
   [PAYPLAN_ROUTE]: MobileNavPayPlanIcon,
