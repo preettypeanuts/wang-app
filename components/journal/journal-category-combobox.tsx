@@ -138,6 +138,7 @@ export function JournalCategoryCombobox({
 
   const optionList = (
     <JournalCategoryOptionList
+      className={useNestedDrawer ? "min-h-0 flex-1" : undefined}
       closeOnSelect={useNestedDrawer}
       options={filteredOptions}
       selectedId={value}
@@ -147,7 +148,7 @@ export function JournalCategoryCombobox({
       type={type}
       listClassName={
         useNestedDrawer
-          ? "max-h-[min(48dvh,24rem)]"
+          ? "min-h-0 flex-1"
           : isMobile
             ? "max-h-[min(52dvh,28rem)]"
             : "max-h-72"
@@ -172,7 +173,6 @@ export function JournalCategoryCombobox({
     return (
       <NestedDrawer
         className={PICKER_NESTED_DRAWER_SURFACE}
-        open={open}
         onOpenChange={handleOpenChange}
         title={CATEGORY_PICKER_TITLE}
         trigger={trigger}
@@ -183,7 +183,9 @@ export function JournalCategoryCombobox({
           </div>
           <h2 className={SETTINGS_IOS_SUB_TITLE}>{CATEGORY_PICKER_TITLE}</h2>
         </header>
-        {optionList}
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden pb-[calc(1rem+var(--mobile-safe-bottom))]">
+          {optionList}
+        </div>
       </NestedDrawer>
     );
   }

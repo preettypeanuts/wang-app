@@ -62,7 +62,6 @@ export function UserCategoryCatalogProvider({
 
   const refreshCatalog = useCallback(async () => {
     if (!userId) {
-      setCatalog([]);
       setLoading(false);
       return;
     }
@@ -71,6 +70,8 @@ export function UserCategoryCatalogProvider({
     try {
       const nextCatalog = await fetchUserCategoryCatalogAction();
       setCatalog(nextCatalog);
+    } catch {
+      setCatalog(mergeUserCategoryCatalog([]));
     } finally {
       setLoading(false);
     }
