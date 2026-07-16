@@ -14,6 +14,7 @@ export interface WalletTransferInput {
   toWalletId: string;
   amount: number;
   note: string;
+  adminFeeAmount: number;
 }
 
 /**
@@ -80,6 +81,21 @@ export async function createWalletTransfer(
         },
       ],
     });
+
+    if (input.adminFeeAmount > 0) {
+      await tx.transaction.create({
+        data: {
+          userId,
+          type: "expense",
+          amount: input.adminFeeAmount,
+          category: "fees",
+          description: `Biaya admin transfer ke ${toWallet.name}`,
+          rawInput: `${rawInput} [transfer-admin-fee:${transferPairId}]`,
+          occurredAt,
+          walletId: fromWallet.id,
+        },
+      });
+    }
   });
 
   revalidateAfterTransactionMutation(userId);

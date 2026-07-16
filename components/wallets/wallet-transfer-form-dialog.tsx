@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 
 import { createWalletTransferAction } from "@/app/actions/wallets";
-import { JournalWalletPicker } from "@/components/journal/journal-wallet-picker";
+import { AmountTextInput } from "@/components/shared/amount-text-input";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
 import {
   ResponsiveDialog,
@@ -16,6 +16,8 @@ import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { InsufficientWalletBalancePanel } from "@/components/wallets/insufficient-wallet-balance-panel";
+import { WalletTransferAdminFeeField } from "@/components/wallets/wallet-transfer-admin-fee-field";
+import { WalletTransferWalletPicker } from "@/components/wallets/wallet-transfer-wallet-picker";
 import {
   FORM_DIALOG_BODY_SCROLL,
   FORM_FIELD_INPUT,
@@ -35,6 +37,7 @@ import {
   WALLET_TRANSFER_TITLE,
   WALLET_TRANSFER_TO,
 } from "@/config/wallet-labels";
+import { isWalletTransferAdminFeePreset } from "@/config/wallet-transfer-admin-fee";
 import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
 import { useProtectedCurrency } from "@/hooks/use-protected-currency";
 import {
@@ -42,6 +45,14 @@ import {
   isInsufficientWalletBalance,
 } from "@/lib/finance/compute-wallet-balance";
 import { parseAmount } from "@/lib/finance/parse-amount";
+import {
+  computeTransferTotalDebit,
+  shouldShowTransferAdminFee,
+} from "@/lib/wallets/transfer-admin-fee";
+import {
+  readTransferPattern,
+  writeTransferPattern,
+} from "@/lib/wallets/transfer-pattern-storage";
 import { cn } from "@/lib/utils";
 import type { WalletWithBalance } from "@/types/wallet";
 
@@ -49,6 +60,50 @@ interface WalletTransferFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   wallets: WalletWithBalance[];
+}
+
+function parseFormAmount(raw: FormDataEntryValue | null): number {
+  if (typeof raw !== "string") {
+    return 0;
+  }
+
+  return (
+    parseAmount(raw) ??
+    (Number.parseInt(raw.replace(/\D/g, ""), 10) || 0)
+  );
+}
+
+function applySavedPattern(input: {
+  setAmount: (value: string) => void;
+  setAdminFeeEnabled: (value: boolean) => void;
+  setAdminFeeAmount: (value: string) => void;
+  setAdminFeeUseCustom: (value: boolean) => void;
+  fromWalletId: string;
+  toWalletId: string;
+}) {
+  const pattern = readTransferPattern(input.fromWalletId, input.toWalletId);
+
+  if (!pattern) {
+    input.setAmount("");
+    input.setAdminFeeEnabled(false);
+    input.setAdminFeeAmount("");
+    input.setAdminFeeUseCustom(false);
+    return;
+  }
+
+  input.setAmount(pattern.amount > 0 ? String(pattern.amount) : "");
+  input.setAdminFeeEnabled(pattern.adminFeeEnabled);
+
+  if (pattern.adminFeeEnabled && pattern.adminFeeAmount > 0) {
+    input.setAdminFeeAmount(String(pattern.adminFeeAmount));
+    input.setAdminFeeUseCustom(
+      !isWalletTransferAdminFeePreset(pattern.adminFeeAmount),
+    );
+    return;
+  }
+
+  input.setAdminFeeAmount("");
+  input.setAdminFeeUseCustom(false);
 }
 
 export function WalletTransferFormDialog({
@@ -64,6 +119,9 @@ export function WalletTransferFormDialog({
   const [toWalletId, setToWalletId] = useState("");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [adminFeeEnabled, setAdminFeeEnabled] = useState(false);
+  const [adminFeeAmount, setAdminFeeAmount] = useState("");
+  const [adminFeeUseCustom, setAdminFeeUseCustom] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmInsufficient, setConfirmInsufficient] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
@@ -75,15 +133,35 @@ export function WalletTransferFormDialog({
 
     setFromWalletId(wallets[0].id);
     setToWalletId(wallets[1].id);
-    setAmount("");
     setNote("");
     setError(null);
     setConfirmInsufficient(false);
     setPendingFormData(null);
   }, [open, wallets]);
 
+  useEffect(() => {
+    if (!open || !fromWalletId || !toWalletId || fromWalletId === toWalletId) {
+      return;
+    }
+
+    applySavedPattern({
+      setAmount,
+      setAdminFeeEnabled,
+      setAdminFeeAmount,
+      setAdminFeeUseCustom,
+      fromWalletId,
+      toWalletId,
+    });
+  }, [open, fromWalletId, toWalletId]);
+
   const walletPickerOptions = useMemo(
-    () => wallets.map((wallet) => ({ id: wallet.id, name: wallet.name })),
+    () =>
+      wallets.map((wallet) => ({
+        id: wallet.id,
+        name: wallet.name,
+        type: wallet.type,
+        icon: wallet.icon,
+      })),
     [wallets],
   );
 
@@ -92,26 +170,40 @@ export function WalletTransferFormDialog({
     [fromWalletId, wallets],
   );
 
+  const toWallet = useMemo(
+    () => wallets.find((wallet) => wallet.id === toWalletId),
+    [toWalletId, wallets],
+  );
+
+  const showAdminFeeField = useMemo(() => {
+    if (!fromWallet || !toWallet) {
+      return false;
+    }
+
+    return shouldShowTransferAdminFee(fromWallet.type, toWallet.type);
+  }, [fromWallet, toWallet]);
+
   const insufficientMessage = useMemo(() => {
     if (!fromWallet || !pendingFormData) {
       return "";
     }
 
-    const amountRaw = pendingFormData.get("amount");
-    const parsed =
-      typeof amountRaw === "string"
-        ? (parseAmount(amountRaw) ??
-          (Number.parseInt(amountRaw.replace(/\D/g, ""), 10) || 0))
-        : 0;
+    const parsedAmount = parseFormAmount(pendingFormData.get("amount"));
+    const adminFeeRaw = pendingFormData.get("adminFeeEnabled");
+    const adminFeeEnabledInForm = adminFeeRaw === "on";
+    const parsedAdminFee = adminFeeEnabledInForm
+      ? parseFormAmount(pendingFormData.get("adminFeeAmount"))
+      : 0;
+    const totalDebit = computeTransferTotalDebit(parsedAmount, parsedAdminFee);
 
-    if (parsed <= 0) {
+    if (totalDebit <= 0) {
       return "";
     }
 
     return buildInsufficientWalletBalanceMessage({
       walletName: fromWallet.name,
       balanceLabel: formatAmount(fromWallet.balance),
-      amountLabel: formatAmount(parsed),
+      amountLabel: formatAmount(totalDebit),
       context: "transfer",
     });
   }, [formatAmount, fromWallet, pendingFormData]);
@@ -126,6 +218,18 @@ export function WalletTransferFormDialog({
         return;
       }
 
+      const parsedAmount = parseFormAmount(formData.get("amount"));
+      const adminFeeEnabledInForm = formData.get("adminFeeEnabled") === "on";
+      const parsedAdminFee = adminFeeEnabledInForm
+        ? parseFormAmount(formData.get("adminFeeAmount"))
+        : 0;
+
+      writeTransferPattern(fromWalletId, toWalletId, {
+        amount: parsedAmount,
+        adminFeeEnabled: adminFeeEnabledInForm && parsedAdminFee > 0,
+        adminFeeAmount: parsedAdminFee,
+      });
+
       onOpenChange(false);
       router.refresh();
     });
@@ -136,18 +240,17 @@ export function WalletTransferFormDialog({
     setError(null);
 
     const formData = new FormData(event.currentTarget);
-    const amountRaw = formData.get("amount");
-    const parsed =
-      typeof amountRaw === "string"
-        ? (parseAmount(amountRaw) ??
-          (Number.parseInt(amountRaw.replace(/\D/g, ""), 10) || null))
-        : null;
+    const parsedAmount = parseFormAmount(formData.get("amount"));
+    const adminFeeEnabledInForm = formData.get("adminFeeEnabled") === "on";
+    const parsedAdminFee = adminFeeEnabledInForm
+      ? parseFormAmount(formData.get("adminFeeAmount"))
+      : 0;
+    const totalDebit = computeTransferTotalDebit(parsedAmount, parsedAdminFee);
 
     if (
       fromWallet &&
-      parsed !== null &&
-      parsed > 0 &&
-      isInsufficientWalletBalance(fromWallet.balance, parsed)
+      totalDebit > 0 &&
+      isInsufficientWalletBalance(fromWallet.balance, totalDebit)
     ) {
       setPendingFormData(formData);
       setConfirmInsufficient(true);
@@ -164,6 +267,29 @@ export function WalletTransferFormDialog({
 
     executeTransfer(pendingFormData);
   }
+
+  function handleAdminFeeEnabledChange(enabled: boolean) {
+    setAdminFeeEnabled(enabled);
+    if (!enabled) {
+      setAdminFeeAmount("");
+      setAdminFeeUseCustom(false);
+    }
+  }
+
+  function handleAdminFeePresetSelect(presetAmount: number) {
+    setAdminFeeUseCustom(false);
+    setAdminFeeAmount(String(presetAmount));
+  }
+
+  const parsedAdminFee =
+    Number.parseInt(adminFeeAmount.replace(/\D/g, ""), 10) || 0;
+  const adminFeeMissing =
+    showAdminFeeField && adminFeeEnabled && parsedAdminFee <= 0;
+  const adminFeeInvalid =
+    showAdminFeeField &&
+    adminFeeEnabled &&
+    adminFeeUseCustom &&
+    adminFeeAmount.trim().length === 0;
 
   return (
     <ResponsiveDialog
@@ -208,7 +334,7 @@ export function WalletTransferFormDialog({
 
             <div className={FORM_GROUP}>
               <FormDialogField label={WALLET_TRANSFER_FROM}>
-                <JournalWalletPicker
+                <WalletTransferWalletPicker
                   backLabel={WALLET_TRANSFER_TITLE}
                   nestedInDrawer={isMobile}
                   onChange={setFromWalletId}
@@ -218,7 +344,7 @@ export function WalletTransferFormDialog({
               </FormDialogField>
 
               <FormDialogField label={WALLET_TRANSFER_TO}>
-                <JournalWalletPicker
+                <WalletTransferWalletPicker
                   backLabel={WALLET_TRANSFER_TITLE}
                   nestedInDrawer={isMobile}
                   onChange={setToWalletId}
@@ -231,17 +357,32 @@ export function WalletTransferFormDialog({
                 label={WALLET_TRANSFER_AMOUNT}
                 htmlFor="wallet-transfer-amount"
               >
-                <Input
+                <AmountTextInput
                   id="wallet-transfer-amount"
                   name="amount"
                   value={amount}
                   onChange={(event) => setAmount(event.target.value)}
-                  placeholder="100000"
-                  inputMode="numeric"
+                  placeholder="0"
                   className={FORM_FIELD_INPUT}
                   required
                 />
               </FormDialogField>
+
+              {showAdminFeeField ? (
+                <WalletTransferAdminFeeField
+                  enabled={adminFeeEnabled}
+                  amount={adminFeeAmount}
+                  useCustomAmount={adminFeeUseCustom}
+                  onEnabledChange={handleAdminFeeEnabledChange}
+                  onPresetSelect={handleAdminFeePresetSelect}
+                  onCustomSelect={() => {
+                    setAdminFeeUseCustom(true);
+                    setAdminFeeAmount("");
+                  }}
+                  onAmountChange={setAdminFeeAmount}
+                  disabled={isPending}
+                />
+              ) : null}
 
               <FormDialogField
                 label={WALLET_TRANSFER_NOTE}
@@ -280,7 +421,9 @@ export function WalletTransferFormDialog({
                 !fromWalletId ||
                 !toWalletId ||
                 fromWalletId === toWalletId ||
-                amount.trim().length === 0
+                amount.trim().length === 0 ||
+                adminFeeInvalid ||
+                adminFeeMissing
               }
               className={cn(SEPARATED_CONTROL, "flex-1")}
             >
