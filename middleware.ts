@@ -24,6 +24,10 @@ function isPublicPath(pathname: string): boolean {
     return true;
   }
 
+  if (pathname.startsWith("/icons/fintech/")) {
+    return true;
+  }
+
   return false;
 }
 

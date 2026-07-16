@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { createWalletAdjustmentAction } from "@/app/actions/wallets";
+import { AmountTextInput } from "@/components/shared/amount-text-input";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
 import {
   ResponsiveDialog,
@@ -69,8 +70,7 @@ export function WalletAdjustFormDialog({
     return null;
   }
 
-  const parsedActual =
-    Number.parseInt(actualBalance.replace(/\D/g, ""), 10) || 0;
+  const parsedActual = Number.parseInt(actualBalance, 10) || 0;
   const diff = parsedActual - wallet.balance;
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -127,13 +127,12 @@ export function WalletAdjustFormDialog({
               label={WALLET_ADJUST_TARGET}
               htmlFor="wallet-adjust-actual"
             >
-              <Input
+              <AmountTextInput
                 id="wallet-adjust-actual"
                 name="actualBalance"
                 value={actualBalance}
                 onChange={(event) => setActualBalance(event.target.value)}
                 placeholder="0"
-                inputMode="numeric"
                 className={FORM_FIELD_INPUT}
                 required
               />

@@ -8,6 +8,7 @@ import {
   saveWalletAction,
   setDefaultWalletAction,
 } from "@/app/actions/wallets";
+import { AmountTextInput } from "@/components/shared/amount-text-input";
 import { FormDialogField } from "@/components/shared/form-dialog-field";
 import {
   ResponsiveDialog,
@@ -15,6 +16,9 @@ import {
   ResponsiveDialogFooter,
   ResponsiveDialogHeader,
 } from "@/components/shared/responsive-dialog";
+import { WalletAdminFeeFields } from "@/components/wallets/wallet-admin-fee-fields";
+import { WalletInstitutionPicker } from "@/components/wallets/wallet-institution-picker";
+import { WalletTypePicker } from "@/components/wallets/wallet-type-picker";
 import { Button } from "@/components/ui/button";
 import { DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -41,10 +45,11 @@ import {
   WALLET_FORM_TITLE_EDIT,
   WALLET_FORM_TITLE_NEW,
   WALLET_FORM_TYPE,
-  WALLET_TYPE_LABELS,
-  WALLET_TYPE_ORDER,
+  WALLET_INSTITUTION_PICKER_LABEL,
 } from "@/config/wallet-labels";
 import { cn } from "@/lib/utils";
+import { useIsMobileViewport } from "@/hooks/use-is-mobile-viewport";
+import type { WalletInstitutionOption } from "@/lib/wallets/build-wallet-institution-catalog";
 import type { WalletRecord, WalletType } from "@/types/wallet";
 
 export type WalletFormMode =
@@ -63,10 +68,15 @@ export function WalletFormDialog({
   onOpenChange,
 }: WalletFormDialogProps) {
   const router = useRouter();
+  const isMobile = useIsMobileViewport();
   const [isPending, startTransition] = useTransition();
   const [name, setName] = useState("");
-  const [type, setType] = useState<WalletType>("cash");
+  const [type, setType] = useState<WalletType>("ewallet");
+  const [icon, setIcon] = useState<string | null>(null);
   const [initialBalance, setInitialBalance] = useState("");
+  const [adminFeeEnabled, setAdminFeeEnabled] = useState(false);
+  const [adminFeeAmount, setAdminFeeAmount] = useState("");
+  const [adminFeeDay, setAdminFeeDay] = useState("1");
   const [error, setError] = useState<string | null>(null);
   const [archiveNotice, setArchiveNotice] = useState<string | null>(null);
   const [isArchiving, setIsArchiving] = useState(false);
@@ -79,15 +89,34 @@ export function WalletFormDialog({
 
     if (mode.kind === "new") {
       setName("");
-      setType("cash");
+      setType("ewallet");
+      setIcon(null);
       setInitialBalance("");
+      setAdminFeeEnabled(false);
+      setAdminFeeAmount("");
+      setAdminFeeDay("1");
     } else {
       setName(mode.wallet.name);
       setType(mode.wallet.type);
+      setIcon(mode.wallet.icon);
       setInitialBalance(
         mode.wallet.initialBalance > 0
           ? String(mode.wallet.initialBalance)
           : "",
+      );
+      const hasAdminFee =
+        mode.wallet.type === "bank" &&
+        mode.wallet.adminFeeAmount !== null &&
+        mode.wallet.adminFeeAmount > 0 &&
+        mode.wallet.adminFeeDay !== null;
+      setAdminFeeEnabled(hasAdminFee);
+      setAdminFeeAmount(
+        hasAdminFee ? String(mode.wallet.adminFeeAmount) : "",
+      );
+      setAdminFeeDay(
+        hasAdminFee && mode.wallet.adminFeeDay
+          ? String(mode.wallet.adminFeeDay)
+          : "1",
       );
     }
 
@@ -100,6 +129,20 @@ export function WalletFormDialog({
   const isEdit = mode?.kind === "edit";
   const title = isEdit ? WALLET_FORM_TITLE_EDIT : WALLET_FORM_TITLE_NEW;
   const showSetDefault = isEdit && mode.wallet.isDefault === false;
+  const showInstitutionPicker = type === "bank" || type === "ewallet";
+  const showAdminFeeFields = type === "bank";
+
+  function handleTypeChange(nextType: WalletType) {
+    setType(nextType);
+    if (nextType !== "bank" && nextType !== "ewallet") {
+      setIcon(null);
+    }
+  }
+
+  function handleInstitutionSelect(option: WalletInstitutionOption) {
+    setName(option.name);
+    setIcon(option.slug);
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -186,8 +229,28 @@ export function WalletFormDialog({
             <input type="hidden" name="id" value={mode.wallet.id} />
           ) : null}
           <input type="hidden" name="type" value={type} />
+          <input type="hidden" name="icon" value={icon ?? ""} />
 
           <div className={FORM_GROUP}>
+            <FormDialogField label={WALLET_FORM_TYPE}>
+              <WalletTypePicker value={type} onChange={handleTypeChange} />
+            </FormDialogField>
+
+            {showInstitutionPicker ? (
+              <FormDialogField label={WALLET_INSTITUTION_PICKER_LABEL}>
+                <WalletInstitutionPicker
+                  type={type}
+                  selectedSlug={icon}
+                  selectedName={name}
+                  onSelect={handleInstitutionSelect}
+                  nestedInDrawer={isMobile}
+                  backLabel={
+                    isEdit ? WALLET_FORM_TITLE_EDIT : WALLET_FORM_TITLE_NEW
+                  }
+                />
+              </FormDialogField>
+            ) : null}
+
             <FormDialogField label={WALLET_FORM_NAME} htmlFor="wallet-name">
               <Input
                 id="wallet-name"
@@ -201,46 +264,33 @@ export function WalletFormDialog({
               />
             </FormDialogField>
 
-            <FormDialogField label={WALLET_FORM_TYPE}>
-              <div
-                className="grid grid-cols-2 gap-2"
-                role="tablist"
-                aria-label={WALLET_FORM_TYPE}
-              >
-                {WALLET_TYPE_ORDER.map((walletType) => (
-                  <button
-                    key={walletType}
-                    type="button"
-                    role="tab"
-                    aria-selected={type === walletType}
-                    onClick={() => setType(walletType)}
-                    className={cn(
-                      "rounded-xl border px-3 py-2 text-sm font-medium transition-colors",
-                      type === walletType
-                        ? "border-primary/40 bg-primary/8 text-foreground"
-                        : "border-black/6 text-muted-foreground dark:border-white/8",
-                    )}
-                  >
-                    {WALLET_TYPE_LABELS[walletType]}
-                  </button>
-                ))}
-              </div>
-            </FormDialogField>
-
             <FormDialogField
               label={WALLET_FORM_INITIAL_BALANCE}
               htmlFor="wallet-initial-balance"
             >
-              <Input
+              <AmountTextInput
                 id="wallet-initial-balance"
                 name="initialBalance"
                 value={initialBalance}
                 onChange={(event) => setInitialBalance(event.target.value)}
                 placeholder="0"
-                inputMode="numeric"
                 className={FORM_FIELD_INPUT}
               />
             </FormDialogField>
+
+            {showAdminFeeFields ? (
+              <WalletAdminFeeFields
+                enabled={adminFeeEnabled}
+                amount={adminFeeAmount}
+                day={adminFeeDay}
+                onEnabledChange={setAdminFeeEnabled}
+                onAmountChange={setAdminFeeAmount}
+                onDayChange={setAdminFeeDay}
+                nestedInDrawer={isMobile}
+                backLabel={title}
+                disabled={isPending}
+              />
+            ) : null}
           </div>
 
           {showSetDefault ? (
@@ -302,7 +352,7 @@ export function WalletFormDialog({
           </Button>
           <Button
             type="submit"
-            disabled={isPending || name.trim().length === 0}
+            disabled={isPending || name.trim().length === 0 || (showAdminFeeFields && adminFeeEnabled && (!adminFeeAmount.trim() || !adminFeeDay))}
             className={cn(SEPARATED_CONTROL, "flex-1")}
           >
             {isPending && !isArchiving && !isSettingDefault

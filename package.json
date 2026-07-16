@@ -10,6 +10,7 @@
     "test": "vitest run",
     "format": "biome format --write",
     "pwa:icons": "node scripts/generate-pwa-icons.mjs",
+    "fintech:logos": "node scripts/sync-fintech-logos.mjs",
     "push:vapid": "node scripts/generate-vapid-keys.mjs",
     "postinstall": "prisma generate",
     "db:init": "node scripts/init-db.mjs",
