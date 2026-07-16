@@ -6,9 +6,11 @@ import {
   revalidateUserWallets,
 } from "@/lib/cache/revalidate-user-data";
 import { userDataTags } from "@/lib/cache/user-data-tags";
+import { endOfDay } from "@/lib/finance/day-range";
 import { prisma } from "@/lib/db/prisma";
 import { flowTransactionTypesWhere } from "@/lib/db/transaction-flow-filter";
 import { scopedByUser, scopedId } from "@/lib/db/user-scope";
+import { removeWalletAdminFeeOnArchive } from "@/lib/wallets/sync-wallet-admin-fee";
 import type { WalletFormInput, WalletRecord } from "@/types/wallet";
 
 export const DEFAULT_WALLET_NAME = "Dompet Utama";
@@ -34,17 +36,38 @@ function mapWallet(record: Wallet): WalletRecord {
     initialBalance: record.initialBalance,
     isDefault: record.isDefault,
     isArchived: record.isArchived,
+    adminFeeAmount: record.adminFeeAmount,
+    adminFeeDay: record.adminFeeDay,
     createdAt: record.createdAt.toISOString(),
   };
 }
 
-async function queryWallets(userId: string): Promise<WalletRecord[]> {
+async function queryWallets(
+  userId: string,
+  asOf?: Date,
+): Promise<WalletRecord[]> {
   const records = await prisma.wallet.findMany({
-    where: { userId, isArchived: false },
+    where: {
+      userId,
+      isArchived: false,
+      ...(asOf ? { createdAt: { lte: endOfDay(asOf) } } : {}),
+    },
     orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
   });
 
   return records.map(mapWallet);
+}
+
+/** Active wallets for balance queries — bypasses cache when `asOf` is set. */
+export async function listActiveWalletsForBalance(
+  userId: string,
+  asOf?: Date,
+): Promise<WalletRecord[]> {
+  if (!asOf) {
+    return listWallets(userId);
+  }
+
+  return queryWallets(userId, asOf);
 }
 
 /** Active (non-archived) wallets — archived ones stay referenced by old transactions but hidden from pickers. */
@@ -101,6 +124,7 @@ export async function createWallet(
       userId,
       name: input.name,
       type: input.type,
+      icon: input.icon ?? null,
       initialBalance: input.initialBalance,
       isDefault: isFirstWallet,
     },
@@ -127,6 +151,7 @@ export async function updateWallet(
     data: {
       name: input.name,
       type: input.type,
+      icon: input.icon ?? null,
       initialBalance: input.initialBalance,
     },
   });
@@ -194,6 +219,8 @@ export async function archiveWallet(userId: string, id: string): Promise<void> {
     where: { id: wallet.id },
     data: { isArchived: true, isDefault: false },
   });
+
+  await removeWalletAdminFeeOnArchive(userId, wallet.id);
 
   revalidateUserWallets(userId);
 }
@@ -320,6 +347,22 @@ export async function countUnassignedFlowTransactions(
       ...flowTransactionTypesWhere(),
     }),
   });
+}
+
+/**
+ * Assigns legacy flow rows to the default wallet so wallet totals match account
+ * history. Safe to call on every page load — no-op when nothing is unassigned.
+ */
+export async function ensureLegacyWalletTransactionsAssigned(
+  userId: string,
+): Promise<number> {
+  const unassigned = await countUnassignedFlowTransactions(userId);
+
+  if (unassigned === 0) {
+    return 0;
+  }
+
+  return assignUnassignedTransactionsToDefaultWallet(userId);
 }
 
 /** One-time style backfill — assigns legacy flow rows to the user's default wallet. */

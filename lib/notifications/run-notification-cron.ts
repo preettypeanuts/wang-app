@@ -12,12 +12,14 @@ import {
   isWebPushConfigured,
   sendWebPush,
 } from "@/lib/notifications/send-web-push";
+import { processWalletAdminFeesForUser } from "@/lib/wallets/process-wallet-admin-fees";
 
 export interface NotificationCronResult {
   usersProcessed: number;
   notificationsCreated: number;
   pushSent: number;
   pushFailed: number;
+  walletAdminFeesProcessed: number;
   errors: string[];
 }
 
@@ -32,7 +34,16 @@ async function listAllUserIds(): Promise<string[]> {
 async function processUserNotifications(
   userId: string,
   referenceDate: Date,
-): Promise<{ created: number; pushSent: number; pushFailed: number }> {
+): Promise<{
+  created: number;
+  pushSent: number;
+  pushFailed: number;
+  walletAdminFeesProcessed: number;
+}> {
+  const walletAdminFeesProcessed = await processWalletAdminFeesForUser(
+    userId,
+    referenceDate,
+  );
   const drafts = await buildUserNotificationDrafts(userId, referenceDate, {
     cron: true,
   });
@@ -74,7 +85,7 @@ async function processUserNotifications(
     }
   }
 
-  return { created, pushSent, pushFailed };
+  return { created, pushSent, pushFailed, walletAdminFeesProcessed };
 }
 
 export async function runNotificationCron(
@@ -89,6 +100,7 @@ export async function runNotificationCron(
     notificationsCreated: 0,
     pushSent: 0,
     pushFailed: 0,
+    walletAdminFeesProcessed: 0,
     errors: [],
   };
 
@@ -99,6 +111,7 @@ export async function runNotificationCron(
       result.notificationsCreated += summary.created;
       result.pushSent += summary.pushSent;
       result.pushFailed += summary.pushFailed;
+      result.walletAdminFeesProcessed += summary.walletAdminFeesProcessed;
     } catch (error) {
       result.errors.push(
         `${userId}: ${error instanceof Error ? error.message : "unknown error"}`,

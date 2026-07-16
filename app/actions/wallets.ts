@@ -23,7 +23,9 @@ import {
 import { parseWalletAdjustmentFormData } from "@/lib/validations/wallet-adjustment";
 import { parseWalletFormData } from "@/lib/validations/wallet";
 import { parseWalletTransferFormData } from "@/lib/validations/wallet-transfer";
-import { WALLETS_ROUTE } from "@/config/navigation";
+import { resolveWalletIconSlug } from "@/lib/wallets/resolve-wallet-icon-slug";
+import { syncWalletAdminFee } from "@/lib/wallets/sync-wallet-admin-fee";
+import { WALLETS_ROUTE, PAYPLAN_ROUTE } from "@/config/navigation";
 import type { WalletRecord, WalletType } from "@/types/wallet";
 
 interface WalletActionSuccess {
@@ -43,6 +45,7 @@ function revalidateWallets(userId: string) {
   revalidateUserWallets(userId);
   revalidatePath("/overview");
   revalidatePath(WALLETS_ROUTE);
+  revalidatePath(PAYPLAN_ROUTE);
   revalidatePath("/journal");
 }
 
@@ -132,10 +135,24 @@ export async function saveWalletAction(
   const id = formData.get("id");
 
   try {
+    const payload = {
+      ...parsed.data,
+      icon:
+        parsed.data.icon ??
+        resolveWalletIconSlug(parsed.data.name, parsed.data.type),
+    };
+
     const wallet =
       typeof id === "string" && id.trim()
-        ? await updateWallet(userId, id.trim(), parsed.data)
-        : await createWallet(userId, parsed.data);
+        ? await updateWallet(userId, id.trim(), payload)
+        : await createWallet(userId, payload);
+
+    await syncWalletAdminFee(userId, {
+      walletId: wallet.id,
+      walletName: wallet.name,
+      walletType: wallet.type,
+      adminFee: parsed.data.adminFee ?? null,
+    });
 
     revalidateWallets(userId);
     return { ok: true, wallet };

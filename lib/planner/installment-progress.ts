@@ -377,6 +377,7 @@ export function computeInstallmentScheduleFromAmounts(
     installmentCount,
     paidInstallmentCount: 0,
     note: null,
+    walletId: null,
   };
 
   const endAt = getInstallmentEndDate(scheduleItem);

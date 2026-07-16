@@ -67,6 +67,7 @@ export async function recordPlannedItemPayment(
       description: item.name,
       occurredAt: dueAt.toISOString(),
     },
+    walletId: item.walletId,
   });
 
   return true;

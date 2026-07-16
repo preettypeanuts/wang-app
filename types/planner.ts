@@ -36,6 +36,7 @@ export interface PlannedItemRecord {
   installmentCount: number | null;
   paidInstallmentCount: number;
   note: string | null;
+  walletId: string | null;
 }
 
 export interface PlannedOccurrence {

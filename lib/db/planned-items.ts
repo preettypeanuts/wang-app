@@ -36,6 +36,7 @@ const PLANNED_ITEM_SELECT = {
   installmentCount: true,
   paidInstallmentCount: true,
   note: true,
+  walletId: true,
 } as const;
 
 function mapPlannedItem(record: {
@@ -51,6 +52,7 @@ function mapPlannedItem(record: {
   installmentCount: number | null;
   paidInstallmentCount: number;
   note: string | null;
+  walletId: string | null;
 }): PlannedItemRecord {
   return {
     id: record.id,
@@ -65,6 +67,7 @@ function mapPlannedItem(record: {
     installmentCount: record.installmentCount,
     paidInstallmentCount: record.paidInstallmentCount,
     note: record.note,
+    walletId: record.walletId,
   };
 }
 

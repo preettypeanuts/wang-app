@@ -140,9 +140,12 @@ model Wallet {
   initialBalance Int          @default(0)
   isDefault      Boolean      @default(false)
   isArchived     Boolean      @default(false)
+  adminFeeAmount Int?
+  adminFeeDay    Int?
   createdAt      DateTime     @default(now())
   transactions   Transaction[]
   defaultForUsers User[]      @relation("UserDefaultWallet")
+  adminFeePlan   PlannedItem? @relation("WalletAdminFeePlan")
 
   @@index([userId])
   @@schema("monmon_whethertie")
@@ -235,6 +238,8 @@ model PlannedItem {
   paidInstallmentCount Int                   @default(0)
   note                 String?
   repeatNextMonth      Boolean               @default(false)
+  walletId             String?               @unique
+  wallet               Wallet?               @relation("WalletAdminFeePlan", fields: [walletId], references: [id], onDelete: Cascade)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
 
