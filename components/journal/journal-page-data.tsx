@@ -5,8 +5,14 @@ import {
   getJournalCategoryExpenseBreakdown,
   listJournalTransactions,
 } from "@/lib/db/journal";
-import { getWalletBalances } from "@/lib/db/wallet-balance";
-import { getDefaultWalletId } from "@/lib/db/wallets";
+import {
+  getWalletBalances,
+  queryWalletBalances,
+} from "@/lib/db/wallet-balance";
+import {
+  ensureLegacyWalletTransactionsAssigned,
+  getDefaultWalletId,
+} from "@/lib/db/wallets";
 import { resolveUserCategoryCatalog } from "@/lib/finance/resolve-user-categories";
 import { reconcileStaleTransactionCategories } from "@/lib/db/reconcile-transaction-categories";
 import { parseJournalSearchParams } from "@/lib/validations/journal";
@@ -21,12 +27,13 @@ export async function JournalPageData({ searchParams }: JournalPageDataProps) {
   const catalog = await resolveUserCategoryCatalog(userId);
   await reconcileStaleTransactionCategories(userId);
   const filters = parseJournalSearchParams(params, catalog);
+  const assigned = await ensureLegacyWalletTransactionsAssigned(userId);
   const [result, daySummary, categoryBreakdown, wallets, defaultWalletId] =
     await Promise.all([
       listJournalTransactions(userId, filters),
       getJournalFilteredSummary(userId, filters),
       getJournalCategoryExpenseBreakdown(userId, filters),
-      getWalletBalances(userId),
+      assigned > 0 ? queryWalletBalances(userId) : getWalletBalances(userId),
       getDefaultWalletId(userId),
     ]);
 

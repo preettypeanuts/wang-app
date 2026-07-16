@@ -60,9 +60,9 @@ export const OVERVIEW_ICON_SHELL_BASE = [
   "[&_svg]:text-white [&_svg]:drop-shadow-sm",
 ].join(" ");
 
-export const OVERVIEW_ICON_SHELL_MD = "size-8 [&_svg]:size-3.5";
+export const OVERVIEW_ICON_SHELL_MD = "size-8 [&_svg]:size-3.5 [&_img]:max-h-full [&_img]:max-w-full";
 
-export const OVERVIEW_ICON_SHELL_LG = "size-9 [&_svg]:size-4";
+export const OVERVIEW_ICON_SHELL_LG = "size-9 [&_svg]:size-4 [&_img]:max-h-full [&_img]:max-w-full";
 
 export const OVERVIEW_ICON_VARIANTS = {
   green: "from-[#8AE6A8] via-[#34C759] to-[#248A3D]",

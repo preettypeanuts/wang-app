@@ -32,6 +32,7 @@ import {
   shiftMonthKey,
   toMonthKey,
 } from "@/lib/planner/calendar";
+import { getAvailableBalance } from "@/lib/db/balance";
 import { prisma } from "@/lib/db/prisma";
 import { flowTransactionTypesWhere, toFlowTransactionRows } from "@/lib/db/transaction-flow-filter";
 import { scopedByUser } from "@/lib/db/user-scope";
@@ -66,26 +67,7 @@ async function getMonthTransactions(
 }
 
 async function getCumulativeBalance(userId: string, date: Date): Promise<number> {
-  const end = endOfDay(date);
-
-  const [incomeAgg, expenseAgg] = await Promise.all([
-    prisma.transaction.aggregate({
-      where: scopedByUser(userId, {
-        occurredAt: { lte: end },
-        type: "income",
-      }),
-      _sum: { amount: true },
-    }),
-    prisma.transaction.aggregate({
-      where: scopedByUser(userId, {
-        occurredAt: { lte: end },
-        type: "expense",
-      }),
-      _sum: { amount: true },
-    }),
-  ]);
-
-  return (incomeAgg._sum?.amount ?? 0) - (expenseAgg._sum?.amount ?? 0);
+  return getAvailableBalance(userId, date);
 }
 
 async function buildJournalRangeSummary(
@@ -210,7 +192,7 @@ function getCachedJournalDaySummary(
       return serializeJournalDaySummary(summary);
     },
     ["journal-day-summary", userId, monthKey, asOfDayKey],
-    { tags: [userDataTags.transactions(userId)] },
+    { tags: [userDataTags.transactions(userId), userDataTags.wallets(userId)] },
   );
 }
 
@@ -263,7 +245,7 @@ function getCachedJournalRangeSummary(
       return serializeJournalDaySummary(summary);
     },
     ["journal-range-summary", userId, dateFrom, dateTo],
-    { tags: [userDataTags.transactions(userId)] },
+    { tags: [userDataTags.transactions(userId), userDataTags.wallets(userId)] },
   );
 }
 

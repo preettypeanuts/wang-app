@@ -31,6 +31,7 @@ import { getWalletBalances } from "@/lib/db/wallet-balance";
 import {
   countUnassignedFlowTransactions,
   DEFAULT_WALLET_NAME,
+  ensureLegacyWalletTransactionsAssigned,
   getDefaultWalletId,
 } from "@/lib/db/wallets";
 import { buildOverviewAlerts } from "@/lib/finance/build-overview-alerts";
@@ -193,6 +194,7 @@ export async function getOverviewPageData(
 ): Promise<OverviewPageResult> {
   const now = new Date();
   const yesterday = addDays(now, -1);
+  await ensureLegacyWalletTransactionsAssigned(userId);
   const monthKey = getCurrentMonthKey(now);
   const parsedMonth = getMonthRange(now.getFullYear(), now.getMonth());
   const { start: todayStart, end: todayEnd } = getDayRange(now);

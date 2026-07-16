@@ -1,36 +1,25 @@
-import { WalletsLegacyAssignBanner } from "@/components/wallets/wallets-legacy-assign-banner";
 import { WalletsPageContent } from "@/components/wallets/wallets-page-content";
 import { WalletsView } from "@/components/wallets/wallets-view";
 import { requireUserId } from "@/lib/auth/session";
-import { getWalletBalances } from "@/lib/db/wallet-balance";
 import {
-  countUnassignedFlowTransactions,
-  getDefaultWalletId,
-  listWallets,
-} from "@/lib/db/wallets";
+  getWalletBalances,
+  queryWalletBalances,
+} from "@/lib/db/wallet-balance";
+import { ensureLegacyWalletTransactionsAssigned } from "@/lib/db/wallets";
+import { processWalletAdminFeesForUser } from "@/lib/wallets/process-wallet-admin-fees";
 
 export async function WalletsPageData() {
   const userId = await requireUserId();
-  const [wallets, unassignedCount, defaultWalletId] = await Promise.all([
-    getWalletBalances(userId),
-    countUnassignedFlowTransactions(userId),
-    getDefaultWalletId(userId),
-  ]);
-
-  const defaultWalletName =
-    wallets.find((wallet) => wallet.id === defaultWalletId)?.name ??
-    (await listWallets(userId)).find((wallet) => wallet.isDefault)?.name ??
-    "Dompet Utama";
+  await processWalletAdminFeesForUser(userId);
+  const assigned = await ensureLegacyWalletTransactionsAssigned(userId);
+  const wallets =
+    assigned > 0
+      ? await queryWalletBalances(userId)
+      : await getWalletBalances(userId);
 
   return (
     <WalletsPageContent>
-      <div className="flex flex-col gap-3">
-        <WalletsLegacyAssignBanner
-          count={unassignedCount}
-          defaultWalletName={defaultWalletName}
-        />
-        <WalletsView wallets={wallets} />
-      </div>
+      <WalletsView wallets={wallets} />
     </WalletsPageContent>
   );
 }
