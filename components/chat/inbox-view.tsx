@@ -16,7 +16,6 @@ import {
   submitInboxMessageFromReceipt,
   updateInboxMessageFromReceipt,
 } from "@/app/actions/receipt";
-import { correctInboxTransactionWalletAction } from "@/app/actions/wallets";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatReceiptDropOverlay } from "@/components/chat/chat-receipt-drop-overlay";
 import { MessageList } from "@/components/chat/message-list";
@@ -737,35 +736,6 @@ export function InboxView({
     }
   }
 
-  async function handleWalletCorrect(input: {
-    assistantMessageId: string;
-    walletId: string;
-  }) {
-    beginInFlight();
-
-    try {
-      const result = await correctInboxTransactionWalletAction(input);
-
-      if (!result.ok) {
-        return;
-      }
-
-      setMessages((current) =>
-        current.map((message) =>
-          message.id === input.assistantMessageId
-            ? {
-                ...message,
-                walletCandidates: undefined,
-                content: result.assistantContent,
-              }
-            : message,
-        ),
-      );
-    } finally {
-      endInFlight();
-    }
-  }
-
   async function handlePayPlan(item: UnpaidPayPlanChatItem) {
     const isIncome = item.flowType === "income";
     const {
@@ -940,7 +910,6 @@ export function InboxView({
         onUndoMessage={handleUndoMessage}
         onEditReceipt={openReceiptEdit}
         onQuickCorrect={handleQuickCorrect}
-        onWalletCorrect={handleWalletCorrect}
         actionsDisabled={isProcessing}
       />
       <ChatReceiptDropOverlay visible={isDraggingReceipt} />
