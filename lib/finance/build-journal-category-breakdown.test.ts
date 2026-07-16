@@ -21,8 +21,6 @@ function buildRecord(
     baseCategoryId: partial.baseCategoryId ?? null,
     hidden: partial.hidden ?? false,
     sortOrder: partial.sortOrder ?? 0,
-    createdAt: partial.createdAt ?? new Date(),
-    updatedAt: partial.updatedAt ?? new Date(),
   };
 }
 
@@ -32,7 +30,7 @@ describe("buildJournalCategoryExpenseBreakdown", () => {
       buildRecord({
         slug: "custom_abc123",
         label: "Langganan App",
-        icon: "sparkles",
+        icon: "sparkle",
         iconIsCustom: true,
       }),
     ];

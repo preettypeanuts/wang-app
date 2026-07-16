@@ -6,8 +6,10 @@ import {
 import { markInstallmentPaid } from "@/lib/db/planned-items";
 import { prisma } from "@/lib/db/prisma";
 import { getDateOnlyParts, startOfDay } from "@/lib/finance/day-range";
+import { findInstallmentIndexDueOn } from "@/lib/wallets/find-installment-index-due-on";
 import { syncWalletAdminFee } from "@/lib/wallets/sync-wallet-admin-fee";
 import type { PlannedItemRecord } from "@/types/planner";
+import type { TransactionType } from "@/types/transaction";
 
 function mapWalletAdminFeePlan(record: {
   id: string;
@@ -15,7 +17,7 @@ function mapWalletAdminFeePlan(record: {
   kind: PlannedItemRecord["kind"];
   repeat: PlannedItemRecord["repeat"];
   amount: number;
-  flowType: PlannedItemRecord["flowType"];
+  flowType: TransactionType;
   category: string;
   startAt: Date;
   endAt: Date | null;
@@ -30,7 +32,7 @@ function mapWalletAdminFeePlan(record: {
     kind: record.kind,
     repeat: record.repeat,
     amount: record.amount,
-    flowType: record.flowType,
+    flowType: record.flowType === "income" ? "income" : "expense",
     category: record.category,
     startAt: record.startAt,
     endAt: record.endAt,
@@ -52,7 +54,7 @@ async function processWalletAdminFee(
       kind: PlannedItemRecord["kind"];
       repeat: PlannedItemRecord["repeat"];
       amount: number;
-      flowType: PlannedItemRecord["flowType"];
+      flowType: TransactionType;
       category: string;
       startAt: Date;
       endAt: Date | null;

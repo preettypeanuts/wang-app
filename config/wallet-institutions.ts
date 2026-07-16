@@ -83,14 +83,16 @@ function buildMoreInstitutions(
   return excludeInstitutionsBySlug(generated, excludedSlugs);
 }
 
-const POPULAR_BANK_SLUGS = new Set(
-  POPULAR_BANK_INSTITUTIONS.map((entry) => entry.slug).filter(Boolean),
-);
-const POPULAR_EWALLET_SLUGS = new Set(
-  POPULAR_EWALLET_INSTITUTIONS.map((entry) => entry.slug).filter(Boolean),
-);
-const INTERNATIONAL_EWALLET_SLUGS = new Set(
-  INTERNATIONAL_EWALLET_INSTITUTIONS.map((entry) => entry.slug).filter(Boolean),
+function institutionSlugs(entries: WalletInstitutionEntry[]): Set<string> {
+  return new Set(
+    entries.flatMap((entry) => (entry.slug ? [entry.slug] : [])),
+  );
+}
+
+const POPULAR_BANK_SLUGS = institutionSlugs(POPULAR_BANK_INSTITUTIONS);
+const POPULAR_EWALLET_SLUGS = institutionSlugs(POPULAR_EWALLET_INSTITUTIONS);
+const INTERNATIONAL_EWALLET_SLUGS = institutionSlugs(
+  INTERNATIONAL_EWALLET_INSTITUTIONS,
 );
 
 /** Full bank catalog from local fintech logos (minus popular list). */
